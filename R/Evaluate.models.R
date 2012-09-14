@@ -77,8 +77,10 @@ Find.Optim.Stat <- function(Stat='TSS',Fit,Obs,Precision = 5, Fixed.thresh = NUL
           valToTest <- unique(Fit)
           valToTest <- round(c(mean(c(0,valToTest)), mean(c(1000,valToTest))))
         } else{
-          mini <- max(min(quantile(Fit,0.05, na.rm=T), na.rm=T),0)
-          maxi <- min(max(quantile(Fit,0.95, na.rm=T), na.rm=T),1000)
+#           mini <- max(min(quantile(Fit,0.05, na.rm=T), na.rm=T),0)
+#           maxi <- min(max(quantile(Fit,0.95, na.rm=T), na.rm=T),1000)
+          mini <- max(min(Fit, na.rm=T),0)
+          maxi <- min(max(Fit, na.rm=T),1000)        
           valToTest <- unique( round(c(seq(mini,maxi,length.out=100), mini, maxi)) )
           # deal with unique value to test case
           if(length(valToTest)<3){

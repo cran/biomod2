@@ -634,7 +634,8 @@ setMethod('predict', signature(object = 'GBM_biomod2_model'),
   if (is.null(overwrite)) overwrite <- TRUE
   if (is.null(on_0_1000)) on_0_1000 <- FALSE
   
-  proj <- predict(newdata, model=get_formal_model(object), n.trees = object@n.trees_optim, type = "response")
+#   proj <- predict(newdata, model=get_formal_model(object), n.trees = object@n.trees_optim, type = "response")
+  proj <- predict(newdata, model=get_formal_model(object), fun=gbm::predict.gbm, n.trees = object@n.trees_optim, type = "response")
   
   if(length(get_scaling_model(object))){
     names(proj) <- "pred"

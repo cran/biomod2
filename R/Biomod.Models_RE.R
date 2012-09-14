@@ -229,8 +229,9 @@
   
   # GBM models creation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if (Model == "GBM") {
+ 
     model.sp <- try(gbm(formula = makeFormula(colnames(Data)[1],head(Data)[,expl_var_names,drop=FALSE], 'simple',0),
-                        data = Data[calibLines,], 
+                        data = Data[calibLines,,drop=FALSE], 
                         distribution = Options@GBM$distribution,
                         var.monotone = rep(0, length = ncol(Data)-2), # -2 because of removing of sp and weights
                         weights = Yweights,
@@ -241,7 +242,7 @@
                         train.fraction = Options@GBM$train.fraction,
                         n.trees = Options@GBM$n.trees,
                         verbose = Options@GBM$verbose,
-#                         class.stratify.cv = Options@GBM$class.stratify.cv,
+                        #class.stratify.cv = Options@GBM$class.stratify.cv,
                         cv.folds = Options@GBM$cv.folds))#,
                         #n.cores=1)) ## to prevent from parallel issues
     
@@ -549,7 +550,7 @@
     
     # for MAXENT predicitons are calculated in the same time than models building to save time.
     cat("\n Getting predictions...")
-    g.pred <- try(round(as.numeric(read.csv(MWD$m_predictFile)[,3]) * 1000))
+    g.pred <- try(round(as.numeric(read.csv(MWD$m_outputFile)[,3]) * 1000))
     
     # remove tmp dir
     .Delete.Maxent.WorkDir(MWD)
