@@ -1,0 +1,139 @@
+BIOMOD_LoadModels <- function(bm.out, ... ){
+  
+  ####
+  # ... can be models, run.eval, data.set to make a models subselection
+  add.args <- list(...)
+  args <- .BIOMOD_LoadModels.check.args(bm.out, add.args)
+  add.args <- args$add.args
+  rm(args)
+  
+  models.to.load <- bm.out@models.computed
+  envir <- parent.frame()
+  
+  ## make a subselection
+  
+  ## remove MAXENT and SRE
+#   if(sum(grepl('MAXENT',  models.to.load)) > 0){
+#     cat("\n   ! MAXENT models can't be load yet ! ")
+#     models.to.load <- models.to.load[- which(grepl('MAXENT',  models.to.load))]
+#   }
+  if(sum(grepl('SRE',  models.to.load)) > 0){
+    cat("\n   ! SRE models can't be load yet ! ")
+    models.to.load <- models.to.load[- which(grepl('SRE',  models.to.load))]
+  }
+  
+  if(!is.null(add.args$models)){
+    model.to.load.tmp <- c()
+    for(mod in add.args$models){
+      if(sum(grepl(mod,  models.to.load)) > 0){
+        model.to.load.tmp <- c(model.to.load.tmp, grep(mod, models.to.load, value=TRUE))
+      }
+    }
+    models.to.load <-  model.to.load.tmp
+  }
+  
+  if(!is.null(add.args$run.eval)){
+    model.to.load.tmp <- c()
+    for(re in add.args$run.eval){
+      if(sum(grepl(re,  models.to.load)) > 0){
+        model.to.load.tmp <- c(model.to.load.tmp, grep(re, models.to.load, value=TRUE))
+      }
+    }
+    models.to.load <-  model.to.load.tmp
+  }
+  
+  if(!is.null(add.args$data.set)){
+    model.to.load.tmp <- c()
+    for(ds in add.args$data.set){
+      if(sum(grepl(ds,  models.to.load)) > 0){
+        model.to.load.tmp <- c(model.to.load.tmp, grep(ds, models.to.load, value=TRUE))
+      }
+    }
+    models.to.load <-  model.to.load.tmp
+  }
+  
+  if(length(models.to.load) == 0){
+    cat("\n   ! No models computed matched, No models loaded !")
+    return(NULL)
+  }
+  
+  
+  for(mtl in models.to.load){
+    load(file=paste(bm.out@sp.name, .Platform$file.sep, "models", .Platform$file.sep, mtl,sep=""),envir=envir)
+  }
+  
+  return(models.to.load)
+  
+}
+
+.BIOMOD_LoadModels.check.args <- function(bm.out, add.args){
+  if(!inherits(bm.out, 'BIOMOD.models.out')){
+    stop("bm.out arg must be a BIOMOD.models.out object")
+  }
+  
+  available.args <- c("models", "run.eval", "data.set", "path")
+  given.args <- names(add.args)
+  
+  ## is all additional args are known ?
+  if(sum(given.args %in% available.args) != length(given.args)){
+    cat("\n   !", toString( given.args[which(!(given.args %in% available.args))] ), "arguments are unknown. Please reffer to function help file to see available ones.", fill=.Options$width)
+    ## remove unknown args
+    for(ga in given.args[which(!(given.args %in% available.args))]){
+      add.args[[ga]] <- NULL
+    }
+  }
+  
+  ## check additional args values
+  ### models names
+  if(!is.null(add.args$models)){
+    if(sum(add.args$models %in% .extractModelNamesInfo(model.names=bm.out@models.computed, info='models') != length(add.args$models)) ){
+      stop(paste("models argument must be one of ", toString(.extractModelNamesInfo(model.names=bm.out@models.computed), info='models'), sep="") )
+    }
+  }
+  
+  ### run.eval names
+  if(!is.null(add.args$run.eval)){
+    if(sum(add.args$run.eval %in% .extractModelNamesInfo(model.names=bm.out@models.computed, info='run.eval') != length(add.args$run.eval)) ){
+      stop(paste("run.eval argument must be one of ", toString(.extractModelNamesInfo(model.names=bm.out@models.computed), info='run.eval'), sep="") )
+    }
+  }
+  
+  ### data.set names
+  if(!is.null(add.args$data.set)){
+    if(sum(add.args$data.set %in% .extractModelNamesInfo(model.names=bm.out@models.computed, info='data.set') != length(add.args$data.set)) ){
+      stop(paste("data.set argument must be one of ", toString(.extractModelNamesInfo(model.names=bm.out@models.computed), info='data.set'), sep="") )
+    }
+  }
+  
+  ### path to sim
+  if(!is.null(add.args$path)){
+    if(!(bm.out@sp.name %in% list.dirs(path = add.args$path))){
+      stop("invalid path given")
+    }
+  } else{
+    add.args$path = "."
+  }
+  
+  return(list(add.args = add.args))
+  
+}
+
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
+                
+'.extractModelNamesInfo' <- function(model.names, info = 'species'){
+  if(!is.character(model.names)){
+    stop("model.names must be a character vector")
+  }
+  if(!is.character(info) | length(info) != 1 | !(info %in% c('species', 'data.set', 'models', 'run.eval')) ){
+    stop("info must be 'specie', 'data.set', 'models' or 'run.eval'")
+  }
+                
+  info.tmp <- as.data.frame(strsplit(model.names, "_"))
+  
+  return( switch(info,
+                 species = paste(unique(unlist(info.tmp[-c(nrow(info.tmp), nrow(info.tmp)-1, nrow(info.tmp)-2),])), collapse="_"),
+                 data.set = paste(unique(unlist(info.tmp[(nrow(info.tmp)-2),]))),
+                 run.eval = paste(unique(unlist(info.tmp[(nrow(info.tmp)-1),]))),
+                 models = paste(unique(unlist(info.tmp[(nrow(info.tmp)),]))) ) )
+              
+}

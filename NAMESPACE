@@ -1,0 +1,24 @@
+exportPattern("^[[:alpha:]]+")
+
+exportClasses(
+     "BIOMOD.formated.data",
+     "BIOMOD.formated.data.PA",
+     "BIOMOD.models.out",
+     "BIOMOD.stored.array",
+     "BIOMOD.stored.data",
+     "BIOMOD.stored.formated.data",
+     "BIOMOD.stored.models.options" 
+)
+
+exportMethods(
+    "BIOMOD.formated.data",
+    "getModelsEvaluations",
+    "getModelsOptions",
+    "getModelsPrediction",
+    "getModelsVarImport",
+    ".Models.prepare.data",
+    ".Projection.do.proj",
+    ".transform.outputs",
+    ".Models.prepare.data"
+)
+
