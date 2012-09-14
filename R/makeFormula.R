@@ -28,7 +28,7 @@ function(respName, explVar, type = 'simple', interaction.level = 0, ...)
   
   explVarNames <- colnames(explVar)
   if(respName %in% explVarNames){ # remove the response variable data if it's given
-    explVar <- explVar[, - which(explVarNames == respName)]
+    explVar <- explVar[, - which(explVarNames == respName), drop=FALSE]
     explVarNames <- colnames(explVar)
   }
   

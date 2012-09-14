@@ -475,42 +475,18 @@ setMethod('disk.pseudo.abs.selection', signature(env="RasterStack"),
               cat("\n   > Pseudo absences are selected in explanatory variables")
               
               # create a mask
-              mask <- maskInside <- maskOutside <- reclassify(raster:::subset(env,1), c(-Inf,Inf,0))
+              dist.mask <- raster:::subset(env,1, drop=TRUE)
+              dist.mask[] <- NA
+              
               pres.xy <- coordinates(sp[which(sp@data[,1]==1),])
+              dist.mask[cellFromXY(dist.mask,pres.xy)] <- 1
               
-              # to convert longitudinal degrees into metters
-              coef.conversion <- ifelse(grepl("longlat",env@crs@projargs), 111319.5, 1)
-#               coef.conversion <- 1
-              ## progress bar
-              cat("\n")
-              pb <- txtProgressBar(min = 0, max = nrow(pres.xy), initial = 0, char = "=-",width = 20,  style = 3, file = "")
-              for(i in 1:nrow(pres.xy)){
-                setTxtProgressBar(pb,i)
-                if(distMin > 0){
-                  maskInside <- maskInside + (distanceFromPoints(mask, pres.xy[i,]) > (distMin * coef.conversion))
-                }
-                if(!is.null(distMax)){
-                  maskOutside <- maskOutside + (distanceFromPoints(mask, pres.xy[i,]) <= (distMax * coef.conversion))
-                } 
-              }
+              dist.mask <- distance(dist.mask)
+              dist.mask <- mask(dist.mask, raster:::subset(env,1, drop=TRUE))
               
-              if(distMin > 0){
-                maskInside <- maskInside == nrow(pres.xy)
-              } else { # keep all cells
-                maskInside <- maskInside + 1
-              }
+              if(is.null(distMax)) distMax <- Inf
+              mask <- reclassify(dist.mask, c(-Inf,distMin,NA ,distMin, distMax,-1, distMax,Inf,NA))
               
-              if(!is.null(distMax)){
-                maskOutside <- maskOutside > 0                
-              } else{ # keep all cells
-                maskOutside <- maskOutside + 1
-              }
-
-                          
-              mask <- maskInside * maskOutside
-              mask[mask==0] <- NA
-              mask <- (-1) * mask
-            
               # remove presences and true absences from our raster
               mask[cellFromXY(mask,coordinates(sp))] <- NA
               
@@ -551,6 +527,97 @@ setMethod('disk.pseudo.abs.selection', signature(env="RasterStack"),
               
             } 
           })
+
+# setMethod('disk.pseudo.abs.selection', signature(env="RasterStack"),
+#           function(sp, env, distMin, distMax, nb.points, nb.repet){
+#             cat("\n   > Disk pseudo absences selection")
+#             
+#             # 1. Check if NA are present in sp or not to determine which dataset to use
+#             if(.nb.available.pa.cells(sp) > 0 ){ # PA will be taken into response variable
+#               env.tmp <- SpatialPointsDataFrame(coords = coordinates(sp),
+#                                                 data = as.data.frame(extract(env,coordinates(sp),method='bilinear')))
+#               
+#               return(disk.pseudo.abs.selection(sp, env.tmp, distMin, distMax, nb.points, nb.repet))
+#             } else {
+#               cat("\n   > Pseudo absences are selected in explanatory variables")
+#               
+#               # create a mask
+#               mask <- maskInside <- maskOutside <- reclassify(raster:::subset(env,1), c(-Inf,Inf,0))
+#               pres.xy <- coordinates(sp[which(sp@data[,1]==1),])
+#               
+#               # to convert longitudinal degrees into metters
+#               coef.conversion <- ifelse(grepl("longlat",env@crs@projargs), 111319.5, 1)
+#               #               coef.conversion <- 1
+#               ## progress bar
+#               cat("\n")
+#               pb <- txtProgressBar(min = 0, max = nrow(pres.xy), initial = 0, char = "=-",width = 20,  style = 3, file = "")
+#               for(i in 1:nrow(pres.xy)){
+#                 setTxtProgressBar(pb,i)
+#                 if(distMin > 0){
+#                   maskInside <- maskInside + (distanceFromPoints(mask, pres.xy[i,]) > (distMin * coef.conversion))
+#                 }
+#                 if(!is.null(distMax)){
+#                   maskOutside <- maskOutside + (distanceFromPoints(mask, pres.xy[i,]) <= (distMax * coef.conversion))
+#                 } 
+#               }
+#               
+#               if(distMin > 0){
+#                 maskInside <- maskInside == nrow(pres.xy)
+#               } else { # keep all cells
+#                 maskInside <- maskInside + 1
+#               }
+#               
+#               if(!is.null(distMax)){
+#                 maskOutside <- maskOutside > 0                
+#               } else{ # keep all cells
+#                 maskOutside <- maskOutside + 1
+#               }
+#               
+#               
+#               mask <- maskInside * maskOutside
+#               mask[mask==0] <- NA
+#               mask <- (-1) * mask
+#               
+#               # remove presences and true absences from our raster
+#               mask[cellFromXY(mask,coordinates(sp))] <- NA
+#               
+#               # checking of nb candidates
+#               nb.cells <- .nb.available.pa.cells(mask)
+#               if(nb.cells <= nb.points){
+#                 nb.repet <- 1
+#                 nb.points <- nb.cells
+#                 cat("\n   > All availables cells have been selected (", nb.points, "pseudo absences selected )")
+#               }
+#               
+#               # select cells into raster
+#               pa.tab.tmp <- matrix(NA, ncol=nb.repet, nrow=nb.points)
+#               for( j in 1:ncol(pa.tab.tmp)){
+#                 pa.tab.tmp[,j] <- sampleRandom(x=mask, size=nb.points, cells=T)[,"cell"]
+#               }
+#               
+#               # puting cells in good format
+#               selected.cells <- sort(unique(as.vector(pa.tab.tmp)))
+#               pa.tab <- matrix(FALSE, ncol = nb.repet, nrow = length(selected.cells))
+#               colnames(pa.tab) <- paste("PA", 1:nb.repet, sep="")
+#               for( j in 1:ncol(pa.tab)){
+#                 pa.tab[selected.cells %in% pa.tab.tmp[,j], j] <- TRUE
+#               }
+#               
+#               # puting presences, true absences and pseudo absences together
+#               xy <- rbind(coordinates(sp), xyFromCell(mask, selected.cells))
+#               sp <- as.numeric(unlist(c(as.vector(sp@data), rep(NA,length(selected.cells))), use.names=FALSE))
+#               env <- extract(env, xy)
+#               
+#               pa.tab <- rbind(matrix(TRUE,nrow=(nrow(xy)-length(selected.cells)), ncol=ncol(pa.tab)),
+#                               pa.tab)
+#               
+#               return(list(xy = xy,
+#                           sp = sp,
+#                           env = as.data.frame(env),
+#                           pa.tab = as.data.frame(pa.tab)))              
+#               
+#             } 
+#           })
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #  
 # .arranging.pa.table(pa.data, pa.tab, sp.data=NULL, xy=NULL){

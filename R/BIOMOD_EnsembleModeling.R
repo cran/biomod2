@@ -4,12 +4,12 @@
                                        eval.metric = 'all',
                                        eval.metric.quality.threshold = NULL,
                                        prob.mean = TRUE,
-                                       prob.cv = TRUE,
-                                       prob.ci = TRUE,
+                                       prob.cv = FALSE,
+                                       prob.ci = FALSE,
                                        prob.ci.alpha = 0.05,
-                                       prob.median = TRUE,
-                                       committee.averaging = TRUE,
-                                       prob.mean.weight = TRUE,
+                                       prob.median = FALSE,
+                                       committee.averaging = FALSE,
+                                       prob.mean.weight = FALSE,
                                        prob.mean.weight.decay = 'proportional'){
   .bmCat("Build Ensemble Models")
   # 1. args checking -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #

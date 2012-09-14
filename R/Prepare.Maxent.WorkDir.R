@@ -11,20 +11,20 @@
   absLines <- which((Data[,1]==0) & calibLines)
   Sp_swd <- cbind(rep(RunName,length(presLines)),
                       xy[presLines,],
-                      Data[presLines,2:ncol(Data)])
+                      Data[presLines,2:ncol(Data),drop=FALSE])
   colnames(Sp_swd) <- c('species','X','Y',colnames(Data)[2:ncol(Data)])
   write.table(Sp_swd, file=paste(getwd(),'/',species.name,"/MaxentTmpData/Sp_swd.csv",sep=""), quote=FALSE, row.names=FALSE, sep=",")
   
   # Background Data
   # keep only 0 of calib lines
-  Back_swd <- cbind(rep("background",length(absLines)),xy[absLines,],Data[absLines,2:ncol(Data)])
+  Back_swd <- cbind(rep("background",length(absLines)),xy[absLines,],Data[absLines,2:ncol(Data),drop=FALSE])
   colnames(Back_swd)  <- c("background",colnames(Back_swd)[-1])
   write.table(Back_swd, file=paste(getwd(),'/',species.name,"/MaxentTmpData/Back_swd.csv",sep=""), quote=FALSE, row.names=FALSE, col.names=TRUE, sep=",")
   
   # Prediction Data
   dir.create(paste(getwd(),'/',species.name,'/MaxentTmpData/Pred', sep=""), showWarnings=FALSE)
   
-  Pred_swd <- cbind(rep("predict",nrow(xy)),xy,Data[,2:ncol(Data)])
+  Pred_swd <- cbind(rep("predict",nrow(xy)),xy,Data[,2:ncol(Data),drop=FALSE])
   colnames(Pred_swd)  <- c("predict",colnames(Back_swd)[-1])
   write.table(Pred_swd, file=paste(getwd(),'/',species.name,"/MaxentTmpData/Pred/Pred_swd.csv",sep=""), quote=FALSE, row.names=FALSE, col.names=TRUE, sep=",")
   
@@ -41,7 +41,7 @@
   
   # dealing with independent evaluation data
   if(!is.null(evalData)){
-    Pred_eval_swd <- cbind(rep("predictEval",nrow(evalxy)),evalxy,evalData[,2:ncol(evalData)])
+    Pred_eval_swd <- cbind(rep("predictEval",nrow(evalxy)),evalxy,evalData[,2:ncol(evalData),drop=FALSE])
     colnames(Pred_eval_swd)  <- c("predict",colnames(Back_swd)[-1])
     write.table(Pred_eval_swd, file=paste(getwd(),'/',species.name,"/MaxentTmpData/Pred/Pred_eval_swd.csv",sep=""), quote=FALSE, row.names=FALSE, col.names=TRUE, sep=",")
   }

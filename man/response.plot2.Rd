@@ -29,7 +29,13 @@ response.plot2( models,
   \item{name}{ the name of the file produced if save.file is different to "no" (extensions are already included) }
   \item{ImageSize}{ the size of the image in pixels if save.file is different to "no". Affects "jpeg" and "tiff" outputs only. Default if 480 pixels which is the R default. }
   \item{plot}{ if TRUE (the default) then a plot is produced}
-  \item{\ldots}{ further arguments (see details)}
+  \item{\ldots}{ further arguments :
+    \itemize{
+      \item{\code{data_species} : vector containing data species occurances. Have to match with \code{Data}. If given, the statistic used to fix variables value will be calculated only over presences points. (Considered only if \code{Data} is under table format)}
+      \item{\code{col} : vector of colors to be used (only for univariate case)}
+      \item{\code{lty} : vector of lines types to be used}
+      \item{\code{legend} : logical, add legend to plot (only for univariate case)}
+    }}
 }
 \details{
   For building the predicted response curves, n-1 variables are set constant to a fixed value (mean, median, min or max i.e \code{fixed.var.metric} arg) and only the remaining one (resp. 2 for 3D response plot) is varying across its whole range (given by \code{Data}). n the case of categorical variable, the most represented class is taken. The variations observed and the curve thus obtained shows the sensibility of the model to that specific variable. This method does not account for interactions between variables.
@@ -64,11 +70,11 @@ predicted responses from species distribution models. Ecological Modelling 186, 
 \dontrun{
 # species occurrences
 DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
-                                    package="biomod2"))
+                                    package="biomod2"), row.names = 1)
 head(DataSpecies)
 
 # the name of studied species
-myRespName <- 'GuloGulo'
+myRespName <- 'VulpesVulpes'
 
 # the presence/absences data for our species 
 myResp <- as.numeric(DataSpecies[,myRespName])
@@ -122,23 +128,19 @@ myRespPlot2D <- response.plot2(models  = myGLMs,
                                Data = getModelsInputData(myBiomomodModelOut,'expl.var'), 
                                show.variables= getModelsInputData(myBiomomodModelOut,'expl.var.names'),
                                do.bivariate = FALSE,
-                               fixed.var.metric = 'mean',
-                               save.file="no", 
-                               name="response_curve", 
-                               ImageSize=480, 
-                               plot=TRUE)
+                               fixed.var.metric = 'median',
+                               col = c("blue", "red"),
+                               legend = TRUE,
+                               data_species = getModelsInputData(myBiomomodModelOut,'resp.var'))
 
 # 4.2 plot 3D response plots
-## here only for a lone model (i.e "MyocastorCoypus_PA1_RUN1_GLM")
+## here only for a lone model (i.e "VulpesVulpes_PA1_AllData_GLM")
 myRespPlot3D <- response.plot2(models  = myGLMs[1],
                                Data = getModelsInputData(myBiomomodModelOut,'expl.var'), 
                                show.variables= getModelsInputData(myBiomomodModelOut,'expl.var.names'),
                                do.bivariate = TRUE,
-                               fixed.var.metric = 'mean',
-                               save.file="no", 
-                               name="response_curve", 
-                               ImageSize=480, 
-                               plot=TRUE)
+                               fixed.var.metric = 'median',
+                               data_species = getModelsInputData(myBiomomodModelOut,'resp.var'))
 
 ### all the values used to produce this plot are stored into the returned object
 ### you can redo plots by yourself and customised them

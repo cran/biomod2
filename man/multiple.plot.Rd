@@ -31,7 +31,7 @@ multiple.plot(Data, coor, color.gradient='red', plots.per.window=9, cex=1, save.
 \dontrun{
 # species occurrences
 DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
-                                    package="biomod2"))
+                                    package="biomod2"), row.names = 1)
 
 # the name of studied species
 myRespName <- c("ConnochaetesGnou", "GuloGulo", "PantheraOnca", 

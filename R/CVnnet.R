@@ -11,17 +11,17 @@
       if(is.null(W)){
           Eval[,3] = Eval[,3] + apply(Eval[,1:2], 1, Samp, Target, Input, FUN=function(x, Samp, Target, Input){
             nn = nnet(eval(parse(text = paste("Target[Samp$calibration]",
-                  paste(.scopeExpSyst(Input[1:10, ], "GBM"), collapse = "")))),data=Input[Samp$calibration, ],
+                  paste(.scopeExpSyst(Input[1:10, ,drop=FALSE], "GBM"), collapse = "")))),data=Input[Samp$calibration, ,drop=FALSE],
                   size = x[1], decay = x[2], maxit = 200, trace = FALSE)
-            AUC = as.numeric(auc(roc(Target[Samp$evaluation], predict(nn, Input[Samp$evaluation,]))))
+            AUC = as.numeric(auc(roc(Target[Samp$evaluation], predict(nn, Input[Samp$evaluation,,drop=FALSE]))))
             return(AUC)
           })
       } else{
           Eval[,3] = Eval[,3] + apply(Eval[,1:2], 1, Samp, Target, Input, W, FUN=function(x, Samp, Target, Input, W){
             nn = nnet(eval(parse(text = paste("Target[Samp$calibration]",
-                  paste(.scopeExpSyst(Input[1:10, ], "GBM"), collapse = "")))),data=Input[Samp$calibration, ],
+                  paste(.scopeExpSyst(Input[1:10, ,drop=FALSE], "GBM"), collapse = "")))),data=Input[Samp$calibration, ,drop=FALSE],
                   weights=W[Samp$calibration], size = x[1], decay = x[2], maxit = 200, trace = FALSE)
-            AUC = as.numeric(auc(roc(Target[Samp$evaluation], predict(nn, Input[Samp$evaluation,]))))
+            AUC = as.numeric(auc(roc(Target[Samp$evaluation], predict(nn, Input[Samp$evaluation,,drop=FALSE]))))
             return(AUC)
           })
       }

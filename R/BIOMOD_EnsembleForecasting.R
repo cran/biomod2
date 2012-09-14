@@ -423,8 +423,12 @@
     if(!is.null(binary.meth)){
       for(bin.meth in binary.meth){
         cuts <- getEMeval(EM.output, em.comp)[[1]][bin.meth, "Cutoff", ]
-        cuts <- cuts[sub("ef.","em.", ef.computed)]
-
+      
+        if(length(cuts)>1){
+          # ensure that cuts are corectly ordered
+          cuts <- cuts[sub("ef.","em.", ef.computed)]
+        }
+  
         ef.bin.obj.name <- paste("proj_", projection.output@proj.names, "_", em.comp,"_", bin.meth,"bin", sep="")
         
         if(sum(is.na(cuts)) > 0) {
