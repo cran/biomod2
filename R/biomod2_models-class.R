@@ -32,7 +32,7 @@ setClass('biomod2_model',
                    model_variables_importance = matrix()),
          validity = function(object){
            
-           # check that rescaler is a glm if it is defined
+           # check that scaler is a glm if it is defined
            if(length(object@scaling_model)) 
              if(sum(! ( c("glm", "lm") %in% class(object@scaling_model) ) ) > 0) 
                return(FALSE)
@@ -45,7 +45,7 @@ setMethod('show', signature('biomod2_model'),
             .bmCat("'biomod2_model'")
             cat("\n\t model name :", object@model_name, fill=.Options$width)
             cat("\n\t model class :", object@model_class, fill=.Options$width)
-            cat("\n\t This model", ifelse(length(object@scaling_model), "has", "does'nt have"),"its own rescaler", fill=.Options$width)
+            cat("\n\t This model", ifelse(length(object@scaling_model), "has", "does'nt have"),"its own scaler", fill=.Options$width)
             
             cat("\n")
             cat("\n\t response modelled :", object@resp_name, fill=.Options$width)
@@ -674,13 +674,13 @@ setMethod('predict', signature(object = 'MAXENT_biomod2_model'),
   
   .Prepare.Maxent.Proj.WorkDir(Data = newdata, proj_name = file.path(object@resp_name,temp_workdir))
   
-  cat("\n\t\tRuning Maxent...")
+  cat("\n\t\tRunning Maxent...")
   system(command=paste("java -cp ", file.path(object@model_options$path_to_maxent.jar, "maxent.jar"),
                        " density.Project \"", 
                        file.path(object@model_output_dir, sub("_MAXENT",".lambdas",object@model_name, fixed=T)),"\" ", 
                        file.path(object@resp_name, temp_workdir, "MaxentTmpData","Proj"), " ", 
                        file.path(object@resp_name, temp_workdir, "MaxentTmpData", "projMaxent.grd") , 
-                       " doclamp=false", sep=""), wait = TRUE)
+                       " doclamp=false visible=false autorun nowarnings notooltips", sep=""), wait = TRUE)
   
   cat("\n\t\tReading Maxent outputs...")
   proj <- raster(file.path(object@resp_name, temp_workdir , "MaxentTmpData","projMaxent.grd"))
@@ -721,19 +721,22 @@ setMethod('predict', signature(object = 'MAXENT_biomod2_model'),
   if (is.null(temp_workdir)) temp_workdir <- paste("maxentWDtmp", format(Sys.time(), "%s"), sep="")
   if (is.null(rm_tmp_files)) rm_tmp_files <- TRUE
   
-  if( is.null(xy) ){
-    if( sum(c('x','y') %in% colnames(newdata) ) == 2 ){
-      coor_col <- c( which(colnames(newdata) == 'x'), which(colnames(newdata) == 'y') )
-      xy <- newdata[,coor_col]
-      newdata <- newdata[,- coor_col]
-    } else { 
-      xy <- data.frame(x=rep(0,nrow(newdata)), y=rep(0,nrow(newdata)))
-    }
-  }
+#   if( is.null(xy) ){
+#     if( sum(c('x','y') %in% colnames(newdata) ) == 2 ){
+#       coor_col <- c( which(colnames(newdata) == 'x'), which(colnames(newdata) == 'y') )
+#       xy <- newdata[,coor_col]
+#       newdata <- newdata[,- coor_col]
+#     } else { 
+#       xy <- data.frame(x=rep(0,nrow(newdata)), y=rep(0,nrow(newdata)))
+#     }
+#   }
+  
+  ## no xy needed for models projections
+  xy <- NULL
   
   .Prepare.Maxent.Proj.WorkDir(Data = as.data.frame(newdata), xy = xy , proj_name = file.path(object@resp_name,temp_workdir))
   
-  cat("\n\t\tRuning Maxent...")
+  cat("\n\t\tRunning Maxent...")
   system(command=paste("java -cp ", file.path(object@model_options$path_to_maxent.jar, "maxent.jar"),
                        " density.Project \"", 
                        file.path(object@model_output_dir, sub("_MAXENT",".lambdas",object@model_name, fixed=T)),"\" ", 

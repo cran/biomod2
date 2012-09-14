@@ -11,14 +11,14 @@
 # 	      DataF <- stack(dataToRescale) 
 #     }
 #     
-#     #Creating or loading the rescaling model
+#     #Creating or loading the scaling model
 #     if(original){ 
 #         Rescaling_GLM = glm(ref~DataF, data=DataF, family="binomial")
-#         eval(parse(text=paste("save(Rescaling_GLM, file='", getwd(), "/models/rescaling_models/Rmod_", run, "', compress='xz')", sep=""))) 
+#         eval(parse(text=paste("save(Rescaling_GLM, file='", getwd(), "/models/scaling_models/Rmod_", run, "', compress='xz')", sep=""))) 
 #     } else
-#         eval(parse(text=paste("load('", getwd(), "/models/rescaling_models/Rmod_", run, "')", sep="")))
+#         eval(parse(text=paste("load('", getwd(), "/models/scaling_models/Rmod_", run, "')", sep="")))
 # 	 	
-#     #make the rescaling prediction
+#     #make the scaling prediction
 #     if(!class(dataToRescale)[1]=='RasterLayer') RescaledData <- predict(Rescaling_GLM, DataF, type="response") 
 # 	if(class(dataToRescale)[1]=='RasterLayer')  RescaledData <- predict(model=Rescaling_GLM, DataF, type="response")    #rasters
 # 	   
@@ -41,10 +41,10 @@ function(dataToRescale, ref=NULL, name, original=FALSE, weights=NULL)
 #         DataF <- stack(dataToRescale) 
 #     }
 #     
-    #Creating or loading the rescaling model
+    #Creating or loading the scaling model
   if(original){
-      if(! file.exists(paste(getwd(),"/", unlist(strsplit(name,'_'))[1], "/models/rescaling_models/", sep=""))){
-        dir.create(paste(getwd(),"/", unlist(strsplit(name,'_'))[1], "/models/rescaling_models/", sep=""), showWarnings=F)
+      if(! file.exists(paste(getwd(),"/", unlist(strsplit(name,'_'))[1], "/models/scaling_models/", sep=""))){
+        dir.create(paste(getwd(),"/", unlist(strsplit(name,'_'))[1], "/models/scaling_models/", sep=""), showWarnings=F)
       }
 #       Rescaling_GLM = glm(ref~DataF, data=DataF, family="binomial", mustart = rep(0.5,length(ref)))
       ## customised wgts
@@ -69,23 +69,23 @@ function(dataToRescale, ref=NULL, name, original=FALSE, weights=NULL)
 #       Rescaling_GLM = glm(ref~DataF, data=DataF, family=binomial, weights=wgts)
 #       Rescaling_GLM = glm(ref~DataF, data=DataF, family=binomial, weights=wgts)
       eval(parse(text=paste("save(Rescaling_GLM, file='", getwd(),"/",
-                            unlist(strsplit(name,'_'))[1], "/models/rescaling_models/",
-                            name, "_rescaled' , compress='",ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz')
+                            unlist(strsplit(name,'_'))[1], "/models/scaling_models/",
+                            name, "_scaled' , compress='",ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz')
                             ,"')", sep=""))) 
     } else{
       eval(parse(text=paste("load('", getwd(),"/",unlist(strsplit(name,'_'))[1],
-                            "/models/rescaling_models/",name,"_rescaled')", sep="")))
+                            "/models/scaling_models/",name,"_scaled')", sep="")))
     }
-    #make the rescaling prediction
+    #make the scaling prediction
     if(! inherits(dataToRescale, "Raster")){
       RescaledData <- predict(Rescaling_GLM, data.frame(pred=as.numeric(dataToRescale)), type="response")
     } else{
-      cat("\n*** rescaller5 raster rescalling")
+      cat("\n*** scaler5 raster scaling")
       RescaledData <- predict(dataToRescale, model=Rescaling_GLM, type='response')
     }
     
   
-#     cat("\n\t\t original range = ", min(DataF) ," - ", max(DataF), "\t rescal ranged = ", min(RescaledData), " - ", max(RescaledData) )
+#     cat("\n\t\t original range = ", min(DataF) ," - ", max(DataF), "\t scal ranged = ", min(RescaledData), " - ", max(RescaledData) )
 
     
 # 	  if(class(dataToRescale)[1]=='RasterLayer')  RescaledData <- predict(model=Rescaling_GLM, DataF, type="response")    #rasters
@@ -119,7 +119,7 @@ function(dataToRescale, ref=NULL, name, original=FALSE, weights=NULL)
       weights = round(weights[]) # to remove glm & gam warnings
     }
      
-    # define a glm to rescal prediction from 0 to1 
+    # define a glm to scal prediction from 0 to1 
     scaling_model <- glm(ref~pred, data=data.frame(ref=as.numeric(ref), pred = as.numeric(dataToRescale)) , family=binomial(link=probit), x=TRUE, weights=weights)
     
     return(scaling_model)
@@ -140,10 +140,10 @@ function(dataToRescale, ref=NULL, name, original=FALSE, weights=NULL)
 #     #         DataF <- stack(dataToRescale) 
 #     #     }
 #     #     
-#     #Creating or loading the rescaling model
+#     #Creating or loading the scaling model
 #     if(original){
-#       if(! file.exists(paste(getwd(),"/", unlist(strsplit(name,'_'))[1], "/models/rescaling_models/", sep=""))){
-#         dir.create(paste(getwd(),"/", unlist(strsplit(name,'_'))[1], "/models/rescaling_models/", sep=""), showWarnings=F)
+#       if(! file.exists(paste(getwd(),"/", unlist(strsplit(name,'_'))[1], "/models/scaling_models/", sep=""))){
+#         dir.create(paste(getwd(),"/", unlist(strsplit(name,'_'))[1], "/models/scaling_models/", sep=""), showWarnings=F)
 #       }
 #       #       Rescaling_GLM = glm(ref~DataF, data=DataF, family="binomial", mustart = rep(0.5,length(ref)))
 #       ## customised wgts
@@ -161,23 +161,23 @@ function(dataToRescale, ref=NULL, name, original=FALSE, weights=NULL)
 #       #       Rescaling_GLM = glm(ref~DataF, data=DataF, family=binomial, weights=wgts)
 #       #       Rescaling_GLM = glm(ref~DataF, data=DataF, family=binomial, weights=wgts)
 #       eval(parse(text=paste("save(Rescaling_GLM, file='", getwd(),"/",
-#                             unlist(strsplit(name,'_'))[1], "/models/rescaling_models/",
-#                             name, "_rescaled' , compress='",ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz')
+#                             unlist(strsplit(name,'_'))[1], "/models/scaling_models/",
+#                             name, "_scaled' , compress='",ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz')
 #                             ,"')", sep=""))) 
 #     } else{
 #       eval(parse(text=paste("load('", getwd(),"/",unlist(strsplit(name,'_'))[1],
-#                             "/models/rescaling_models/",name,"_rescaled')", sep="")))
+#                             "/models/scaling_models/",name,"_scaled')", sep="")))
 #     }
-#     #make the rescaling prediction
+#     #make the scaling prediction
 #     if(! inherits(dataToRescale, "Raster")){
 #       RescaledData <- predict(Rescaling_GLM, data.frame(pred=as.numeric(dataToRescale)), type="response")
 #     } else{
-#       cat("\n*** rescaller5 raster rescalling")
+#       cat("\n*** scaler5 raster scaling")
 #       RescaledData <- predict(dataToRescale, model=Rescaling_GLM, type='response')
 #     }
 #     
 #     
-#     #     cat("\n\t\t original range = ", min(DataF) ," - ", max(DataF), "\t rescal ranged = ", min(RescaledData), " - ", max(RescaledData) )
+#     #     cat("\n\t\t original range = ", min(DataF) ," - ", max(DataF), "\t scal ranged = ", min(RescaledData), " - ", max(RescaledData) )
 #     
 #     
 #     #     if(class(dataToRescale)[1]=='RasterLayer')  RescaledData <- predict(model=Rescaling_GLM, DataF, type="response")    #rasters

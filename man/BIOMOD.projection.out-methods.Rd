@@ -2,6 +2,8 @@
 
 \alias{getProjection}
 \alias{getProjection,BIOMOD.projection.out-method}
+\alias{free}
+\alias{free,BIOMOD.projection.out-method}
 
 \title{ BIOMOD.projection.out getters }
 
@@ -11,6 +13,7 @@ Functions to get attributs of \code{\link[biomod2]{BIOMOD_Projection}} outputs
 
 \usage{
   getProjection(obj, ...)
+  free(obj)
 }
 
 
@@ -35,6 +38,7 @@ Functions to get attributs of \code{\link[biomod2]{BIOMOD_Projection}} outputs
 
   \enumerate{
     \item{\bold{getProjection: }}{ an \code{array} or a \code{data.frame} containing models projections}
+    \item{\bold{free: }}{remove projection value from R memory and only keep the path to correspunding file on hard drive.}
   }
 }
 

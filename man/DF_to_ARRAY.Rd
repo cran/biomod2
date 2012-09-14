@@ -31,34 +31,41 @@ A standard \pkg{biomod2} \code{array} output.
 
 \seealso{ \code{\link[biomod2]{BIOMOD_Projection}} }
 \examples{
-# 0. Load data & Selecting Data
-
 # species occurrences
-species_occ <- read.csv(system.file("external/species/species_occ.csv",package="biomod2"))
+DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
+                                    package="biomod2"))
+head(DataSpecies)
 
-# we consider only presences of MyocastorCoypus species
-myRespName <- 'MyocastorCoypus'
-myRespCoord <- species_occ[,c('x','y')]
-myResp <- as.numeric(species_occ[,myRespName])
+# the name of studied species
+myRespName <- 'GuloGulo'
 
-# Environemental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
-myExpl = raster::stack(system.file("external/climat/current/bio3.grd",package="biomod2"),
-                       system.file("external/climat/current/bio4.grd",package="biomod2"),
-                       system.file("external/climat/current/bio7.grd",package="biomod2"),
-                       system.file("external/climat/current/bio11.grd",package="biomod2"),
-                       system.file("external/climat/current/bio12.grd",package="biomod2"))
+# the presence/absences data for our species 
+myResp <- as.numeric(DataSpecies[,myRespName])
+
+# the XY coordinates of species data
+myRespXY <- DataSpecies[,c("X_WGS84","Y_WGS84")]
+
+
+# Environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
+myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
+                             package="biomod2"),
+                system.file( "external/bioclim/current/bio4.grd", 
+                             package="biomod2"), 
+                system.file( "external/bioclim/current/bio7.grd", 
+                             package="biomod2"),  
+                system.file( "external/bioclim/current/bio11.grd", 
+                             package="biomod2"), 
+                system.file( "external/bioclim/current/bio12.grd", 
+                             package="biomod2"))
 
 # Keep only points where we have info                       
-myExpl <- extract(myExpl, myRespCoord)
+myExpl <- extract(myExpl, myRespXY)
 
-# 1. Formating Data
+# 1. Formatting Data
 myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
                                      expl.var = myExpl,
-                                     resp.xy = myRespCoord,
-                                     resp.name = myRespName,
-                                     PA.nb.rep = 1,
-                                     PA.nb.absences = 100,
-                                     PA.strategy = 'random')
+                                     resp.xy = myRespXY,
+                                     resp.name = myRespName)
                                                                      
 # 2. Defining Models Options using default options.
 myBiomodOption <- BIOMOD_ModelingOptions()

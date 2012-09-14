@@ -20,6 +20,10 @@
 \alias{sre.pseudo.abs.selection,ANY,RasterStack-method}
 \alias{sre.pseudo.abs.selection,ANY,SpatialPointsDataFrame-method}
 
+\alias{user.defined.pseudo.abs.selection}
+\alias{user.defined.pseudo.abs.selection,ANY,RasterStack-method}
+\alias{user.defined.pseudo.abs.selection,ANY,SpatialPointsDataFrame-method}
+
 \alias{.transform.outputs}
 \alias{.transform.outputs,array-method}
 \alias{.transform.outputs,list-method}

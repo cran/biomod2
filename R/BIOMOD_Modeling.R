@@ -39,16 +39,14 @@
                                Prevalence=NULL,
                                VarImport=0, 
                                models.eval.meth = c('KAPPA','TSS','ROC'), 
-#                                SavePredictions = TRUE, 
-#                                KeepPredIndependent=FALSE, 
-#                                DoEnsembleForcasting = TRUE,
                                SaveObj = TRUE,
                                rescal.all.models = TRUE,
-                               do.full.models = TRUE){
-  SavePredictions = TRUE
+                               do.full.models = TRUE,
+                               modeling.id=as.character(format(Sys.time(), "%s"))){
+  
   # 0. loading required libraries =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   .Models.dependencies(silent=TRUE, models.options=models.options )
-
+  
   # 1. args checking =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
   args <- .Models.check.args(data, models, models.options, NbRunEval, DataSplit,
                              Yweights, VarImport, models.eval.meth, Prevalence)
@@ -65,6 +63,7 @@
   rm(args)
   models.out <- new('BIOMOD.models.out',
                     sp.name = data@sp.name,
+                    modeling.id = modeling.id,
                     expl.var.names = colnames(data@data.env.var),
                     has.evaluation.data = data@has.data.eval,
                     rescal.all.models = rescal.all.models)
@@ -75,20 +74,20 @@
   
   # 2. creating simulation directories =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #  
   # create the directories in which various objects will be stored (models, predictions and 
-  # projection). The projection directories are created in the Projection() function.
-  .Models.prepare.workdir(data@sp.name, models, SavePredictions)
+  # projections). Projections' directories are created in the Projection() function.
+  .Models.prepare.workdir(data@sp.name, models.out@modeling.id)
   
   
   # 3. Saving Data and Model.option objects -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
   if(SaveObj){
     # save Input Data
-    save(data, file = paste(models.out@sp.name,"/.BIOMOD_DATA/formated.input.data",sep=""), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+    save(data, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"formated.input.data"), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
     models.out@formated.input.data@inMemory <- FALSE
-    models.out@formated.input.data@link <- paste(models.out@sp.name,"/.BIOMOD_DATA/formated.input.data",sep="")
+    models.out@formated.input.data@link <- file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"formated.input.data")
     # save Model Options
-    save(models.options, file = paste(models.out@sp.name,"/.BIOMOD_DATA/models.options",sep=""), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+    save(models.options, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.options"), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
     models.out@models.options@inMemory <- FALSE
-    models.out@models.options@link <- paste(models.out@sp.name,"/.BIOMOD_DATA/models.options",sep="")
+    models.out@models.options@link <- file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.options")
 
   }
   
@@ -99,35 +98,34 @@
   rm(data)
   
   # keeping calibLines
-#   if(NbRunEval > 0){
-    calib.lines <- mod.prep.dat[[1]]$calibLines
-    if(length(mod.prep.dat) > 1){
-      for(pa in 2:length(mod.prep.dat)){
-        calib.lines <- abind(calib.lines, mod.prep.dat[[pa]]$calibLines, along=3)
-      }
+  calib.lines <- mod.prep.dat[[1]]$calibLines
+  if(length(mod.prep.dat) > 1){
+    for(pa in 2:length(mod.prep.dat)){
+      calib.lines <- abind(calib.lines, mod.prep.dat[[pa]]$calibLines, along=3)
     }
-    # save calib.lines
-    save(calib.lines, file = paste(models.out@sp.name,"/.BIOMOD_DATA/calib.lines",sep=""), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
-    models.out@calib.lines@inMemory <- FALSE
-    models.out@calib.lines@link <- paste(models.out@sp.name,"/.BIOMOD_DATA/calib.lines",sep="")
-#     models.out@calib.lines@val <- calib.lines
-    rm(calib.lines)
-#   } 
+  }
+  # save calib.lines
+  save(calib.lines, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"calib.lines"), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+  models.out@calib.lines@inMemory <- FALSE
+  models.out@calib.lines@link <- file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"calib.lines")
+  rm(calib.lines)
+
 
   # 4. Print modelling summary in console -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
   .Models.print.modeling.summary(mod.prep.dat, models)
   
-  # 5. Runing models -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
+  # 5. Running models -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
+  
   # loop on PA
   modeling.out <- lapply(mod.prep.dat,.Biomod.Models.loop,
-                      Model = models,
-                      Options = models.options,
-                      VarImport = VarImport, 
-                      mod.eval.method = models.eval.meth,
-#                       do.EF = DoEnsembleForcasting,
-                      SavePred = SavePredictions,
-                      rescal.models = rescal.all.models
-                      )
+                          modeling.id = models.out@modeling.id,   
+                          Model = models,
+                          Options = models.options,
+                          VarImport = VarImport, 
+                          mod.eval.method = models.eval.meth,
+                          SavePred = SaveObj,
+                          scal.models = rescal.all.models
+                          )
   # put outputs in good format and save those
 
   models.out@models.computed <- .transform.outputs(modeling.out, out='models.run')
@@ -136,9 +134,9 @@
   if(SaveObj){
     # save model evaluation
     models.evaluation <- .transform.outputs(modeling.out, out='evaluation')
-    save(models.evaluation, file = paste(models.out@sp.name,"/.BIOMOD_DATA/models.evaluation",sep=""), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+    save(models.evaluation, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.evaluation"), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
     models.out@models.evaluation@inMemory <- TRUE
-    models.out@models.evaluation@link <- paste(models.out@sp.name,"/.BIOMOD_DATA/models.evaluation",sep="")
+    models.out@models.evaluation@link <- file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.evaluation")
     models.out@models.evaluation@val <- models.evaluation
     rm(models.evaluation)
     
@@ -151,26 +149,26 @@
       dimnames(variables.importances) <- vi.dim.names
       rm('vi.dim.names')
     
-      save(variables.importances, file = paste(models.out@sp.name,"/.BIOMOD_DATA/variables.importances",sep=""), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+      save(variables.importances, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"variables.importance"), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
       models.out@variables.importances@inMemory <- TRUE
-      models.out@variables.importances@link <- paste(models.out@sp.name,"/.BIOMOD_DATA/variables.importances",sep="")
+      models.out@variables.importances@link <-file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"variables.importance")
       models.out@variables.importances@val <- variables.importances
       rm(variables.importances)
     }
 
     # save model predictions
     models.prediction <- .transform.outputs(modeling.out, out='prediction')
-    save(models.prediction, file = paste(models.out@sp.name,"/.BIOMOD_DATA/models.prediction",sep=""), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+    save(models.prediction, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.prediction"), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
     models.out@models.prediction@inMemory <- FALSE
-    models.out@models.prediction@link <- paste(models.out@sp.name,"/.BIOMOD_DATA/models.prediction",sep="")
+    models.out@models.prediction@link <- file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.prediction")
 #     models.out@models.prediction@val <- .transform.outputs(modeling.out, out='prediction')
     rm(models.prediction)
     
     # save evaluation model predictions
     models.prediction.eval <- .transform.outputs(modeling.out, out='prediction.eval')
-    save(models.prediction.eval, file = paste(models.out@sp.name,"/.BIOMOD_DATA/models.prediction.eval",sep=""), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+    save(models.prediction.eval, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.prediction.eval"), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
     models.out@models.prediction.eval@inMemory <- FALSE
-    models.out@models.prediction.eval@link <- paste(models.out@sp.name,"/.BIOMOD_DATA/models.prediction.eval",sep="")
+    models.out@models.prediction.eval@link <- file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.prediction.eval")
 #     models.out@models.prediction@val <- .transform.outputs(modeling.out, out='prediction')
     rm(models.prediction.eval)
 
@@ -183,13 +181,15 @@
   
   rm(modeling.out)
   
-  # create models id
-  eval(parse(text=paste(models.out@sp.name,'.models.out <- models.out', sep='')))
-  eval(parse(text=paste("save(",models.out@sp.name,".models.out,file= '",
-                         models.out@sp.name,"/",models.out@sp.name,".models.out')"
-                        ,sep="")))
+  # save model object on hard drive
+  models.out@link <- file.path(models.out@sp.name, paste(models.out@sp.name, '.', models.out@modeling.id, '.models.out', sep=""))
+  assign(x=paste(models.out@sp.name, '.', models.out@modeling.id, '.models.out', sep=""),
+         value=models.out)
+  save(list=paste(models.out@sp.name, '.', models.out@modeling.id, '.models.out', sep=""), 
+       file=models.out@link)
+  
 
-  cat("\n-=-=-=- Done -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n")
+  .bmCat("Done")
   return(models.out)
 }
 
@@ -237,7 +237,7 @@
                              "BIOMOD.formated.data.PA",
                              "BIOMOD.formated.data.indep",
                              "BIOMOD.formated.data.PA.indep") )){
-    stop( "data argument mut be a 'BIOMOD.formated.data' (obtain by runing Initial.State function) ")
+    stop( "data argument mut be a 'BIOMOD.formated.data' (obtain by running Initial.State function) ")
   }
   
   # models checking
@@ -252,9 +252,23 @@
                              == FALSE) ]," is not a availabe model !",sep=""))
   }
   
+  categorial_var <- unlist(sapply(colnames(data@data.env.var), function(x){if(is.factor(data@data.env.var[,x])) return(x) else return(NULL)} ))
+  
+  if(length(categorial_var)){
+    if("SRE" %in% models){
+      models <- models[-which(models=="SRE")]
+      cat("\n\t! SRE was switch off because of categorical variables !")
+    }
+    if("MARS" %in% models){
+      models <- models[-which(models=="MARS")]
+      cat("\n\t! MARS was switch off because of categorical variables !")
+    }
+    
+  }
+  
   # models.options checking ( peut etre permetre l'utilisation de liste de params )
   if( !is.null(models.options) && class(models.options) != "BIOMOD.Model.Options" ){
-    stop("models.options argument must be a 'BIOMOD.Model.Options.object' (obtain by runing ... ) ")
+    stop("models.options argument must be a 'BIOMOD.Model.Options.object' (obtained by running ... ) ")
   }
   
   if( is.null(models.options)){
@@ -345,7 +359,13 @@
   if(!is.null(Prevalence)){
     if(!is.numeric(Prevalence) | Prevalence>=1 | Prevalence <=0){
       stop("Prevalence must be a 0-1 numeric")
-    }    
+    } else {
+      # update MAXENT default prevalence
+      if("MAXENT" %in% models){
+        cat("\n\t MAXENT defaultprevalence option was updated to fit with modeling prevalence (i.e",Prevalence,")")
+        models.options@MAXENT$defaultprevalence = Prevalence
+      }
+    }
   }
 
 #   cat('\nChecking done!\n')
@@ -361,17 +381,15 @@
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
 
-.Models.prepare.workdir <- function(sp.name, model, SavePredictions=FALSE){
+.Models.prepare.workdir <- function(sp.name, modeling.id){
   cat("\nCreating suitable Workdir...\n")
-  dir.create(paste(getwd(),"/",sp.name,sep=""), showWarnings=FALSE)
-  dir.create(paste(getwd(),"/",sp.name,"/.BIOMOD_DATA",sep=""), showWarnings=FALSE)
-  dir.create(paste(getwd(),"/",sp.name, "/models", sep=""), showWarnings=FALSE)
-#   if(SavePredictions){
-#     dir.create(paste(getwd(),"/",sp.name, "/pred", sep=""), showWarnings=FALSE)
+  dir.create(sp.name, showWarnings=FALSE, recursive=TRUE)
+  dir.create(file.path(sp.name,".BIOMOD_DATA",modeling.id), showWarnings=FALSE, recursive=TRUE)
+  dir.create(file.path(sp.name, "models",modeling.id,"scaling_models"), showWarnings=FALSE, recursive=T)
+
+#   if(sum(models.list %in% c('MARS', 'FDA', 'ANN')) > 0 ){
+#     dir.create(paste(getwd(),"/",sp.name, "/models/scaling_models", sep=""), showWarnings=FALSE, recursive=T)
 #   }
-  if(sum(model %in% c('MARS', 'FDA', 'ANN')) > 0 ){
-    dir.create(paste(getwd(),"/",sp.name, "/models/rescaling_models", sep=""), showWarnings=FALSE)
-  }
 }
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
@@ -398,17 +416,18 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
 
 .Models.print.modeling.summary <- function( mod.prep.dat, models){
-  cat("\n\n-=-=-=- ", unlist(strsplit(mod.prep.dat[[1]]$name,'_'))[1], " Modeling Summary -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n")
+  cat("\n\n")
+  .bmCat(paste(unlist(strsplit(mod.prep.dat[[1]]$name,'_'))[1], "Modeling Summary"))
 
-  cat(ncol(mod.prep.dat[[1]]$dataBM)-1, " environmental variables (", colnames(mod.prep.dat[[1]]$dataBM)[-1], ")\n")
+  cat("\n",ncol(mod.prep.dat[[1]]$dataBM)-1, " environmental variables (", colnames(mod.prep.dat[[1]]$dataBM)[-1], ")")
 
-  cat("Number of evaluation repetitions :" , ncol(mod.prep.dat[[1]]$calibLines), "\n")
+  cat("\nNumber of evaluation repetitions :" , ncol(mod.prep.dat[[1]]$calibLines))
 
-  cat("Models selected :", models, "\n")
+  cat("\nModels selected :", models, "\n")
 
-  cat("Total number of model runs :",ncol(mod.prep.dat[[1]]$calibLines) * length(models) * length(mod.prep.dat),"\n")
+  cat("\nTotal number of model runs :",ncol(mod.prep.dat[[1]]$calibLines) * length(models) * length(mod.prep.dat),"\n")
   
-  cat("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n")
+  .bmCat()
 }
   
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #

@@ -89,8 +89,8 @@ BIOMOD_ConvertOldRun <- function(savedObj, path = NULL){
       stop("models directory doesn't exist!")
     }
     dir.create(paste(models.out@sp.name,"/models",sep=""), showWarnings=FALSE)
-    if(file.exists(paste(path,"models/rescaling_models",sep=""))){
-      dir.create(paste(models.out@sp.name,"/models/rescaling_models",sep=""), showWarnings=FALSE)
+    if(file.exists(paste(path,"models/scaling_models",sep=""))){
+      dir.create(paste(models.out@sp.name,"/models/scaling_models",sep=""), showWarnings=FALSE)
     }
     
     old.mod.computed <- list.files(path = paste(path,"models/",sep=""),
@@ -105,12 +105,12 @@ BIOMOD_ConvertOldRun <- function(savedObj, path = NULL){
         } else{
           x <- paste(x,'_Full',sep='')
         }
-        if(length(grep('Rmod_',x)) > 0){ # rescaled models
-          x <- paste(gsub('Rmod_','',x),'_rescaled',sep='')
+        if(length(grep('Rmod_',x)) > 0){ # scaled models
+          x <- paste(gsub('Rmod_','',x),'_scaled',sep='')
           
-          x.str <- unlist(strsplit(gsub('rescaling_models/','',x),'_'))
+          x.str <- unlist(strsplit(gsub('scaling_models/','',x),'_'))
           x <- paste(x.str[1], x.str[3], x.str[4], x.str[2], x.str[length(x.str)], sep='_')
-          x <- paste('rescaling_models/',x,sep='')
+          x <- paste('scaling_models/',x,sep='')
         } else{
           x.str <- unlist(strsplit(x,'_'))
           x <- paste(x.str[1], x.str[3], x.str[4], x.str[2], sep='_')
@@ -122,12 +122,12 @@ BIOMOD_ConvertOldRun <- function(savedObj, path = NULL){
         } else{
           x <- paste(x,'_Full',sep='')
         }
-        if(length(grep('Rmod_',x)) > 0){ # rescaled models
-          x <- paste(gsub('Rmod_','',x),'_rescaled',sep='')
+        if(length(grep('Rmod_',x)) > 0){ # scaled models
+          x <- paste(gsub('Rmod_','',x),'_scaled',sep='')
           
-          x.str <- unlist(strsplit(gsub('rescaling_models/','',x),'_'))
+          x.str <- unlist(strsplit(gsub('scaling_models/','',x),'_'))
           x <- paste(x.str[1], x.str[3], x.str[2], x.str[length(x.str)], sep='_')
-          x <- paste('rescaling_models/',x,sep='')
+          x <- paste('scaling_models/',x,sep='')
         } else{
           x.str <- unlist(strsplit(x,'_'))
           x <- paste(x.str[1], x.str[3], x.str[2], sep='_')
@@ -146,8 +146,8 @@ BIOMOD_ConvertOldRun <- function(savedObj, path = NULL){
                 copy.mode = TRUE )
     })
       
-    models.out@models.computed <- unique(as.character(gsub('_rescaled','',
-                                                    gsub('rescaling_models/','',new.mod.computed))))
+    models.out@models.computed <- unique(as.character(gsub('_scaled','',
+                                                    gsub('scaling_models/','',new.mod.computed))))
 #     models.out@models.failed <- Biomod.material$calibration.failures
          
     #   3.3 Models evaluation conversion

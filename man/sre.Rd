@@ -42,23 +42,35 @@ sre(Response = NULL, Explanatory = NULL, NewData = NULL, Quant=0.025, return_ext
 \seealso{ \code{\link[biomod2]{BIOMOD_Modeling}}, \code{\link[biomod2]{BIOMOD_ModelingOptions}}, \code{\link[biomod2]{BIOMOD_Projection}} }
 \examples{
 
-# Environemental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
-myExpl = raster:::stack(system.file("external/climat/current/bio3.grd",package="biomod2"),
-                       system.file("external/climat/current/bio4.grd",package="biomod2"),
-                       system.file("external/climat/current/bio7.grd",package="biomod2"),
-                       system.file("external/climat/current/bio11.grd",package="biomod2"),
-                       system.file("external/climat/current/bio12.grd",package="biomod2"))
+# species occurrences
+DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
+                                    package="biomod2"))
+head(DataSpecies)
 
-# species occurances
-species_occ <- read.csv(system.file("external/species/species_occ.csv",package="biomod2"))
+# the name of studied species
+myRespName <- 'GuloGulo'#'PteropusGiganteus'
 
-# we consider only presences of MyocastorCoypus species
-myRespName <- 'MyocastorCoypus'
-myRespCoord <- species_occ[which(!is.na(species_occ[,myRespName])),c('x','y')]
+# the presence/absences data for our species 
+myResp <- as.numeric(DataSpecies[,myRespName])
+
+# the XY coordinates of species data
+myRespXY <- DataSpecies[which(myResp==1),c("X_WGS84","Y_WGS84")]
+
+# Environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
+myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
+                             package="biomod2"),
+                system.file( "external/bioclim/current/bio4.grd", 
+                             package="biomod2"), 
+                system.file( "external/bioclim/current/bio7.grd", 
+                             package="biomod2"),  
+                system.file( "external/bioclim/current/bio11.grd", 
+                             package="biomod2"), 
+                system.file( "external/bioclim/current/bio12.grd", 
+                             package="biomod2"))
 
 # we build a raster layer based on environmental rasters for our response variable
 myResp <- reclassify(subset(myExpl,1,drop=TRUE), c(-Inf,Inf,0))
-myResp[cellFromXY(myResp,myRespCoord)] <- 1
+myResp[cellFromXY(myResp,myRespXY)] <- 1
 
 
 # Compute some SRE for several quantile values

@@ -28,6 +28,7 @@ setClass("BIOMOD.formated.data",
          representation(sp.name = 'character',
                         coord = "data.frame",
                         data.species = "numeric",
+#                         data.counting = "matrix",
                         data.env.var = "data.frame",
                         has.data.eval = "logical",
                         eval.coord = "data.frame",
@@ -85,12 +86,21 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='data.frame' ),
           cat("\n\t\t\t! Some NAs have been automaticly removed from your evaluation data")
           BFD@eval.coord <- BFD@eval.coord[-rowToRm,]
           BFD@eval.data.species <- BFD@eval.data.species[-rowToRm]
-          FD@eval.data.env.var <- BFD@eval.data.env.var[-rowToRm,]
+          BFD@eval.data.env.var <- BFD@eval.data.env.var[-rowToRm,]
         }      
       }
       
       
     }
+    
+    # count data occutances
+#     BFD@data.counting <- matrix(c(sum(BFD@data.species, na.rm=TRUE),sum(BFD@data.species==0, na.rm=TRUE)),
+#                             ncol=1,nrow=2, dimnames=list(c("nb.pres","nb.abs"),c("data.species") ) )
+#     
+#     if(BFD@has.data.eval){
+#       BFD@data.counting <- cbind(BFD@data.counting,c(sum(BFD@eval.data.species, na.rm=TRUE),sum(BFD@eval.data.species==0, na.rm=TRUE)))
+#       colnames(BFD@data.counting)[ncol(BFD@data.counting)] <- "eval.data.species"
+#     }
     
     return(BFD)
 	}
@@ -117,10 +127,17 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='matrix' ),
           
 setMethod('BIOMOD.formated.data', signature(sp='numeric', env='RasterStack' ), 
   function(sp,env,xy=NULL,sp.name=NULL, eval.sp=NULL, eval.env=NULL, eval.xy=NULL, na.rm=TRUE){
+    categorial_var <- names(env)[is.factor(env)]
+    
     # take the same eval environemental variables than calibrating ones 
     if(!is.null(eval.sp)){
       if(is.null(eval.env)){
         eval.env <- as.data.frame(extract(env,eval.xy))
+        if(length(categorial_var)){
+          for(cat_var in categorial_var){
+            eval.env[,cat_var] <- as.factor(eval.env[,cat_var])
+          }
+        }
       }
     }
     
@@ -130,6 +147,13 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='RasterStack' ),
       xy <- as.data.frame(coordinates(env))
       env <- as.data.frame(extract(env,xy))
     }
+    
+    if(length(categorial_var)){
+      for(cat_var in categorial_var){
+        env[,cat_var] <- as.factor(env[,cat_var])
+      }
+    }
+    
     BFD <- BIOMOD.formated.data(sp,env,xy,sp.name,eval.sp, eval.env, eval.xy, na.rm=na.rm)
     .bmCat('Done')
     return(BFD)
@@ -204,7 +228,7 @@ setMethod('show', signature('BIOMOD.formated.data'),
 # 2.1 Class Definition
 setClass("BIOMOD.formated.data.PA",
          contains = "BIOMOD.formated.data",
-         representation(PA = 'data.frame'),
+         representation(PA.strategy='character', PA = 'data.frame'),
          validity = function(object){
            return(TRUE)
            })
@@ -229,13 +253,21 @@ BIOMOD.formated.data.PA <-  function(sp, env, xy, sp.name,
                                      PA.dist.min = 0,
                                      PA.dist.max = NULL,
                                      PA.sre.quant = 0.025,
+                                     PA.table = NULL,
                                      na.rm=TRUE){
+  
+  if(inherits(env,'Raster')) categorial_var <- names(env)[is.factor(env)] else categorial_var <- NULL
   
   # take the same eval environemental variables than calibrating ones 
   if(!is.null(eval.sp)){
     if(is.null(eval.env)){
       if(inherits(env,'Raster')){
         eval.env <- as.data.frame(extract(env,eval.xy))
+        if(length(categorial_var)){
+          for(cat_var in categorial_var){
+            eval.env[,cat_var] <- as.factor(eval.env[,cat_var])
+          }
+        }
       } else{
         stop("No evaluation explanatory variable given")
       }
@@ -259,8 +291,16 @@ BIOMOD.formated.data.PA <-  function(sp, env, xy, sp.name,
                                           nb.points = PA.nb.absences,
                                           distMin = PA.dist.min, 
                                           distMax = PA.dist.max,
-                                          quant.SRE = PA.sre.quant )
+                                          quant.SRE = PA.sre.quant,
+                                          PA.table = PA.table)
+    
   if(!is.null(pa.data.tmp)){
+    
+    if(length(categorial_var)){
+      for(cat_var in categorial_var){
+        pa.data.tmp$env[,cat_var] <- as.factor(pa.data.tmp$env[,cat_var])
+      }
+    }
     
     if(na.rm){
       rowToRm <- unique(unlist(lapply(pa.data.tmp$env,function(x){return(which(is.na(x)))})))
@@ -271,8 +311,11 @@ BIOMOD.formated.data.PA <-  function(sp, env, xy, sp.name,
         pa.data.tmp$env <- pa.data.tmp$env[-rowToRm,]
         pa.data.tmp$pa.tab <- pa.data.tmp$pa.tab[-rowToRm,]
       }      
-      
     }
+    
+    # data counting
+#     pa.data.tmp$data.counting <- apply(pa.data.tmp$pa.tab,2,function(x){nbPres <- sum(pa.data.tmp$sp[x],na.rm=T) ; return(c(nbPres,sum(x)-nbPres))})
+#     colnames(pa.data.tmp$data.counting) <- colnames(pa.data.tmp$pa.tab)
       
     BFD <- BIOMOD.formated.data(sp=pa.data.tmp$sp,
                                 env=pa.data.tmp$env,
@@ -287,21 +330,23 @@ BIOMOD.formated.data.PA <-  function(sp, env, xy, sp.name,
     BFDP <- new('BIOMOD.formated.data.PA',
                 sp.name = BFD@sp.name,
                 coord = BFD@coord,
+#                 data.counting = cbind(BFD@data.counting,pa.data.tmp$data.counting) ,
                 data.env.var = BFD@data.env.var,
                 data.species = BFD@data.species,
                 has.data.eval = BFD@has.data.eval,
                 eval.coord = BFD@eval.coord,
                 eval.data.species = BFD@eval.data.species,
                 eval.data.env.var = BFD@eval.data.env.var,
-                PA = as.data.frame(pa.data.tmp$pa.tab) )
+                PA = as.data.frame(pa.data.tmp$pa.tab),
+                PA.strategy = PA.strategy)
     
     rm(list='BFD')
   } else {
     cat("\n   ! PA selection not done", fill=.Options$width)
       
-    BFDP <- BIOMOD.formated.data(sp=pa.data.tmp$sp,
-                                env=pa.data.tmp$env,
-                                xy=as.data.frame(pa.data.tmp$xy),
+    BFDP <- BIOMOD.formated.data(sp=sp,
+                                env=env,
+                                xy=xy,
                                 sp.name=sp.name,
                                 eval.sp=eval.sp,
                                 eval.env=eval.env,
@@ -353,18 +398,18 @@ setMethod('plot', signature(x='BIOMOD.formated.data.PA'),
               # all points (~mask)
               plot(x=x@coord[,1], y=x@coord[,2], col=col[4], xlab = 'X', ylab = 'Y',
                    main = paste(x@sp.name," Pseudo Absences ", i, sep=""), pch=20 )
-              # PA
-              points(x=x@coord[x@PA[,i],1],
-                     y=x@coord[x@PA[,i],2],
-                     col=col[3],pch=18)
               # presences 
-              points(x=x@coord[which(x@data.species == 1),1],
-                     y=x@coord[which(x@data.species == 1),2],
+              points(x=x@coord[(x@data.species == 1) & x@PA[,i],1],
+                     y=x@coord[(x@data.species == 1) & x@PA[,i],2],
                      col=col[1],pch=18)
               # true absences
-              points(x=x@coord[which(x@data.species == 0),1],
-                     y=x@coord[which(x@data.species == 0),2],
+              points(x=x@coord[(x@data.species == 0) & x@PA[,i],1],
+                     y=x@coord[(x@data.species == 0) & x@PA[,i],2],
                      col=col[2],pch=18)
+              # PA
+              points(x=x@coord[is.na(x@data.species) & x@PA[,i],1],
+                     y=x@coord[is.na(x@data.species) & x@PA[,i],2],
+                     col=col[3],pch=18)
             }
           })
 
@@ -628,7 +673,8 @@ setClass("BIOMOD.stored.models.options",
          })
 
 setClass("BIOMOD.models.out",
-         representation(sp.name = 'character',
+         representation(modeling.id = 'character', 
+                        sp.name = 'character',
                         expl.var.names = 'character',
                         models.computed = 'character',
                         models.failed = 'character',
@@ -640,8 +686,10 @@ setClass("BIOMOD.models.out",
                         models.prediction.eval = 'BIOMOD.stored.array',
                         formated.input.data = 'BIOMOD.stored.formated.data',
                         calib.lines = 'BIOMOD.stored.array',
-                        models.options = 'BIOMOD.stored.models.options'),
-         prototype(sp.name='',
+                        models.options = 'BIOMOD.stored.models.options',
+                        link = 'character'),
+         prototype(modeling.id = as.character(format(Sys.time(), "%s")),
+                   sp.name='',
                    expl.var.names = '',
                    models.computed='',
                    models.failed='',
@@ -653,15 +701,25 @@ setClass("BIOMOD.models.out",
                    models.prediction.eval = new('BIOMOD.stored.array'),
                    formated.input.data = new('BIOMOD.stored.formated.data'),
                    calib.lines = new('BIOMOD.stored.array'),
-                   models.options = new('BIOMOD.stored.models.options')),
+                   models.options = new('BIOMOD.stored.models.options'),
+                   link=''),
          validity = function(object){
            return(TRUE)
            })
 
+setClass("BIOMOD.stored.models.out",
+         contains = "BIOMOD.stored.data",
+         representation(val = 'BIOMOD.models.out'),
+         prototype(val = NULL),
+         validity = function(object){
+           return(TRUE)
+         })
+
 setMethod('show', signature('BIOMOD.models.out'),
           function(object){
-            .bmCat("'BIOMOD.models.out")
-            cat("\nSpecie modelised :", object@sp.name, fill=.Options$width)
+            .bmCat("BIOMOD.models.out")
+            cat("\nModeling id :", object@modeling.id, fill=.Options$width)
+            cat("\nSpecies modeled :", object@sp.name, fill=.Options$width)
             cat("\nConsidered variables :", object@expl.var.names, fill=.Options$width)
             
             cat("\n\nComputed Models : ", object@models.computed, fill=.Options$width)
@@ -721,6 +779,8 @@ setMethod("getModelsPrediction", "BIOMOD.models.out",
             }
           }
           )
+
+
 
 
 setGeneric("getModelsPredictionEval",
@@ -868,6 +928,27 @@ setMethod("getModelsBuiltModels", "BIOMOD.models.out",
             return(obj@models.computed)
           }
           )
+
+
+setGeneric("RemoveProperly",
+           function(obj,obj.name=deparse(substitute(obj))){
+             standardGeneric("RemoveProperly")
+           })
+
+setMethod("RemoveProperly", "BIOMOD.models.out",
+          function(obj, obj.name=deparse(substitute(obj))){
+            cat("\n\t> Removing .BIOMOD_DATA files...")
+            unlink(file.path(obj@sp.name, ".BIOMOD_DATA", obj@modeling.id), recursive=T, force=TRUE)
+            cat("\n\t> Removing models...")
+            unlink(file.path(obj@sp.name, "models", obj@modeling.id), recursive=T, force=TRUE)
+            cat("\n\t> Removing object hard drive copy...")
+            unlink(obj@link, recursive=T, force=TRUE)
+            cat("\n\t> Removing object from memory...")
+            rm(list=obj.name,envir=sys.frame(-2))
+            cat("\nCompleted!")
+          })
+
+
 ####################################################################################################
 ### BIOMOD Storing Projection Objects ##############################################################
 ####################################################################################################
@@ -901,7 +982,9 @@ setClass("BIOMOD.projection.out",
                         sp.name = 'character',
                         expl.var.names = 'character',
                         models.projected = 'character',
-                        rescaled.models = 'logical',
+                        scaled.models = 'logical',
+                        modeling.object = 'BIOMOD.stored.data',
+                        modeling.object.id = 'character',
                         type = 'character',
                         proj = 'BIOMOD.stored.data',
                         xy.coord = 'matrix'),
@@ -909,7 +992,8 @@ setClass("BIOMOD.projection.out",
                    sp.name='',
                    expl.var.names='',
                    models.projected='',
-                   rescaled.models=TRUE,
+                   scaled.models=TRUE,
+                   modeling.object.id='',
                    type='',
                    xy.coord = matrix()),
          validity = function(object){
@@ -924,14 +1008,18 @@ setGeneric("getProjection",
 setMethod("getProjection", "BIOMOD.projection.out",
           function(obj, model = NULL, as.data.frame = FALSE){
             if(!as.data.frame & is.null(model)){
-#               if(obj@proj@inMemory ){
+              if(obj@proj@inMemory ){
                 return(obj@proj@val)
-#               } else{
-#                 if(obj@proj@link != ''){
-#                   load(obj@proj@link)
-#                   return(proj)
-#                 } else{ return(NA) }
-#               }            
+              } else {
+                if( grepl(".RData", obj@proj@link) ){
+                  return(get(load(obj@proj@link)))
+                } else if(grepl(".grd", obj@proj@link) | grepl(".img", obj@proj@link)){
+                  return(stack(obj@proj@link))
+                } else {
+                  cat("\n!! You have to load your projections by yourself !!")
+                  return(NA) 
+                }
+              } 
             } else if(as.data.frame){
               if(obj@proj@inMemory ){
                 proj <- as.data.frame(obj@proj@val)
@@ -968,7 +1056,7 @@ setMethod('plot', signature(x='BIOMOD.projection.out'),
               
             } else if(class(x@proj) == "BIOMOD.stored.array"){
               if(ncol(x@xy.coord) != 2){
-                cat("\n ! Impossible to plot projection because xy coordinates are not available !")
+                cat("\n ! Impossible to plot projections because xy coordinates are not available !")
               } else {
                 if(is.null(str.grep)){
                   multiple.plot(Data = getProjection(x,as.data.frame=T), coor = x@xy.coord)
@@ -990,12 +1078,31 @@ setMethod('show', signature('BIOMOD.projection.out'),
             cat("\nsp.name :", object@sp.name, fill=.Options$width)
             cat("\nexpl.var.names :", object@expl.var.names, fill=.Options$width)
             cat("\n")
+            cat("\nmodeling id :", object@modeling.object.id ,"(",object@modeling.object@link ,")", fill=.Options$width)
             cat("\nmodels projected :", toString(object@models.projected), fill=.Options$width)
 
             .bmCat()
           })
 
-           
+setGeneric("free",
+           function(obj){
+             standardGeneric("free")
+           })
+
+setMethod(f='free', 
+                 signature='BIOMOD.projection.out',
+                 definition = function(obj){
+                   if(inherits(obj@proj,"BIOMOD.stored.array")){
+                     obj@proj@val = array()
+                   } else if(inherits(obj@proj,"BIOMOD.stored.raster.stack")){
+                     obj@proj@val = stack()
+                   } else{
+                     obj@proj@val = NULL
+                   }
+                   obj@proj@inMemory = FALSE
+                   
+                   return(obj)
+                 })
 
 ####################################################################################################
 ### BIOMOD Storing Ensemble Modeling Objects #######################################################
@@ -1007,6 +1114,7 @@ setClass("BIOMOD.EnsembleModeling.out",
                         eval.metric = 'character',
                         eval.metric.quality.threshold = 'numeric',
                         em.computed = 'character',
+                        em.by = 'character',
 #                         em.models.kept = 'list',
 #                         em.prediction = 'BIOMOD.stored.array',
 #                         em.evaluation = 'BIOMOD.stored.array',
@@ -1155,18 +1263,21 @@ setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data'),
             
             if(is.null(Yweights)){ # 1 for all points
               if(!is.null(Prevalence)){
-                nbPres <- sum(data@data.species, na.rm=TRUE)
-                nbAbs <- length(data@data.species) - nbPres
-                Yweights <- rep(1,length(data@data.species))
-                
-                if(nbAbs > nbPres){ # code absences as 1
-                  Yweights[which(data@data.species>0)] <- (Prevalence * nbAbs) / (nbPres * (1-Prevalence))
-                } else{ # code presences as 1
-                  Yweights[which(data@data.species==0 | is.na(data@data.species))] <- (nbPres * (1-Prevalence)) / (Prevalence * nbAbs)
-                }
-                
-                Yweights = round(Yweights[]) # test to remove glm & gam warnings
+                cat("\n\t> Automatic weights creation to rise a", Prevalence,"prevalence")
+                Yweights <- .automatic_weights_creation(data@data.species ,prev=Prevalence)
+#                 nbPres <- sum(data@data.species, na.rm=TRUE)
+#                 nbAbs <- length(data@data.species) - nbPres
+#                 Yweights <- rep(1,length(data@data.species))
+#                 
+#                 if(nbAbs > nbPres){ # code absences as 1
+#                   Yweights[which(data@data.species>0)] <- (Prevalence * nbAbs) / (nbPres * (1-Prevalence))
+#                 } else{ # code presences as 1
+#                   Yweights[which(data@data.species==0 | is.na(data@data.species))] <- (nbPres * (1-Prevalence)) / (Prevalence * nbAbs)
+#                 }
+#                 
+#                 Yweights = round(Yweights[]) # test to remove glm & gam warnings
               } else{
+                cat("\n\t> No weights : all observations will have the same weight")
                 Yweights <- rep(1,length(data@data.species))
               }
               
@@ -1184,20 +1295,29 @@ setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data'),
 setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data.PA'),
           function(data, NbRunEval, DataSplit, Yweights=NULL, Prevalence=NULL, do.full.models=TRUE){
             list.out <- list()
+            formal_weights <- Yweights
             for(pa in 1:ncol(data@PA)){
+              Yweights <- formal_weights
               name <- paste(data@sp.name,"_",colnames(data@PA)[pa],sep="")
               xy <- data@coord[data@PA[,pa],]
-              dataBM <- data.frame(cbind(data@data.species[data@PA[,pa]],
+              resp <- data@data.species[data@PA[,pa]] # response variable (with pseudo absences selected)
+              resp[is.na(resp)] <- 0
+              dataBM <- data.frame(cbind(resp,
                                          data@data.env.var[data@PA[,pa],]))
               colnames(dataBM)[1] <- data@sp.name
                 
               if(NbRunEval == 0){ # take all available data
-                calibLines <- matrix(rep(TRUE,length(data@data.species[data@PA[,pa]])),ncol=1)
+                calibLines <- matrix(NA,nrow=length(data@data.species),ncol=1)
+                calibLines[data@PA[,pa],1] <- TRUE
                 colnames(calibLines) <- '_Full'
               } else {
-                calibLines <- .SampleMat(data@data.species[data@PA[,pa]], DataSplit, NbRunEval)
+                calibLines <- matrix(NA,nrow=length(data@data.species),ncol=NbRunEval)
+                sampled.mat <- .SampleMat(data@data.species[data@PA[,pa]], DataSplit, NbRunEval)
+                calibLines[data@PA[,pa],] <- sampled.mat
+                colnames(calibLines) <- colnames(sampled.mat)
                 if(do.full.models){
-                  calibLines <- cbind(calibLines, rep(TRUE,length(data@data.species[data@PA[,pa]])))
+                  calibLines <- cbind(calibLines, rep(NA,length(data@data.species)))
+                  calibLines[data@PA[,pa],NbRunEval+1] <- TRUE
                   colnames(calibLines)[NbRunEval+1] <- '_Full'
                 }                
               }
@@ -1210,31 +1330,23 @@ setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data.PA'),
               } else{ evalDataBM <- eval.xy <- NULL }
 
               if(is.null(Yweights)){ # prevalence of 0.5... may be parametrize
-                if(is.null(Prevalence)){
-                  cat("\n\t\t\t! Weights where defined to rise a 0.5 prevalence !")
-                  Prevalence = 0.5
-                }
-                nbPres <- sum(data@data.species, na.rm=TRUE)
-                nbAbsKept <- sum(data@PA[,1], na.rm=TRUE) - sum(data@data.species, na.rm=TRUE) # The number of true absences + pseudo absences to maintain true value of prevalence
-                Yweights <- rep(1,nrow(dataBM))
+                if(is.null(Prevalence)) Prevalence <- 0.5
                 
-                if(nbAbsKept > nbPres){ # code absences as 1
-                  Yweights[which(dataBM[,1]>0)] <- (Prevalence * nbAbsKept) / (nbPres * (1-Prevalence))
-                } else{ # code presences as 1
-                  Yweights[which(dataBM[,1]==0 | is.na(dataBM[,1]))] <- (nbPres * (1-Prevalence)) / (Prevalence * nbAbsKept)
-                }
-                Yweights = round(Yweights[]) # test to remove glm & gam warnings
-#                 cat("\n*** length(Yweights) = ", length(Yweights))
-#                 cat("\n*** length(data@data.species) = ", length(data@data.species))
-#                 cat("\n*** dim(dataBM) = ", dim(dataBM))
-#                 cat("\n***\n")
-#                 print(head(data@PA))
+                cat("\n\t\t\t! Weights where automaticly defined for", name, "to rise a", Prevalence, "prevalence !")
+                
+                
+                Yweights <- rep(NA, length(data@data.species))
+                Yweights[data@PA[,pa]] <- .automatic_weights_creation(as.numeric(dataBM[,1]) ,prev=Prevalence)#, subset=data@PA[,pa])
+              } else{
+                # remove useless weights
+                Yweights[!data@PA[,pa]] <- NA
               }
+              
               list.out[[name]] <- list(name=name,
                                      xy=xy,
                                      dataBM=dataBM,
                                      calibLines=calibLines,
-                                     weights = Yweights,
+                                     Yweights = Yweights,
                                      evalDataBM = evalDataBM,
                                      eval.xy = eval.xy)
             }
@@ -1242,3 +1354,20 @@ setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data.PA'),
           })
 
 
+.automatic_weights_creation <- function(resp,prev=0.5, subset=NULL){
+  if(is.null(subset)) subset<- rep(TRUE, length(resp))
+  
+  nbPres <- sum(resp[subset], na.rm=TRUE)
+  nbAbsKept <- sum(subset, na.rm=T) - sum(resp[subset], na.rm=TRUE) # The number of true absences + pseudo absences to maintain true value of prevalence
+  Yweights <- rep(1,length(resp))
+  
+  if(nbAbsKept > nbPres){ # code absences as 1
+    Yweights[which(resp>0)] <- (prev * nbAbsKept) / (nbPres * (1-prev))
+  } else{ # code presences as 1
+    Yweights[which(resp==0 | is.na(resp))] <- (nbPres * (1-prev)) / (prev * nbAbsKept)
+  }
+  Yweights = round(Yweights[])
+  Yweights[!subset] <- 0
+  
+  return(Yweights)
+}

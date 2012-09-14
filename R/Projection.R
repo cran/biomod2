@@ -17,7 +17,7 @@ setMethod( 'Projection', signature(new.env.data = 'data.frame'),
 #            models.evaluation = NULL,
 #            models.options = NULL,
            compress="xz",
-#            rescaled.models=TRUE,
+#            scaled.models=TRUE,
            do.stack = FALSE){
         
 #     # 1. loading resuired libraries =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
@@ -42,7 +42,7 @@ setMethod( 'Projection', signature(new.env.data = 'data.frame'),
 #       kept.algo.run <- algo.run
 #     }
     
-    proj.array <- lapply(kept.models.name, .Projection.do.proj, env=new.env.data, xy=xy, rescaled.models=rescaled.models, proj.name=paste("proj_",proj.name, sep=""), models.options=models.options)
+    proj.array <- lapply(kept.models.name, .Projection.do.proj, env=new.env.data, xy=xy, scaled.models=scaled.models, proj.name=paste("proj_",proj.name, sep=""), models.options=models.options)
     proj.array <- as.data.frame(proj.array)
     names(proj.array) <- kept.models.name
     
@@ -126,7 +126,7 @@ setMethod( 'Projection', signature(new.env.data = 'RasterStack'),
            models.options = NULL,
            stack = TRUE,
            compress="xz",
-           rescaled.models=TRUE,
+           scaled.models=TRUE,
            do.stack = FALSE){
         
     # 1. loading resuired libraries =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
@@ -153,7 +153,7 @@ setMethod( 'Projection', signature(new.env.data = 'RasterStack'),
 #     }
     
     if(do.stack){
-      proj.ras <- lapply(models.name, .Projection.do.proj, env=new.env.data, rescaled.models=rescaled.models, proj.name=paste("proj_",proj.name, sep=""), models.options=models.options)
+      proj.ras <- lapply(models.name, .Projection.do.proj, env=new.env.data, scaled.models=scaled.models, proj.name=paste("proj_",proj.name, sep=""), models.options=models.options)
   
       # transform list of rasterLayers into a rasterStack
       proj.stack <- stack(x = proj.ras)
@@ -221,7 +221,7 @@ setMethod( 'Projection', signature(new.env.data = 'RasterStack'),
       proj.stack <- c() # list of saved files
       for(m.n in models.name){
         
-        proj.ras <- .Projection.do.proj(m.n, env=new.env.data, rescaled.models=rescaled.models, proj.name=paste("proj_",proj.name, sep=""), models.options=models.options)
+        proj.ras <- .Projection.do.proj(m.n, env=new.env.data, scaled.models=scaled.models, proj.name=paste("proj_",proj.name, sep=""), models.options=models.options)
         names(proj.ras) <- m.n #names(proj.ras.mod)
 
         # 5. Computing Binary transformation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
@@ -298,7 +298,7 @@ setGeneric( ".Projection.do.proj",
                     } )
 
 setMethod('.Projection.do.proj', signature(env='data.frame'),
-  function(model.name, env, xy = NULL, model.dir = NULL, rescaled.models=TRUE, proj.name=NULL, models.options=NULL){
+  function(model.name, env, xy = NULL, model.dir = NULL, scaled.models=TRUE, proj.name=NULL, models.options=NULL){
     cat('\n\t>', model.name)
     # automaticly fill model.dir if not given
     if(is.null(model.dir)){
@@ -320,7 +320,7 @@ setMethod('.Projection.do.proj', signature(env='data.frame'),
     
     if(model.type == 'ANN'){
       set.seed(555) # to be able to refind our trees MAY BE BAD
-      # proj automaticly rescaled
+      # proj automaticly scaled
       return(data.frame( proj = as.integer(.Rescaler5(as.numeric(predict(model.sp, env, type = "raw")),
                                               name = model.name ) * 1000)))
     }
@@ -328,7 +328,7 @@ setMethod('.Projection.do.proj', signature(env='data.frame'),
     if(model.type == 'CTA'){
       proj <- as.integer(as.numeric(predict(model.sp, env,type="prob")[,2]) * 1000)
     
-      if(rescaled.models){
+      if(scaled.models){
         proj <- as.integer(.Rescaler5(proj/1000, name = model.name ) * 1000)
       }
       
@@ -336,7 +336,7 @@ setMethod('.Projection.do.proj', signature(env='data.frame'),
     }
     
     if(model.type == 'FDA'){
-      # proj automaticly rescaled
+      # proj automaticly scaled
       return( data.frame( proj = as.integer(.Rescaler5(as.numeric(predict(model.sp, env, type = "posterior")[, 2]),
                                               name = model.name) * 1000)))
     }
@@ -345,7 +345,7 @@ setMethod('.Projection.do.proj', signature(env='data.frame'),
       best.iter <- gbm.perf(model.sp, method = "cv", plot.it = FALSE) # may be better to load it
       proj <- as.integer(predict.gbm(model.sp, env, best.iter, type = "response") * 1000)
 
-      if(rescaled.models){
+      if(scaled.models){
         proj <- as.integer(.Rescaler5(proj/1000, name = model.name ) * 1000)
       }
 
@@ -355,7 +355,7 @@ setMethod('.Projection.do.proj', signature(env='data.frame'),
     if(model.type == 'GLM'){
       proj <- as.integer(.testnull(model.sp, Prev=0.5, env) * 1000)
 
-      if(rescaled.models){
+      if(scaled.models){
         proj <- as.integer(.Rescaler5(proj/1000, name = model.name ) * 1000)
       }
       
@@ -365,7 +365,7 @@ setMethod('.Projection.do.proj', signature(env='data.frame'),
     if(model.type == 'GAM'){
       proj <- as.integer(.testnull(model.sp, Prev=0.5, env) * 1000)
 
-      if(rescaled.models){
+      if(scaled.models){
         proj <- as.integer(.Rescaler5(proj/1000, name = model.name ) * 1000)
       }
  
@@ -373,7 +373,7 @@ setMethod('.Projection.do.proj', signature(env='data.frame'),
     }
     
     if(model.type == 'MARS'){
-      # proj automaticly rescaled
+      # proj automaticly scaled
       return(data.frame( proj = as.integer(.Rescaler5(as.numeric(predict(model.sp, env)), 
                                               name = model.name) * 1000)))
     }
@@ -381,7 +381,7 @@ setMethod('.Projection.do.proj', signature(env='data.frame'),
     if(model.type == 'RF'){
       proj <- as.integer(as.numeric(predict(model.sp,env, type='prob')[,'1']) *1000)
       
-      if(rescaled.models){
+      if(scaled.models){
         proj <- as.integer(.Rescaler5(proj/1000, name = model.name ) * 1000)
       }
       
@@ -400,7 +400,7 @@ setMethod('.Projection.do.proj', signature(env='data.frame'),
       if(!is.null(xy)){
         proj <- as.integer(predict( object=model.sp, newdata=env, proj_name=proj.name, xy=xy) * 1000)
         
-#         if(rescaled.models){
+#         if(scaled.models){
           proj <- as.integer(.Rescaler5(proj/1000, name = model.name ) * 1000)
 #         }        
         
@@ -408,7 +408,7 @@ setMethod('.Projection.do.proj', signature(env='data.frame'),
 #         
 #         .Prepare.Maxent.Proj.WorkDir(env, xy, proj.name=file.path(.extractModelNamesInfo(model.name, info='species'), proj.name ))
 #         
-#         cat("\t Runing Maxent...")
+#         cat("\t Running Maxent...")
 #         
 #         system(command=paste("java -cp ", file.path(models.options@MAXENT$path_to_maxent.jar, "maxent.jar"), " density.Project \"", model.dir,.Platform$file.sep,
 #                              model.name, .Platform$file.sep ,sub("_MAXENT","",model.name),
@@ -434,7 +434,7 @@ setMethod('.Projection.do.proj', signature(env='data.frame'),
 
 
 setMethod('.Projection.do.proj', signature(env='RasterStack'),
-  function(model.name, env, model.dir = NULL, rescaled.models=TRUE, proj.name=NULL, models.options=NULL){
+  function(model.name, env, model.dir = NULL, scaled.models=TRUE, proj.name=NULL, models.options=NULL){
     cat('\n\t>', model.name)
     
     # automaticly fill model.dir if not given
@@ -466,7 +466,7 @@ setMethod('.Projection.do.proj', signature(env='RasterStack'),
     if(model.type == 'CTA'){
       set.seed(123) # to be able to refind our trees MAY BE BAD
       proj.ras <- predict(env, model=model.sp, type='prob', index=2)
-      if(rescaled.models){
+      if(scaled.models){
         proj.ras[!is.na(proj.ras[])] <- .Rescaler5( proj.ras[!is.na(proj.ras[])], ref=NULL,
                                                     name=model.name, original=FALSE)
       }
@@ -488,7 +488,7 @@ setMethod('.Projection.do.proj', signature(env='RasterStack'),
       }
         
       proj.ras <- predict(env, model.sp, n.trees=best.iter, type='response')
-      if(rescaled.models){
+      if(scaled.models){
         proj.ras[!is.na(proj.ras[])] <- .Rescaler5( proj.ras[!is.na(proj.ras[])], ref=NULL,
                                                     name=model.name, original=FALSE)
       }
@@ -498,7 +498,7 @@ setMethod('.Projection.do.proj', signature(env='RasterStack'),
     
     if(model.type == 'GLM'){
       proj.ras <- predict(env, model=model.sp, type='response')
-      if(rescaled.models){
+      if(scaled.models){
         proj.ras[!is.na(proj.ras[])] <- .Rescaler5( proj.ras[!is.na(proj.ras[])], ref=NULL,
                                                     name=model.name, original=FALSE)
       }
@@ -508,7 +508,7 @@ setMethod('.Projection.do.proj', signature(env='RasterStack'),
     
     if(model.type == 'GAM'){
       proj.ras <- predict(env, model=model.sp, type='response')
-      if(rescaled.models){
+      if(scaled.models){
         proj.ras[!is.na(proj.ras[])] <- .Rescaler5( proj.ras[!is.na(proj.ras[])], ref=NULL,
                                                     name=model.name, original=FALSE)
       }
@@ -524,7 +524,7 @@ setMethod('.Projection.do.proj', signature(env='RasterStack'),
     
     if(model.type == 'RF'){
       proj.ras <- predict(env, model=model.sp, type='prob', index=2)
-      if(rescaled.models){
+      if(scaled.models){
         proj.ras[!is.na(proj.ras[])] <- .Rescaler5( proj.ras[!is.na(proj.ras[])], ref=NULL,
                                                     name=model.name, original=FALSE)
       }
@@ -547,7 +547,7 @@ setMethod('.Projection.do.proj', signature(env='RasterStack'),
     if(model.type == 'MAXENT'){
       proj.ras <- predict( object=model.sp, newdata=env, proj_name=proj.name)
       
-#       if(rescaled.models){
+#       if(scaled.models){
         proj.ras[!is.na(proj.ras[])] <- .Rescaler5(proj.ras[!is.na(proj.ras[])], ref=NULL,
                                                    name=model.name, original=FALSE)
 #       }        

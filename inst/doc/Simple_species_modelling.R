@@ -18,39 +18,36 @@ options(prompt = " ", continue = "  ", width = 60, digits=4)
 # load the library
 library(biomod2)
 
-# load our species raster
-# we consider only the presences of Myocastor coypus species
-myResp.ras <- raster( system.file(
-                        "external/species/Myocastor_coypus.img", 
-                        package="biomod2") )
+# load our species data
+DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
+                                    package="biomod2"))
 
-# extract the presences data
+head(DataSpecies)
 
-# the name
-myRespName <- 'Myocastor'
+# the name of studied species
+myRespName <- 'GuloGulo'
 
-# the XY coordinates of the presence
-myRespXY <- xyFromCell(object=myResp.ras, 
-                       cell=which(myResp.ras[]>0))
+# the presence/absences data for our species 
+myResp <- as.numeric(DataSpecies[,myRespName])
 
-# and the presence data 
-myResp <- extract(x=myResp.ras, y=myRespXY)
+# the XY coordinates of species data
+myRespXY <- DataSpecies[,c("X_WGS84","Y_WGS84")]
+
 
 # load the environmental raster layers (could be .img, ArcGIS rasters or any supported format by the raster package)
 
 # Environmental variables extracted from Worldclim (bio_3, bio_4, 
 # bio_7, bio_11 & bio_12)
-myExpl = stack( system.file( "external/climat/current/bio3.grd", 
+myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
                              package="biomod2"),
-                system.file( "external/climat/current/bio4.grd", 
+                system.file( "external/bioclim/current/bio4.grd", 
                              package="biomod2"), 
-                system.file( "external/climat/current/bio7.grd", 
+                system.file( "external/bioclim/current/bio7.grd", 
                              package="biomod2"),  
-                system.file( "external/climat/current/bio11.grd", 
+                system.file( "external/bioclim/current/bio11.grd", 
                              package="biomod2"), 
-                system.file( "external/climat/current/bio12.grd", 
+                system.file( "external/bioclim/current/bio12.grd", 
                              package="biomod2"))
-
 
 
 ###################################################
@@ -59,10 +56,7 @@ myExpl = stack( system.file( "external/climat/current/bio3.grd",
 myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
                                      expl.var = myExpl,
                                      resp.xy = myRespXY,
-                                     resp.name = myRespName,
-                                     PA.nb.rep = 2,
-                                     PA.nb.absences = 200,
-                                     PA.strategy = 'random')
+                                     resp.name = myRespName)
 
 
 ###################################################
@@ -93,13 +87,16 @@ myBiomodModelOut <- BIOMOD_Modeling(
                            myBiomodData, 
                            models = c('SRE','CTA','RF','MARS','FDA'), 
                            models.options = myBiomodOption, 
-                           NbRunEval=1, 
+                           NbRunEval=3, 
                            DataSplit=80, 
-                           Yweights=NULL, 
-                           VarImport=3, 
+                           Prevalence=0.5, 
+                           VarImport=3,
                            models.eval.meth = c('TSS','ROC'),
                            SaveObj = TRUE,
-                           rescal.all.models = TRUE)
+                           rescal.all.models = TRUE,
+                           do.full.models = FALSE,
+                           modeling.id = paste(myRespName,"FirstModeling",sep=""))
+
 
 
 ###################################################
@@ -138,8 +135,9 @@ getModelsVarImport(myBiomodModelOut)
 myBiomodEM <- BIOMOD_EnsembleModeling( 
                      modeling.output = myBiomodModelOut,
                      chosen.models = 'all',
+                     em.by='all',
                      eval.metric = c('TSS'),
-                     eval.metric.quality.threshold = c(0.85),
+                     eval.metric.quality.threshold = c(0.7),
                      prob.mean = T,
                      prob.cv = T,
                      prob.ci = T,
@@ -169,9 +167,16 @@ myBiomomodProj <- BIOMOD_Projection(
                          new.env = myExpl,
                          proj.name = 'current',
                          selected.models = 'all',
-                         binary.meth = 'ROC',
+                         binary.meth = 'TSS',
                          compress = 'xz',
-                         clamping.mask = F)
+                         clamping.mask = F,
+                         output.format = '.grd')
+
+# summary of crated oject
+myBiomomodProj
+
+# files created on hard drive
+list.files("GuloGulo/proj_current/")
 
 
 
@@ -194,25 +199,26 @@ myCurrentProj
 ### code chunk number 16: projection_future
 ###################################################
 # load environmental variables for the future. 
-myExpl2050 = stack( system.file( "external/climat/future/bio3.grd",
+myExplFuture = stack( system.file( "external/bioclim/future/bio3.grd",
                                  package="biomod2"),
-                    system.file( "external/climat/future/bio4.grd",
+                    system.file( "external/bioclim/future/bio4.grd",
                                  package="biomod2"),
-                    system.file( "external/climat/future/bio7.grd",
+                    system.file( "external/bioclim/future/bio7.grd",
                                  package="biomod2"),
-                    system.file( "external/climat/future/bio11.grd",
+                    system.file( "external/bioclim/future/bio11.grd",
                                  package="biomod2"),
-                    system.file( "external/climat/future/bio12.grd",
+                    system.file( "external/bioclim/future/bio12.grd",
                                  package="biomod2"))
 
-myBiomomodProj2050 <- BIOMOD_Projection(
+myBiomomodProjFuture <- BIOMOD_Projection(
                               modeling.output = myBiomodModelOut,
-                              new.env = stack(myExpl2050),
-                              proj.name = 't2050',
+                              new.env = myExplFuture,
+                              proj.name = 'future',
                               selected.models = 'all',
-                              binary.meth = 'ROC',
+                              binary.meth = 'TSS',
                               compress = 'xz',
-                              clamping.mask = T)
+                              clamping.mask = T,
+                              output.format = '.grd')
                               
 
 
@@ -221,27 +227,27 @@ myBiomomodProj2050 <- BIOMOD_Projection(
 ### code chunk number 17: projection_current_plot
 ###################################################
 # make some plots, sub-selected by str.grep argument
-plot(myBiomomodProj2050, str.grep = 'MARS')
+plot(myBiomomodProjFuture, str.grep = 'MARS')
 
 
 ###################################################
-### code chunk number 18: EnsembleForecasting_future
+### code chunk number 18: EnsembleForecasting_current
 ###################################################
 myBiomodEF <- BIOMOD_EnsembleForecasting( 
-                      projection.output = myBiomomodProj2050,
+                      projection.output = myBiomomodProj,
                       EM.output = myBiomodEM )
 
 
 ###################################################
 ### code chunk number 19: EnsembleForecasting_loading_res
 ###################################################
-load("Myocastor/proj_t2050/Myocastor_PA1_AllRun_EM.TSS")
-Myocastor_PA1_AllRun_EM.TSS
+proj_current_GuloGulo_TotalConsensus_EMbyTSS <- stack("GuloGulo/proj_current/proj_current_GuloGulo_TotalConsensus_EMbyTSS.grd")
+proj_current_GuloGulo_TotalConsensus_EMbyTSS
 
 
 ###################################################
 ### code chunk number 20: EnsembleForecasting_plotting_res
 ###################################################
-plot(Myocastor_PA1_AllRun_EM.TSS)
+plot(proj_current_GuloGulo_TotalConsensus_EMbyTSS)
 
 

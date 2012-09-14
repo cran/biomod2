@@ -122,7 +122,7 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
         # 0. get model
         mod <- get(model)
 
-        # 2. do projections
+        # 2. make projections
         pts.tmp <- seq(min(Data[,vari]), max(Data[,vari]), length.out=nb.pts)
         
         Data.r.tmp <- Data.r
@@ -150,7 +150,7 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
           # 0. get model
           mod <- get(model)
             
-          # 2. do projections
+          # 2. make projections
           pts.tmp1 <- rep(seq(min(Data[,vari1]), max(Data[,vari1]), length.out=sqrt(nb.pts)),each=sqrt(nb.pts))
           pts.tmp2 <- rep(seq(min(Data[,vari2]), max(Data[,vari2]), length.out=sqrt(nb.pts)),sqrt(nb.pts))
           

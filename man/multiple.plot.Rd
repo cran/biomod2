@@ -29,16 +29,19 @@ multiple.plot(Data, coor, color.gradient='red', plots.per.window=9, cex=1, save.
 \seealso{ \code{\link{level.plot}} }
 \examples{
 \dontrun{
-species_occ <- read.csv(system.file("external/species/species_occ.csv",package="biomod2"))
+# species occurrences
+DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
+                                    package="biomod2"))
 
-# we consider only presences of MyocastorCoypus species
-myRespName <- c("CapraIbex", "MelesMeles", "MyocastorCoypus")
-myRespCoord <- species_occ[,c('x','y')]
-myResp <- species_occ[,myRespName]
+# the name of studied species
+myRespName <- c("ConnochaetesGnou", "GuloGulo", "PantheraOnca", 
+                "PteropusGiganteus", "TenrecEcaudatus", "VulpesVulpes")
 
-# NOTE: NA not supported yet
-# replace NA by 0
-myResp[is.na(myResp)] <- 0
+# the presence/absences data for our species 
+myResp <- DataSpecies[,myRespName]
+
+# the XY coordinates of species data
+myRespXY <- DataSpecies[,c("X_WGS84","Y_WGS84")]
 
 multiple.plot(Data = myResp,
               coor = myRespCoord )

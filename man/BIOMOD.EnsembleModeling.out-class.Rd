@@ -31,6 +31,7 @@ EnsembleModeling objects are created, used and returned by BIOMOD functions. It'
     \item{\code{eval.metric}:}{ "character", evaluation metrics choosed for models selection }
     \item{\code{eval.metric.quality.threshold}:}{ "numeric", thresholds defined for models selection }
     \item{\code{em.computed}:}{ "character", ensemble models built names}
+    \item{\code{em.by}:}{ "character", way models are combined}
     \item{\code{em.res}:}{ "list", list that contains ensemble models results}
     \item{\code{em.ci.alpha}:}{ "numeric", alpha value selected for confidence intervals ensemble models built}
     \item{\code{em.weight}:}{ "list", list that contains weights calculated for weighted mean ensemble models built}

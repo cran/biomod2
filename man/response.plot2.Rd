@@ -61,33 +61,40 @@ predicted responses from species distribution models. Ecological Modelling 186, 
 
 \seealso{ \code{\link{BIOMOD_Modeling}}  }
 \examples{
+\dontrun{
+# species occurrences
+DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
+                                    package="biomod2"))
+head(DataSpecies)
 
-# 0. Load data & Selecting Data
+# the name of studied species
+myRespName <- 'GuloGulo'
 
-# species occurances
-species_occ <- read.csv(system.file("external/species/species_occ.csv",package="biomod2"))
+# the presence/absences data for our species 
+myResp <- as.numeric(DataSpecies[,myRespName])
 
-# we consider only presences of MyocastorCoypus species
-myRespName <- 'MyocastorCoypus'
-myRespCoord <- species_occ[which(!is.na(species_occ[,myRespName])),c('x','y')]
-myResp <- as.numeric(na.omit(species_occ[,myRespName]))
+# the XY coordinates of species data
+myRespXY <- DataSpecies[,c("X_WGS84","Y_WGS84")]
 
-# Environemental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
-myExpl = raster::stack(system.file("external/climat/current/bio3.grd",package="biomod2"),
-                       system.file("external/climat/current/bio4.grd",package="biomod2"),
-                       system.file("external/climat/current/bio7.grd",package="biomod2"),
-                       system.file("external/climat/current/bio11.grd",package="biomod2"),
-                       system.file("external/climat/current/bio12.grd",package="biomod2"))
 
-# 1. Formating Data
+# Environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
+myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
+                             package="biomod2"),
+                system.file( "external/bioclim/current/bio4.grd", 
+                             package="biomod2"), 
+                system.file( "external/bioclim/current/bio7.grd", 
+                             package="biomod2"),  
+                system.file( "external/bioclim/current/bio11.grd", 
+                             package="biomod2"), 
+                system.file( "external/bioclim/current/bio12.grd", 
+                             package="biomod2"))
+
+# 1. Formatting Data
 myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
                                      expl.var = myExpl,
-                                     resp.xy = myRespCoord,
-                                     resp.name = myRespName,
-                                     PA.nb.rep = 1,
-                                     PA.nb.absences = 200,
-                                     PA.strategy = 'random')
-                                                                     
+                                     resp.xy = myRespXY,
+                                     resp.name = myRespName)
+
 # 2. Defining Models Options using default options.
 myBiomodOption <- BIOMOD_ModelingOptions()
 
@@ -96,12 +103,13 @@ myBiomodOption <- BIOMOD_ModelingOptions()
 myBiomomodModelOut <- BIOMOD_Modeling( myBiomodData, 
                                        models = c('RF','GLM'), 
                                        models.options = myBiomodOption, 
-                                       NbRunEval=1, 
+                                       NbRunEval=2, 
                                        DataSplit=80, 
-                                       Yweights=NULL, 
-                                       VarImport=3, 
+                                       Prevalence=0.5,
+                                       VarImport=0, 
                                        models.eval.meth = c('TSS'),
-                                       SaveObj = TRUE )
+                                       SaveObj = TRUE,
+                                       do.full.models=FALSE)
 
 
 # 4. Plot response curves
@@ -111,26 +119,26 @@ myGLMs <- BIOMOD_LoadModels(myBiomomodModelOut, models='GLM')
 
 # 4.2 plot 2D response plots
 myRespPlot2D <- response.plot2(models  = myGLMs,
-                             Data = getModelsInputData(myBiomomodModelOut,'expl.var'), 
-                             show.variables= getModelsInputData(myBiomomodModelOut,'expl.var.names'),
-                             do.bivariate = FALSE,
-                             fixed.var.metric = 'mean',
-                             save.file="no", 
-                             name="response_curve", 
-                             ImageSize=480, 
-                             plot=TRUE)
+                               Data = getModelsInputData(myBiomomodModelOut,'expl.var'), 
+                               show.variables= getModelsInputData(myBiomomodModelOut,'expl.var.names'),
+                               do.bivariate = FALSE,
+                               fixed.var.metric = 'mean',
+                               save.file="no", 
+                               name="response_curve", 
+                               ImageSize=480, 
+                               plot=TRUE)
 
 # 4.2 plot 3D response plots
 ## here only for a lone model (i.e "MyocastorCoypus_PA1_RUN1_GLM")
 myRespPlot3D <- response.plot2(models  = myGLMs[1],
-                             Data = getModelsInputData(myBiomomodModelOut,'expl.var'), 
-                             show.variables= getModelsInputData(myBiomomodModelOut,'expl.var.names'),
-                             do.bivariate = TRUE,
-                             fixed.var.metric = 'mean',
-                             save.file="no", 
-                             name="response_curve", 
-                             ImageSize=480, 
-                             plot=TRUE)
+                               Data = getModelsInputData(myBiomomodModelOut,'expl.var'), 
+                               show.variables= getModelsInputData(myBiomomodModelOut,'expl.var.names'),
+                               do.bivariate = TRUE,
+                               fixed.var.metric = 'mean',
+                               save.file="no", 
+                               name="response_curve", 
+                               ImageSize=480, 
+                               plot=TRUE)
 
 ### all the values used to produce this plot are stored into the returned object
 ### you can redo plots by yourself and customised them
@@ -139,7 +147,7 @@ dimnames(myRespPlot2D)
 
 dim(myRespPlot3D)
 dimnames(myRespPlot3D)
-
+}
 }
 
 \keyword{ dplot }

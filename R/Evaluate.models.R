@@ -1,26 +1,38 @@
 Find.Optim.Stat <- function(Stat='TSS',Fit,Obs,Precision = 5, Fixed.thresh = NULL){
   if(length(unique(Obs)) == 1 | length(unique(Fit)) == 1){
-    warnings("\nObserved or fited data contains only a value.. Evaluation Methods switched off\n")
-    best.stat <- cutoff <- true.pos <- sensibility <- true.neg <- specificity <- NA  
-  } else {
+#     warning("\nObserved or fited data contains only a value.. Evaluation Methods switched off\n",immediate.=T)
+#     best.stat <- cutoff <- true.pos <- sensibility <- true.neg <- specificity <- NA  
+      warning("\nObserved or fited data contains a unique value.. Be carefull with this models predictions\n",immediate.=T)
+      #best.stat <- cutoff <- true.pos <- sensibility <- true.neg <- specificity <- NA    
+  } #else {
     if(Stat != 'ROC'){
       StatOptimum <- getStatOptimValue(Stat)
       if(is.null(Fixed.thresh)){ # test a range of threshold to get the one giving the best score
-        mini <- max(min(quantile(Fit,0.05, na.rm=T), na.rm=T),0)
-        maxi <- min(max(quantile(Fit,0.95, na.rm=T), na.rm=T),1000)
-        valToTest <- unique( round(c(seq(mini,maxi,length.out=100), mini, maxi)) )
+        if(length(unique(Fit)) == 1){
+          valToTest <- unique(Fit)
+          valToTest <- round(c(mean(c(0,valToTest)), mean(c(1000,valToTest))))
+        } else{
+          mini <- max(min(quantile(Fit,0.05, na.rm=T), na.rm=T),0)
+          maxi <- min(max(quantile(Fit,0.95, na.rm=T), na.rm=T),1000)
+          valToTest <- unique( round(c(seq(mini,maxi,length.out=100), mini, maxi)) )
+          # deal with unique value to test case
+          if(length(valToTest)<3){
+            valToTest <- round(c(mean(0,mini), valToTest, mean(1000,maxi)))
+          }
+        }
 #         valToTest <- unique( c(seq(mini,maxi,by=Precision), mini, maxi) )        
       } else{
         valToTest <- Fixed.thresh
       }
-
+      
       calcStat <- sapply(lapply(valToTest, function(x){return(table(Fit>x,Obs))} ), calculate.stat, stat=Stat)
       
-      # rescal on 0-1 ladder.. 1 is the best
+      # scal on 0-1 ladder.. 1 is the best
       calcStat <- 1 - abs(StatOptimum - calcStat)
       
       best.stat <- max(calcStat, na.rm=T)
-      cutoff <- mean(valToTest[which(calcStat==best.stat)]) # if several values are selected
+      
+      cutoff <- median(valToTest[which(calcStat==best.stat)]) # if several values are selected
 
       misc <- table(Fit >= cutoff, Obs)
       misc <- .contagency.table.check(misc)
@@ -29,13 +41,15 @@ Find.Optim.Stat <- function(Stat='TSS',Fit,Obs,Precision = 5, Fixed.thresh = NUL
       specificity <- (true.neg * 100)/sum(misc[,'0'])
       sensibility <- (true.pos * 100)/sum(misc[,'1'])
     } else{
-      best.stat <- .somers2(Fit, Obs)["C"]
-      Cut <- .CutOff.Optimised(Obs, Fit)
-      cutoff <- Cut[1]
-      sensibility <- Cut[2]
-      specificity <- Cut[3]
+      require(pROC,quietly=T)
+      roc1 <- roc(Obs, Fit, percent=T)
+      roc1.out <- coords(roc1, "best", ret=c("threshold", "sens", "spec"))
+      best.stat <- as.numeric(auc(roc1))/100
+      cutoff <- as.numeric(roc1.out["threshold"])
+      sensibility <- as.numeric(roc1.out["sensitivity"])
+      specificity <- as.numeric(roc1.out["specificity"])
     }
-  }
+  #}
   return(cbind(best.stat,cutoff,sensibility,specificity))
 }
 
@@ -135,6 +149,11 @@ function(Misc, stat='TSS')
   if(stat=='ORSS'){
     return((hits*correct_negatives - misses*false_alarms) / (hits*correct_negatives + misses*false_alarms))
   }
+  
+  if(stat=="BOYCE"){
+    
+  }
+  
 }
 
 .contagency.table.check <- function(Misc){
