@@ -1,4 +1,4 @@
-0fb55bbc92b2c1596efa9d3984cde562 *DESCRIPTION
+270746cc40aee971529aea1b5c90e764 *DESCRIPTION
 0c0bde652f17d966e99a95d04c2178e4 *NAMESPACE
 a1caf40c56a423ab13b15840dae63db4 *NEWS
 8e095f21f59e3127397ae76dccef05ac *R/BIOMOD_ConvertOldRun.R
@@ -23,7 +23,7 @@ ba69dc0b32e98f3726f3e035a7bb1dfc *R/Evaluate.models.R
 0b12ce3643f84694ff6dc3ddedb6170b *R/Projection.R
 0b20d7a876732d851299bbd6649039ed *R/Rescaler4.R
 705a04d444079454175a03464b767e57 *R/SampleMat2.R
-f0e7d581cdc969ce9b1c068bad06dab6 *R/biomod2_models-class.R
+fdcf5fda0c6690916c48aa13160a1ed8 *R/biomod2_models-class.R
 cdfb0c112006d64f621706b86c2bf5a1 *R/deprecated_functions.R
 3013c2a8098aca61fe3138714557819e *R/functionkeep.R
 763fefdb3d36409b42526b9ca14fcf3b *R/level.plot.R
