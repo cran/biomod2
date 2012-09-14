@@ -924,14 +924,14 @@ setGeneric("getProjection",
 setMethod("getProjection", "BIOMOD.projection.out",
           function(obj, model = NULL, as.data.frame = FALSE){
             if(!as.data.frame & is.null(model)){
-              if(obj@proj@inMemory ){
+#               if(obj@proj@inMemory ){
                 return(obj@proj@val)
-              } else{
-                if(obj@proj@link != ''){
-                  load(obj@proj@link)
-                  return(proj)
-                } else{ return(NA) }
-              }            
+#               } else{
+#                 if(obj@proj@link != ''){
+#                   load(obj@proj@link)
+#                   return(proj)
+#                 } else{ return(NA) }
+#               }            
             } else if(as.data.frame){
               if(obj@proj@inMemory ){
                 proj <- as.data.frame(obj@proj@val)
@@ -1158,8 +1158,14 @@ setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data'),
                 nbPres <- sum(data@data.species, na.rm=TRUE)
                 nbAbs <- length(data@data.species) - nbPres
                 Yweights <- rep(1,length(data@data.species))
-                Yweights[which(data@data.species==0 | is.na(data@data.species))] <- (nbPres * (1-Prevalence)) / (Prevalence * nbAbs) 
-                Yweights = as.integer(Yweights[]*100) # test to remove glm & gam warnings
+                
+                if(nbAbs > nbPres){ # code absences as 1
+                  Yweights[which(data@data.species>0)] <- (Prevalence * nbAbs) / (nbPres * (1-Prevalence))
+                } else{ # code presences as 1
+                  Yweights[which(data@data.species==0 | is.na(data@data.species))] <- (nbPres * (1-Prevalence)) / (Prevalence * nbAbs)
+                }
+                
+                Yweights = round(Yweights[]) # test to remove glm & gam warnings
               } else{
                 Yweights <- rep(1,length(data@data.species))
               }
@@ -1209,11 +1215,20 @@ setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data.PA'),
                   Prevalence = 0.5
                 }
                 nbPres <- sum(data@data.species, na.rm=TRUE)
-                nbAbs <- length(data@data.species) - nbPres
-                Yweights <- rep(1,length(data@data.species[data@PA[,pa]]))
-                Yweights[which(data@data.species[data@PA[,pa]]==0 | is.na(data@data.species[data@PA[,pa]]))] <- (nbPres * (1-Prevalence)) / (Prevalence * nbAbs) 
-                Yweights = as.integer(Yweights[]*100) # test to remove glm & gam warnings                
-                              
+                nbAbsKept <- sum(data@PA[,1], na.rm=TRUE) - sum(data@data.species, na.rm=TRUE) # The number of true absences + pseudo absences to maintain true value of prevalence
+                Yweights <- rep(1,nrow(dataBM))
+                
+                if(nbAbsKept > nbPres){ # code absences as 1
+                  Yweights[which(dataBM[,1]>0)] <- (Prevalence * nbAbsKept) / (nbPres * (1-Prevalence))
+                } else{ # code presences as 1
+                  Yweights[which(dataBM[,1]==0 | is.na(dataBM[,1]))] <- (nbPres * (1-Prevalence)) / (Prevalence * nbAbsKept)
+                }
+                Yweights = round(Yweights[]) # test to remove glm & gam warnings
+#                 cat("\n*** length(Yweights) = ", length(Yweights))
+#                 cat("\n*** length(data@data.species) = ", length(data@data.species))
+#                 cat("\n*** dim(dataBM) = ", dim(dataBM))
+#                 cat("\n***\n")
+#                 print(head(data@PA))
               }
               list.out[[name]] <- list(name=name,
                                      xy=xy,

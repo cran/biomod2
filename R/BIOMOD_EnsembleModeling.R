@@ -241,7 +241,7 @@
         em.ca <- round(apply(as.data.frame(BinaryTransformation(prediction.kept,models.kept.tresh)), 1, mean)*1000)
         ### keep bin thresholds
         EM@em.bin.tresh <- c(EM@em.bin.tresh, 
-                             eval(parse( text = paste("list('", modeling.output@sp.name, "_", assemb, "_EM.", eval.m,"' = models.kept.tresh)", sep=""))) )
+                             eval(parse( text = paste("list('", modeling.output@sp.name, "_", assemb, "_EMby", eval.m,"' = models.kept.tresh)", sep=""))) )
       }
       
       # 6. weighted mean of probabilities -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
@@ -282,7 +282,7 @@
       	em.pmw <- round(as.vector(as.matrix(prediction.kept) %*% models.kept.scores))
         
         ### keep the weighted scores of models
-        EM@em.weight <- c(EM@em.weight, eval(parse( text = paste("list('", modeling.output@sp.name, "_", assemb, "_EM.", eval.m,"' = models.kept.scores)", sep=""))))
+        EM@em.weight <- c(EM@em.weight, eval(parse( text = paste("list('", modeling.output@sp.name, "_", assemb, "_EMby", eval.m,"' = models.kept.scores)", sep=""))))
       }
       
       # 7. Assembling all computed models -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
@@ -340,9 +340,9 @@
       em.cross.validation <- abind(em.cross.validation, along=3)
       
                                       
-      EM@em.computed <- c(EM@em.computed, paste(modeling.output@sp.name, "_", assemb, "_EM.", eval.m,sep=""))
+      EM@em.computed <- c(EM@em.computed, paste(modeling.output@sp.name, "_", assemb, "_EMby", eval.m,sep=""))
       
-      eval(parse(text = paste('EM@em.res$',modeling.output@sp.name, "_", assemb, "_EM.", eval.m, " <- list(em.models.kept = models.kept, em.algo = colnames(em.pred), em.pred = em.pred, em.cross.validation = em.cross.validation )", sep="")))
+      eval(parse(text = paste('EM@em.res$',modeling.output@sp.name, "_", assemb, "_EMby", eval.m, " <- list(em.models.kept = models.kept, em.algo = colnames(em.pred), em.pred = em.pred, em.cross.validation = em.cross.validation )", sep="")))
       
       rm(list=c('em.pred', 'em.cross.validation'))
     } 

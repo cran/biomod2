@@ -97,12 +97,7 @@ myBiomodOption <- BIOMOD_ModelingOptions()
 myBiomomodModelOut <- BIOMOD_Modeling( myBiomodData, 
                                        models = c('CTA','RF'), 
                                        models.options = myBiomodOption, 
-                                       NbRunEval=1, 
-                                       DataSplit=80, 
-                                       Yweights=NULL, 
-                                       VarImport=3, 
-                                       models.eval.meth = c('TSS','ROC'),
-                                       SaveObj = TRUE )
+                                       models.eval.meth ='TSS')
                                        
                                        
 # 4.1 Projection on current environemental conditions
@@ -111,10 +106,9 @@ myBiomomodProjection <- BIOMOD_Projection(modeling.output = myBiomomodModelOut,
                                           new.env = myExpl,
                                           proj.name = 'current',
                                           selected.models = 'all',
-                                          binary.meth = 'ROC',
-                                          filtered.meth = 'TSS',
-                                          compress = 'xz',
-                                          clamping.mask = TRUE)
+                                          binary.meth = 'TSS',
+                                          compress = FALSE,
+                                          build.clamping.mask = FALSE)
                                           
 # 4.2 Projection on future environemental conditions
 
@@ -128,21 +122,22 @@ myBiomomodProjection2050 <- BIOMOD_Projection(modeling.output = myBiomomodModelO
                                               new.env = myExpl2050,
                                               proj.name = 't2050',
                                               selected.models = 'all',
-                                              binary.meth = 'ROC',
-                                              filtered.meth = 'TSS',
-                                              compress = 'xz',
-                                              clamping.mask = TRUE)
+                                              binary.meth = 'TSS',
+                                              compress = FALSE,
+                                              build.clamping.mask = FALSE)
 
 # 5. Detect where our species occurances state is forecasted to change
 
 # load binary projections
-load("MyocastorCoypus/proj_current/current_MyocastorCoypus_bin_ROC_RasterStack")
-load("MyocastorCoypus/proj_t2050/t2050_MyocastorCoypus_bin_ROC_RasterStack")
+# here is rasters objects ('.grd')
+currentPred <- stack("MyocastorCoypus/proj_current/proj_current_MyocastorCoypus_TSSbin")
+futurePred <- stack("MyocastorCoypus/proj_t2050/proj_t2050_MyocastorCoypus_TSSbin")
+
 
 # call the Range size function
 myBiomodRangeSize <- BIOMOD_RangeSize(
-                          CurrentPred=current_MyocastorCoypus_bin_ROC_RasterStack,
-                          FutureProj=t2050_MyocastorCoypus_bin_ROC_RasterStack)
+                          CurrentPred=currentPred,
+                          FutureProj=futurePred)
 
 # see the results
 myBiomodRangeSize$Compt.By.Models

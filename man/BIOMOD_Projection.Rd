@@ -14,7 +14,7 @@ BIOMOD_Projection(modeling.output,
                   binary.meth = NULL,
                   filtered.meth = NULL,
                   compress = 'xz',
-                  clamping.mask = TRUE,
+                  build.clamping.mask = TRUE,
                   ...)
 }
 
@@ -36,7 +36,7 @@ BIOMOD_Projection(modeling.output,
 
 \item{compress}{compression format of objects stored on your hard drive. May be one of \sQuote{xz}, \sQuote{gzip} or \code{NULL}}
 
-\item{clamping.mask}{ if TRUE, a clamping mask will be saved on hard drive different (see details)}
+\item{build.clamping.mask}{ if TRUE, a clamping mask will be saved on hard drive different (see details)}
 
 \item{...}{ Additional arguments }
 }
@@ -45,7 +45,7 @@ BIOMOD_Projection(modeling.output,
 \details{
 Projections are done for all selected models, that means (by default) for all evaluation run, and pseudo absences selections if applicable. This projections may be used later to compute ensemble forecasting.
 
-If \code{clamping.mask} is set to \code{TRUE} a file (same type than \code{new.env} arg) will be saved in your projection folder. This mask will identifies locations where predictions are uncertain because the values of the variables are outside the range used for calibrating the models. The \sQuote{clamping.mask} values correrspond to the number of variables that are out of their calibrating/training range. (see vignette for more details)
+If \code{build.clamping.mask} is set to \code{TRUE} a file (same type than \code{new.env} arg) will be saved in your projection folder. This mask will identifies locations where predictions are uncertain because the values of the variables are outside the range used for calibrating the models. The \sQuote{build.clamping.mask} values correrspond to the number of variables that are out of their calibrating/training range. (see vignette for more details)
 
 \ldots may be :
 \itemize{
@@ -122,7 +122,7 @@ myBiomomodProjection <- BIOMOD_Projection(modeling.output = myBiomomodModelOut,
                                           binary.meth = 'ROC',
                                           filtered.meth = 'TSS',
                                           compress = 'xz',
-                                          clamping.mask = TRUE)
+                                          build.clamping.mask = TRUE)
                                           
 # 4.2 Projection on future environemental conditions
 
@@ -139,7 +139,7 @@ myBiomomodProjection2050 <- BIOMOD_Projection(modeling.output = myBiomomodModelO
                                               binary.meth = 'ROC',
                                               filtered.meth = 'TSS',
                                               compress = 'xz',
-                                              clamping.mask = TRUE)
+                                              build.clamping.mask = TRUE)
 
 # print summary and plot projections
 myBiomomodProjection2050

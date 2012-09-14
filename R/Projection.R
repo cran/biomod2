@@ -14,14 +14,14 @@ setMethod( 'Projection', signature(new.env.data = 'data.frame'),
            proj.name = NULL,
            binary.proj = NULL,
            filtred.proj = NULL,
-           models.evaluation = NULL,
-           models.options = NULL,
+#            models.evaluation = NULL,
+#            models.options = NULL,
            compress="xz",
-           rescaled.models=TRUE,
+#            rescaled.models=TRUE,
            do.stack = FALSE){
         
-    # 1. loading resuired libraries =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
-    .Models.dependencies(silent=TRUE, models.options=models.options )
+#     # 1. loading resuired libraries =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
+#     .Models.dependencies(silent=TRUE, models.options=models.options )
   
     # 2. extract model info  =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
     
@@ -33,14 +33,14 @@ setMethod( 'Projection', signature(new.env.data = 'data.frame'),
     # 3. Printing Projection Summary =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
     
     # 4. Computing Projections =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
-    cat('\nDoing Models Projections...')
-    if(length(grep('EF.',models.name)) > 0 ){
-      kept.models.name <- models.name[-grep('EF.',models.name)] 
-      kept.algo.run <- algo.run[-grep('EF.',algo.run)]
-    } else {
-      kept.models.name <- models.name
-      kept.algo.run <- algo.run
-    }
+#     cat('\nDoing Models Projections...')
+#     if(length(grep('EF.',models.name)) > 0 ){
+#       kept.models.name <- models.name[-grep('EF.',models.name)] 
+#       kept.algo.run <- algo.run[-grep('EF.',algo.run)]
+#     } else {
+#       kept.models.name <- models.name
+#       kept.algo.run <- algo.run
+#     }
     
     proj.array <- lapply(kept.models.name, .Projection.do.proj, env=new.env.data, xy=xy, rescaled.models=rescaled.models, proj.name=paste("proj_",proj.name, sep=""), models.options=models.options)
     proj.array <- as.data.frame(proj.array)
@@ -106,6 +106,12 @@ setMethod( 'Projection', signature(new.env.data = 'data.frame'),
     
     return(invisible(proj.array))   
   })
+
+
+
+
+
+
 
 
 setMethod( 'Projection', signature(new.env.data = 'RasterStack'),
@@ -549,41 +555,7 @@ setMethod('.Projection.do.proj', signature(env='RasterStack'),
       return(round(proj.ras*1000))
       
       
-      
-#       if(fromDisk(env)){
-#         if(grepl(".grd", filename(subset(env,1)))){
-# #           print(paste("java -cp ", file.path(Options@MAXENT$path_to_maxent.jar, "maxent.jar"), " density.Project \"", model.dir,.Platform$file.sep,
-# #                              model.name, .Platform$file.sep ,sub("_MAXENT","",model.name),
-# #                              ".lambdas\" ", .extractModelNamesInfo(model.name, info='species'), "/", proj.name ,"/MaxentTmpData/Proj ",.extractModelNamesInfo(model.name, info='species'), "/", proj.name ,"/MaxentTmpData/projMaxent", sep=""))
-#           
-#           system(command=paste("java -cp ", file.path(Options@MAXENT$path_to_maxent.jar, "maxent.jar"), " density.Project \"", model.dir,.Platform$file.sep,
-#                              model.name, .Platform$file.sep ,sub("_MAXENT","",model.name),
-#                              ".lambdas\" ", "projTmp" , " projTmp/maxentOut -grd", sep=""), wait = TRUE)
-#           cat("maxent done")
-#           readline()
-#         }
-#       } 
-      
-      
-      
-      
-#         .Prepare.Maxent.Proj.WorkDir(env, proj.name=file.path(.extractModelNamesInfo(model.name, info='species'), proj.name ))
-#         
-#         cat("\n\t Runing Maxent...")
-#         
-#         system(command=paste("java -cp ", file.path(models.options@MAXENT$path_to_maxent.jar, "maxent.jar"), " density.Project \"", model.dir,.Platform$file.sep,
-#                              model.name, .Platform$file.sep ,sub("_MAXENT","",model.name),
-#                              ".lambdas\" ", .extractModelNamesInfo(model.name, info='species'), "/", proj.name ,"/MaxentTmpData/Proj ",.extractModelNamesInfo(model.name, info='species'), "/", proj.name ,"/MaxentTmpData/projMaxent.grd doclamp=false", sep=""), wait = TRUE) 
-#         
-#         cat("\n\t Reading Maxent outputs...")
-#         proj.ras <- raster(file.path(.extractModelNamesInfo(model.name, info='species'), proj.name , "MaxentTmpData","projMaxent.grd"))
-#         proj.ras[!is.na(proj.ras[])] <- .Rescaler5(proj.ras[!is.na(proj.ras[])], ref=NULL,
-#                                                  name=model.name, original=FALSE)
-# #         .Delete.Maxent.WorkDir(paste(.extractModelNamesInfo(model.name, info='species'), "/", proj.name ,sep=""))
-#         return(round(proj.ras*1000))
-      
-      
-      
+         
     }   
   })
 
