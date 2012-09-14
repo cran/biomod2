@@ -10,7 +10,8 @@
 makeFormula(respName, 
             explVar, 
             type = 'simple', 
-            interaction.level = 0)
+            interaction.level = 0,
+            ...)
 }
 
 
@@ -18,13 +19,20 @@ makeFormula(respName,
 \arguments{
   \item{respName}{  a \code{character} indicating the response variable name }
   \item{explVar}{ a \code{matrix} or a \code{data.frame}, the explanatory variables table that will be considered at modelling step}
-  \item{type}{ either 'simple', 'quadratic' or 'polynomial' defining the type of formula you want to build}
+  \item{type}{ either 'simple', 'quadratic', 'polynomial' or 's_smoother' defining the type of formula you want to build}
   \item{interaction.level}{ an \code{integer}, the interaction level depth between explanatory variables}
+  \item{...}{some additional arguments (see details)}
 }
 
 
 \details{
 It's advise to give only a subset of \code{explVar} table to avoid useless memory consuming. If some explanatory variables are factorial ones, you have to give a \code{data.frame} for \code{explVar} where associated columns are define as \code{factor}.
+
+\code{...} argument availables values are :
+\itemize{
+  \item{k}{ the smooting parameter value (used only if \code{type = 's_smoother'}) corespunding to \code{k} parameter of \pkg{mgcv} \code{\link[mgcv]{s}}} or \code{df} \pkg{gam} \code{\link[gam]{s}} arguments.
+
+}
 }
 
 
