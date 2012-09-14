@@ -7,7 +7,16 @@
   maps produced are the same than with the \code{\link{level.plot}} function 
 }
 \usage{
-multiple.plot(Data, coor, color.gradient='red', plots.per.window=9, cex=1, save.file="no", name="multiple plot", ImageSize = "small", AddPresAbs = NULL, PresAbsSymbol = c(cex * 0.8, 16, 4))
+multiple.plot(Data,
+              coor, 
+              color.gradient='red', 
+              plots.per.window=9, 
+              cex=1, 
+              save.file="no", 
+              name="multiple plot", 
+              ImageSize = "small", 
+              AddPresAbs = NULL, 
+              PresAbsSymbol = c(cex * 0.8, 16, 4))
 }
 
 \arguments{

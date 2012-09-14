@@ -1,9 +1,9 @@
 `response.plot` <-
-function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="response_curve", ImageSize=480, plot=TRUE){
-  
-  cat("\n! Deprecated function, please use response.plot2 instead !")
-  return(TRUE)      
-} 
+  function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="response_curve", ImageSize=480, plot=TRUE){
+    
+    cat("\n! Deprecated function, please use response.plot2 instead !")
+    return(TRUE)      
+  } 
 
 
 # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
@@ -49,47 +49,32 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
   nb.pts <- args$nb.pts
   
   if(is.null(data_species)) data_species <- rep(1,nrow(Data)) else data_species[data_species!=1 | is.na(data_species)] <- 0
-
+  
   
   # 2. build function outputs
+  factor_id <- which(sapply(Data,is.factor))
   
-  ## array for monavariate res
-  array.mono.out <- array(0, 
-                     dim=c(nb.pts,2,length(show.variables), length(models)), 
-                     dimnames=list(NULL,  c("Var", "Pred"), show.variables, models) )
-  if(do.bivariate){
-    ## array for bivariate res
-    dim3.array.bi.out <- c()
-    for(i in 1:(length(show.variables)-1)){
-      for(j in (i+1):length(show.variables)){
-        dim3.array.bi.out <- c(dim3.array.bi.out, paste(show.variables[i],show.variables[j],sep="-"))
-      }
-    }
-    
-    array.bi.out <- array(0, 
-                       dim=c(nb.pts,3,length(dim3.array.bi.out), length(models)), 
-                       dimnames=list(NULL,  c("Var1", "Var2", "Pred"), dim3.array.bi.out, models) )    
-  }
-
+  list.out <- list()
+  
   # Create a ranged data table
-  Data.r <- data.frame(matrix(NA, nrow=nb.pts, ncol=ncol(Data)))
-  colnames(Data.r) <- colnames(Data)
+  ref_table <- Data[1,,drop=F]
+  rownames(ref_table) <- NULL
+  
   for(i in 1:ncol(Data)){
     if(is.numeric(Data[,i])){
-      Data.r[,i] <- switch(fixed.var.metric,
-                           mean = rep(mean(Data[data_species==1,i]), nb.pts),
-                           median = rep(median(Data[data_species==1,i]), nb.pts),
-                           min = rep(min(Data[data_species==1,i]), nb.pts),
-                           max = rep(max(Data[data_species==1,i]), nb.pts))
+      ref_table[,i] <- switch(fixed.var.metric,
+                              mean = mean(Data[data_species==1,i]),
+                              median = median(Data[data_species==1,i]),
+                              min = min(Data[data_species==1,i]),
+                              max = max(Data[data_species==1,i]))
     } else{
-      Data.r[,i] <- switch(fixed.var.metric,
-                           mean = rep(levels(as.factor(Data[data_species==1,i]))[round(length(levels(as.factor(Data[data_species==1,i]))) / 2 )], nb.pts),
-                           median = rep(levels(as.factor(Data[data_species==1,i]))[round(length(levels(as.factor(Data[data_species==1,i]))) / 2 )], nb.pts),
-                           min = rep(levels(as.factor(Data[data_species==1,i]))[1], nb.pts),
-                           max = rep(levels(as.factor(Data[data_species==1,i]))[length(levels(as.factor(Data[data_species==1,i])))], nb.pts))
-      Data.r[,i] <- as.factor(Data.r[,i])
+      # return everytimes the majoritary class
+      sum_level <- summary(Data[data_species==1,i])
+      ref_table[,i] <- names(sum_level)[sum_level==max(sum_level)]
     }
   }
+  
+  
   
   if(plot){
     # X. Open a graphic file for plotting restults
@@ -99,7 +84,7 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
     if(save.file=="postscript") postscript(paste(name, "eps", sep="."))
     
     # XX. parametrize our plot window
-      
+    
     if(!do.bivariate){
       nb.graphs <- length(show.variables)
     } else{
@@ -120,42 +105,62 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
     text(x=0.5, y=0.8, pos=1, cex=1.6, labels=paste("Response curves for ", get(models[1])@resp_name, "'s ",  get(models[1])@model_class,sep=""),  ,col="#4c57eb")
     par(mar = c(2,2,3.5,1))      
   } 
-
+  
   
   if(!do.bivariate){  
     for(vari in show.variables){
-    	if(plot) {
+      if(plot) {
         if(on_0_1000) ylim <- c(0,1000) else ylim <- c(0,1) 
-
-        plot(0,0,col="white",xlim=c(min(Data[,vari]), max(Data[,vari])), ylim=ylim, main=vari, ann=TRUE, bty="o",xaxs="r", xaxt="s")
-  			rug(Data[ ,vari])
+        
+        if(is.factor(Data[,vari])) xlim <- c(1,length(levels(Data[,vari]))) else xlim=c(min(Data[,vari], na.rm=T), max(Data[,vari], na.rm=T))
+        
+        plot(0,0,col="white",xlim=xlim, ylim=ylim, main=vari, ann=TRUE, bty="o",xaxs="r", xaxt="s", xaxt=ifelse(is.factor(Data[,vari]),'n','t'))
+        rug(Data[ ,vari])
+        
+        if(is.factor(Data[,vari])) axis(1, at=seq(xlim[1],xlim[2],1), labels=levels(Data[,vari]))
         
         # define color vector
         col <- rep(col,length.out=length(models))
         lty <- rep(lty,length.out=length(models))
-  		}
+      }
+      
+      
+      # creating Tmp data
+      if(is.factor(Data[,vari])) pts.tmp <- as.factor(levels(Data[,vari])) else pts.tmp <- seq(min(Data[,vari]), max(Data[,vari]), length.out=nb.pts)
+      
+      Data.r.tmp <- eval(parse(text=paste("cbind(",vari,"=pts.tmp,ref_table[,-which(colnames(ref_table)==vari),drop=F])",sep="")))
+      Data.r.tmp <- Data.r.tmp[,colnames(ref_table),drop=F]
+      if(length(factor_id)){
+        for(f in factor_id){
+          Data.r.tmp[,f] <- factor(as.character(Data.r.tmp[,f]), levels=levels(Data[,f]))
+        }
+      }
+      
       
       for(model in models){
         
         # 0. get model
         mod <- get(model)
-
-        # 2. make projections
-        pts.tmp <- seq(min(Data[,vari]), max(Data[,vari]), length.out=nb.pts)
         
-        Data.r.tmp <- Data.r
-        Data.r.tmp[,vari] <- pts.tmp
-        
+        # 2. make projections 
         proj.tmp <- predict(mod, Data.r.tmp, on_0_1000=on_0_1000)
-
+        
         # 4. Ploting results
-    		if(plot) {
-  				lines(pts.tmp, proj.tmp, col=col[which(models==model)], lty = lty[which(models==model)])
-  			}
+        if(plot ) {
+          if(is.factor(Data[,vari])){
+            points(pts.tmp[1:length(levels(Data[,vari]))], proj.tmp[1:length(levels(Data[,vari]))], col=col[which(models==model)], lty = lty[which(models==model)])
+          } else{
+            lines(pts.tmp[1:nb.pts], proj.tmp[1:nb.pts], col=col[which(models==model)], lty = lty[which(models==model)])
+          }
+        }
         
         # 5. Storing results
-        array.mono.out[,"Var",vari,model] <- pts.tmp
-        array.mono.out[,"Pred",vari,model] <- proj.tmp
+        if(length(list.out[[vari]]) == 0){ #init
+          eval(parse(text=paste("list.out[['",vari,"']] <- data.frame(",vari,"=pts.tmp, ",model,"=proj.tmp)",sep="")))
+        } else{
+          eval(parse(text=paste("list.out[['",vari,"']] <- cbind(list.out[['",vari,"']],",model,"=proj.tmp)",sep="")))
+        }
+        
       }    
       
     }
@@ -171,29 +176,39 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
   } else{ ## bivariate case
     for(vari1 in show.variables[-length(show.variables)]){
       for(vari2 in show.variables[-(1:which(show.variables == vari1))]){
-      
+        
+        # creating Tmp data
+        #         if(is.factor(Data[,vari])) pts.tmp <- as.factor(levels(Data[,vari])) else pts.tmp <- seq(min(Data[,vari]), max(Data[,vari]), length.out=nb.pts)
+        
+        pts.tmp1 <- rep(seq(min(Data[,vari1]), max(Data[,vari1]), length.out=sqrt(nb.pts)),each=sqrt(nb.pts))
+        pts.tmp2 <- rep(seq(min(Data[,vari2]), max(Data[,vari2]), length.out=sqrt(nb.pts)),sqrt(nb.pts))
+        
+        Data.r.tmp <- eval(parse(text=paste("cbind(",vari1,"=pts.tmp1,",vari2,"=pts.tmp2, ref_table[,-which(colnames(ref_table)%in% c(vari1,vari2)),drop=F])",sep="")))
+        Data.r.tmp <- Data.r.tmp[,colnames(ref_table),drop=F]
+        if(length(factor_id)){
+          for(f in factor_id){
+            Data.r.tmp[,f] <- factor(as.character(Data.r.tmp[,f]), levels=levels(Data[,f]))
+          }
+        }
+        
         for(model in models){
           
           # 0. get model
           mod <- get(model)
-            
+          
           # 2. make projections
-          pts.tmp1 <- rep(seq(min(Data[,vari1]), max(Data[,vari1]), length.out=sqrt(nb.pts)),each=sqrt(nb.pts))
-          pts.tmp2 <- rep(seq(min(Data[,vari2]), max(Data[,vari2]), length.out=sqrt(nb.pts)),sqrt(nb.pts))
-          
-          Data.r.tmp <- Data.r
-          Data.r.tmp[,vari1] <- pts.tmp1
-          Data.r.tmp[,vari2] <- pts.tmp2
-          
           proj.tmp <- predict(mod, Data.r.tmp, on_0_1000=on_0_1000)
           
           # 4. Storing results
-          array.bi.out[,"Var1",paste(vari1,vari2,sep="-"),model] <- pts.tmp1
-          array.bi.out[,"Var2",paste(vari1,vari2,sep="-"),model] <- pts.tmp2
-          array.bi.out[,"Pred",paste(vari1,vari2,sep="-"),model] <- proj.tmp
+          vari <- paste(vari1,vari2,sep="_")
+          if(length(list.out[[vari]]) == 0){ #init
+            eval(parse(text=paste("list.out[['",vari,"']] <- data.frame(",vari1,"=pts.tmp1,",vari2,"=pts.tmp2, ",model,"=proj.tmp)",sep="")))
+          } else{
+            eval(parse(text=paste("list.out[['",vari,"']] <- cbind(list.out[['",vari,"']],",model,"=proj.tmp)",sep="")))
+          }
           
           # 5. Ploting results
-        	if(plot) {
+          if(plot) {
             # reformating results to perform a persp plot
             pts.tmp1 <- sort(unique(pts.tmp1))
             pts.tmp2 <- sort(unique(pts.tmp2))
@@ -212,38 +227,34 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
             # Recode facet z-values into color indices
             facetcol <- cut(zfacet, nbcol)
             
-    				persp(x=pts.tmp1,y=pts.tmp2,z=proj.tmp, xlab = vari1, ylab=vari2, zlab="pred", zlim=c(0,1), theta = 30, phi = 30,
-              expand = 0.5, col = color[facetcol], ltheta = 120, shade = 0.25, ticktype = "simple", main = formal_names[which(models==model)], cex.main = 0.9, cex.axis=0.7)
-    			}
+            persp(x=pts.tmp1,y=pts.tmp2,z=proj.tmp, xlab = vari1, ylab=vari2, zlab="pred", zlim=c(0,1), theta = 30, phi = 30,
+                  expand = 0.5, col = color[facetcol], ltheta = 120, shade = 0.25, ticktype = "simple", main = formal_names[which(models==model)], cex.main = 0.9, cex.axis=0.7)
+          }
           
         }        
       }
     }
   }
-
+  
   # XXX. Close file
   if(save.file=="pdf" | save.file=="jpeg" | save.file=="tiff" | save.file=="postscript") dev.off()
   
   # delete temp files if somes has been created
   if(file.exists(file.path(get(models[1])@resp_name,'RespPlotTmp'))){
-     unlink(path.expand(file.path(get(models[1])@resp_name,'RespPlotTmp')), recursive=TRUE, force=TRUE)
+    unlink(path.expand(file.path(get(models[1])@resp_name,'RespPlotTmp')), recursive=TRUE, force=TRUE)
   }
   
-  if(!do.bivariate){
-    invisible(array.mono.out)
-  } else{
-    invisible(array.bi.out)
-  }
-    
+  invisible(list.out)
+  
 }
- 
+
 # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
 .response.plot2.check.arg <- function(models, Data, show.variables, save.file, name, ImageSize, plot, fixed.var.metric, do.bivariate, add.args){
   
   # 1. check add.args
-#   if(sum(! (names(add.args) %in% c("nb.pts","xy"))) > 0){
-#     warning(paste(toString(names(add.args)[which(! (names(add.args) %in% c("nb.pts")))]), " are unknown arguments", sep="" ))
-#   }
+  #   if(sum(! (names(add.args) %in% c("nb.pts","xy"))) > 0){
+  #     warning(paste(toString(names(add.args)[which(! (names(add.args) %in% c("nb.pts")))]), " are unknown arguments", sep="" ))
+  #   }
   
   
   ### check of models args =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
@@ -299,15 +310,24 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
     rm(list=c('maxVal','minVal','DataTmp'))
     
   }
-    
+  
   ### check show.variables arg -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if( ( length(show.variables) > ncol(Data) ) | (sum(!(show.variables %in% colnames(Data)))) ) stop("columns wanted in show.variables do not match the data \n")
-    
-  ### check save.file arg -=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
-
   
-
-
+  # remove factorial var in do.bivariate case
+  if(do.bivariate){
+    fact_var <- sapply(Data[,show.variables, drop=F], is.factor)
+    if(sum(fact_var)>0){
+      cat("\n\tFactorial variables have been automatically removed!")
+      show.variables <- show.variables[!fact_var]
+    }
+  }
+  
+  ### check save.file arg -=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
+  
+  
+  
+  
   
   
   # TO DO 
@@ -330,11 +350,11 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
   ## ANN ##
   if(sum(!(c("nnet") %in% class(mod))) == 0){
     return(new("ANN_biomod2_model",
-      model = mod,
-      model_name = paste(as.character(mod$terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_ANN", sep=""),      
-      model_class = 'ANN', 
-      resp_name = ifelse(is.null(mod$terms[[2]]), "",as.character(mod$terms[[2]])), 
-      expl_var_names = as.character(mod$terms[[3]])))
+               model = mod,
+               model_name = paste(as.character(mod$terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_ANN", sep=""),      
+               model_class = 'ANN', 
+               resp_name = ifelse(is.null(mod$terms[[2]]), "species",as.character(mod$terms[[2]])), 
+               expl_var_names = attr(mod$terms,"term.labels")))
   }
   
   
@@ -356,7 +376,7 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
                model_name = paste(as.character(mod$terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_FDA", sep=""),
                model_class = 'FDA',
                resp_name = as.character(mod$terms[[2]]),
-               expl_var_names = as.character(mod$terms[[3]])))
+               expl_var_names = attr(mod$terms,"term.labels")))
   }
   
   ## GAM ##
@@ -367,7 +387,7 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
                model_name = paste(as.character(mod$terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_GAM", sep=""),
                model_class = 'GAM',
                resp_name = as.character(mod$terms[[2]]),
-               expl_var_names = as.character(mod$terms[[3]])))
+               expl_var_names = attr(mod$terms,"term.labels")))
   }
   
   ## GBM ##
@@ -377,7 +397,7 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
                model_name = paste(as.character(mod$Terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_GBM", sep=""),
                model_class = 'GBM',
                resp_name = as.character(mod$Terms[[2]]),
-               expl_var_names = as.character(mod$Terms[[3]])))
+               expl_var_names = attr(mod$terms,"term.labels")))
   }
   
   ## GLM ##
@@ -387,7 +407,7 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
                model_name = paste(as.character(mod$terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_GLM", sep=""),
                model_class = 'GLM',
                resp_name = as.character(mod$terms[[2]]),
-               expl_var_names = as.character(mod$terms[[3]])))
+               expl_var_names = attr(mod$terms,"term.labels")))
   }
   
   ## MARS ##
@@ -406,8 +426,8 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
                model = mod,
                model_name =paste(as.character(mod$terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_RF", sep=""),
                model_class = 'RF',
-               resp_name = as.character(mod$terms[[2]]),
-               expl_var_names = as.character(mod$terms[[3]])))
+               resp_name = ifelse(is.null(mod$terms[[2]]), "species",as.character(mod$terms[[2]])),
+               expl_var_names = attr(mod$terms,"term.labels")))
   }
   
   stop("Unknown model class")

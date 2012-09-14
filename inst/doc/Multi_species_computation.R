@@ -5,11 +5,12 @@
 ### code chunk number 1: options
 ###################################################
 options(prompt = " ", continue = "  ", width = 60, digits=4)
-.CurFileName <- "biomod2_getting_started"
+.CurFileName <- "simple_species"
 # .PrefixName <- strsplit(.CurFileName, "\\.")[[1]][1]
-.PrefixName <- .CurFileName
+.PrefixName <- file.path("figs",.CurFileName)
 .RversionName <- R.version.string
 .PkgVersion <- packageDescription("biomod2")$Version
+.SupportedDataVignette <- paste("run:",system.file('doc/Simple_species_modelling.pdf',package='biomod2'),sep="")
 
 
 ###################################################
@@ -53,7 +54,8 @@ myExpl = stack( system.file( "external/bioclim/current/bio3.grd",
 ###################################################
 
 # define the species of interest
-sp.names <- c("ConnochaetesGnou", "GuloGulo", "PantheraOnca", "PteropusGiganteus", "TenrecEcaudatus", "VulpesVulpes")
+sp.names <- c("ConnochaetesGnou", "GuloGulo", "PantheraOnca", "PteropusGiganteus", 
+              "TenrecEcaudatus", "VulpesVulpes")
 
 # loop on species == applying the same functions to each species
 for(sp.n in sp.names){
@@ -64,7 +66,7 @@ for(sp.n in sp.names){
   ## i.e keep only the column of our species
   myResp <- as.numeric(DataSpecies[,myRespName])
   
-  myRespCoord = DataSpecies[c('X_WGS84','Y_WGS84')]  ## coordinates of the presence-only data 
+  myRespCoord = DataSpecies[c('X_WGS84','Y_WGS84')]  
   
   
   
@@ -94,11 +96,13 @@ for(sp.n in sp.names){
                         modeling.id = paste(myRespName,"FirstModeling",sep=""))
   
   ### save models evaluation scores and variables importance on hard drive
-  capture.output(getModelsEvaluations(myBiomodModelOut),
-                 file=file.path(myRespName, paste(myRespName,"_formal_models_evaluation.txt", sep="")))
+  capture.output(get_evaluations(myBiomodModelOut),
+      file=file.path(myRespName, 
+                     paste(myRespName,"_formal_models_evaluation.txt", sep="")))
   
-  capture.output(getModelsVarImport(myBiomodModelOut),
-                 file=file.path(myRespName, paste(myRespName,"_formal_models_variables_importance.txt", sep="")))               
+  capture.output(get_variables_importance(myBiomodModelOut),
+      file=file.path(myRespName, 
+                     paste(myRespName,"_formal_models_variables_importance.txt", sep="")))               
                  
   
   ### Building ensemble-models
@@ -118,7 +122,7 @@ for(sp.n in sp.names){
                   prob.mean.weight.decay = 'proportional' )
   
   ### Make projections on current variable
-  myBiomomodProj <- BIOMOD_Projection(
+  myBiomodProj <- BIOMOD_Projection(
                       modeling.output = myBiomodModelOut,
                       new.env = myExpl,
                       proj.name = 'current',
@@ -130,9 +134,8 @@ for(sp.n in sp.names){
   
   ### Make ensemble-models projections on current variable
   myBiomodEF <- BIOMOD_EnsembleForecasting( 
-                  projection.output = myBiomomodProj,
-                  EM.output = myBiomodEM,
-                  binary.meth = 'TSS')
+                  projection.output = myBiomodProj,
+                  EM.output = myBiomodEM)
 }
 
 
@@ -146,7 +149,13 @@ alphaMap <- reclassify(subset(myExpl,1), c(-Inf,Inf,0))
 # # add all other species map
 for(sp.n in sp.names){
   # add layer
-  alphaMap <- alphaMap + subset(stack(file.path(sp.n,"proj_current",paste("proj_current_",sp.n,"_TotalConsensus_EMbyTSS_TSSbin.grd", sep=""))), 1)
+  alphaMap <- 
+    alphaMap + 
+    subset(stack(file.path(sp.n,
+                           "proj_current", 
+                           paste("proj_current_",
+                                 sp.n, 
+                                 "_TotalConsensus_EMbyTSS_TSSbin.grd", sep=""))), 1)
 }
 
 # summary of created raster
@@ -174,7 +183,7 @@ MyBiomodSF <- function(sp.n){
   ## i.e keep only the column of our species
   myResp <- as.numeric(DataSpecies[,myRespName])
   
-  myRespCoord = DataSpecies[c('X_WGS84','Y_WGS84')]  ## coordinates of the presence-only data 
+  myRespCoord = DataSpecies[c('X_WGS84','Y_WGS84')]
   
   
   
@@ -204,11 +213,13 @@ MyBiomodSF <- function(sp.n){
     modeling.id = paste(myRespName,"FirstModeling",sep=""))
   
   ### save models evaluation scores and variables importance on hard drive
-  capture.output(getModelsEvaluations(myBiomodModelOut),
-                 file=file.path(myRespName, paste(myRespName,"_formal_models_evaluation.txt", sep="")))
+  capture.output(get_evaluations(myBiomodModelOut),
+     file=file.path(myRespName, 
+                    paste(myRespName,"_formal_models_evaluation.txt", sep="")))
   
-  capture.output(getModelsVarImport(myBiomodModelOut),
-                 file=file.path(myRespName, paste(myRespName,"_formal_models_variables_importance.txt", sep="")))               
+  capture.output(get_variables_importance(myBiomodModelOut),
+     file=file.path(myRespName, 
+                    paste(myRespName,"_formal_models_variables_importance.txt", sep="")))               
   
   
   ### Building ensemble-models
@@ -228,7 +239,7 @@ MyBiomodSF <- function(sp.n){
     prob.mean.weight.decay = 'proportional' )
   
   ### Make projections on current variable
-  myBiomomodProj <- BIOMOD_Projection(
+  myBiomodProj <- BIOMOD_Projection(
     modeling.output = myBiomodModelOut,
     new.env = myExpl,
     proj.name = 'current',
@@ -240,9 +251,8 @@ MyBiomodSF <- function(sp.n){
   
   ### Make ensemble-models projections on current variable
   myBiomodEF <- BIOMOD_EnsembleForecasting( 
-    projection.output = myBiomomodProj,
-    EM.output = myBiomodEM,
-    binary.meth = 'TSS')
+    projection.output = myBiomodProj,
+    EM.output = myBiomodEM)
                         
 }
 

@@ -7,7 +7,8 @@ BIOMOD_LoadModels <- function(bm.out, ... ){
   add.args <- args$add.args
   rm(args)
   
-  models.to.load <- bm.out@models.computed
+  models.to.load <- get_built_models(bm.out)
+  
   envir <- parent.frame()
   
   
@@ -68,8 +69,8 @@ BIOMOD_LoadModels <- function(bm.out, ... ){
 }
 
 .BIOMOD_LoadModels.check.args <- function(bm.out, add.args){
-  if(!inherits(bm.out, 'BIOMOD.models.out')){
-    stop("bm.out arg must be a BIOMOD.models.out object")
+  if(! (inherits(bm.out, 'BIOMOD.models.out') | inherits(bm.out, 'BIOMOD.EnsembleModeling.out'))){
+    stop("bm.out arg must be a BIOMOD.models.out or a BIOMOD.EnsembleModeling.out object")
   }
   
   available.args <- c("models", "run.eval", "data.set", "path", "as", "full.name")
@@ -84,25 +85,34 @@ BIOMOD_LoadModels <- function(bm.out, ... ){
     }
   }
   
+  ## get all available model names
+  avail_models <- get_built_models(bm.out)
+  
   ## check additional args values
   ### models names
   if(!is.null(add.args$models)){
-    if(sum(add.args$models %in% .extractModelNamesInfo(model.names=bm.out@models.computed, info='models') ) != length(add.args$models) ){
-      stop(paste("models argument must be one of ", toString(.extractModelNamesInfo(model.names=bm.out@models.computed, info='models')), sep="") )
+    if(sum(add.args$models %in% .extractModelNamesInfo(model.names=avail_models, info='models') ) != length(add.args$models) ){
+      stop(paste("models argument must be one of ", toString(.extractModelNamesInfo(model.names=avail_models, info='models')), sep="") )
+    } else{
+      add.args$models = paste("_", add.args$models, sep="")
     }
   }
   
   ### run.eval names
   if(!is.null(add.args$run.eval)){
-    if(sum(add.args$run.eval %in% .extractModelNamesInfo(model.names=bm.out@models.computed, info='run.eval') != length(add.args$run.eval)) ){
-      stop(paste("run.eval argument must be one of ", toString(.extractModelNamesInfo(model.names=bm.out@models.computed), info='run.eval'), sep="") )
+    if(sum(add.args$run.eval %in% .extractModelNamesInfo(model.names=avail_models, info='run.eval') != length(add.args$run.eval)) ){
+      stop(paste("run.eval argument must be one of ", toString(.extractModelNamesInfo(model.names=avail_models), info='run.eval'), sep="") )
+    } else{
+      add.args$run.eval = paste("_", add.args$run.eval, "_", sep="")
     }
   }
   
   ### data.set names
   if(!is.null(add.args$data.set)){
-    if(sum(add.args$data.set %in% .extractModelNamesInfo(model.names=bm.out@models.computed, info='data.set') != length(add.args$data.set)) ){
-      stop(paste("data.set argument must be one of ", toString(.extractModelNamesInfo(model.names=bm.out@models.computed), info='data.set'), sep="") )
+    if(sum(add.args$data.set %in% .extractModelNamesInfo(model.names=avail_models, info='data.set') != length(add.args$data.set)) ){
+      stop(paste("data.set argument must be one of ", toString(.extractModelNamesInfo(model.names=avail_models), info='data.set'), sep="") )
+    } else{
+      add.args$data.set = paste("_", add.args$data.set, "_", sep="")
     }
   }
   
@@ -117,8 +127,8 @@ BIOMOD_LoadModels <- function(bm.out, ... ){
   
   ### full.name
   if(!is.null(add.args$full.name)){
-    if(sum(!(add.args$full.name %in% bm.out@models.computed)) > 0){
-      stop("full.name arg must be one of : ", toString(bm.out@models.computed))
+    if(sum(!(add.args$full.name %in% avail_models)) > 0){
+      stop("full.name arg must be one of : ", toString(avail_models))
     }
   }
   

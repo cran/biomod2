@@ -32,11 +32,13 @@
 \alias{.Models.prepare.data,BIOMOD.formated.data-method}
 \alias{.Models.prepare.data,BIOMOD.formated.data.PA-method}
 
+
 \title{ biomod2 internal functions }
 
 \description{ 
 biomod2 internal functions.
 }
+
 
 \details{
   All this functions are low level functions. Interested people can go into source code for futher details.

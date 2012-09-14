@@ -14,16 +14,21 @@
 #   expl.var <- Explanatory Variable as matrix, data.frame, sp.point.data.frame or rasterStack
 #   resp.xy <- coordiantes of reponse points (2 column matrix)
 #   resp.name <- name of considered specie
+#   eval.resp.var <- independent response variable for models evaluations
+#   eval.expl.var <- independent explanatory variable for models evaluations
+#   eval.resp.xy <- independent response variable coordinates variable for models evaluations
 #   PA.nb.rep <- Nb of Pseudo Absences Run to compute
 #   PA.nb.absences <- Nb of Absences selected (true absences are counted in)
-#   PA.strategy <- Pseudo Absences startegy
-#   PA.distances <- Pseudo Absences minimum distance between pres and selected absences
+#   PA.strategy <- Pseudo Absences strategy
+#   PA.dist.min <- If strategy is 'disk' : Pseudo Absences minimum distance between pres and selected absences (in metters if explanatory is georeferenced or in resp.xy units in all other cases)
+#   PA.dist.man <- If strategy is 'disk' : Pseudo Absences maximum distance between pres and selected absences (in metters if explanatory is georeferenced or in resp.xy units in all other cases)
+# 
+#   PA.sre.quant <- If strategy is 'sre' : the quantile use for sre calculation
+#   PA.table <- If strategy is 'user.defined' : a boolean data.frame indiacating which points of resp.var should be sonsidered in each PA run.
+#   na.rm <- if True na are automatically removed
 
 # OUTPUT : 
 #   a BIOMOD.formated.data object that will be given to BIOMOD_Modeling function
-
-# NOTE : 
-#   Independents dataset no considered yet !
 
 ####################################################################################################
 
@@ -78,23 +83,29 @@
   rm('args')
   gc()
   
+  out <- NULL
+  
   if(PA.strategy == 'none'){ # no Pseudo Absences
-    return(BIOMOD.formated.data(sp=resp.var,
+    out <- BIOMOD.formated.data(sp=resp.var,
                                 xy=resp.xy,
                                 env=expl.var,
                                 sp.name=resp.name,
                                 eval.sp=eval.resp.var,
                                 eval.env=eval.expl.var,
                                 eval.xy=eval.resp.xy,
-                                na.rm=na.rm))
+                                na.rm=na.rm)
   } else{ # Automatic Pseudo Absences Selection
-    return(BIOMOD.formated.data.PA(sp=resp.var, xy=resp.xy, env=expl.var, sp.name=resp.name,
+    out <- BIOMOD.formated.data.PA(sp=resp.var, xy=resp.xy, env=expl.var, sp.name=resp.name,
                                    eval.sp=eval.resp.var, eval.env=eval.expl.var, eval.xy=eval.resp.xy,
                                    PA.NbRep=PA.nb.rep, PA.strategy=PA.strategy, 
                                    PA.nb.absences = PA.nb.absences, PA.dist.min = PA.dist.min,
                                    PA.dist.max = PA.dist.max, PA.sre.quant = PA.sre.quant, PA.table=PA.table, 
-                                   na.rm=na.rm))
+                                   na.rm=na.rm)
   } 
+  
+  
+  .bmCat("Done")
+  return(out)
 }
 
 .BIOMOD_FormatingData.check.args <- function(resp.var,
@@ -154,7 +165,7 @@
     if(!is.null(resp.xy)){
       cat("\n      ! XY coordinates of response variable will be ignored because spatial response object is given.")
     }
-    resp.xy <- data.matrix(coordinates(resp.var))
+    resp.xy <- data.matrix(sp::coordinates(resp.var))
     if(class(resp.var) == 'SpatialPointsDataFrame'){
       resp.var <- resp.var@data
     } else{
@@ -179,7 +190,7 @@
   }
       
   if(inherits(expl.var, 'Raster')){
-    expl.var <- raster:::stack(expl.var)
+    expl.var <- raster::stack(expl.var)
   }
     
   if(inherits(expl.var, 'SpatialPoints')){
@@ -279,7 +290,7 @@
       if(!is.null(eval.resp.xy)){
         cat("\n      ! XY coordinates of response variable will be ignored because spatial response object is given.")
       }
-      eval.resp.xy <- data.matrix(coordinates(eval.resp.var))
+      eval.resp.xy <- data.matrix(sp::coordinates(eval.resp.var))
       if(class(eval.resp.var) == 'SpatialPointsDataFrame'){
         eval.resp.var <- eval.resp.var@data
       } else{
@@ -304,7 +315,7 @@
     }
         
     if(inherits(eval.expl.var, 'Raster')){
-      eval.expl.var <- raster:::stack(eval.expl.var)
+      eval.expl.var <- raster::stack(eval.expl.var)
     }
       
     if(inherits(eval.expl.var, 'SpatialPoints')){

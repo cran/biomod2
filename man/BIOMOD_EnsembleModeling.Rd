@@ -19,7 +19,8 @@ BIOMOD_EnsembleModeling( modeling.output,
                          prob.median = FALSE,
                          committee.averaging = FALSE,
                          prob.mean.weight = FALSE,
-                         prob.mean.weight.decay = 'proportional')
+                         prob.mean.weight.decay = 'proportional',
+                         VarImport = 0)
 }
 
 \arguments{
@@ -36,13 +37,14 @@ BIOMOD_EnsembleModeling( modeling.output,
   \item{committee.averaging}{Logical. Estimate the committee averaging across predictions}
   \item{prob.mean.weight}{Logical. Estimate the weighted sum of probabilities}
   \item{prob.mean.weight.decay}{Define the relative importance of the weights. A high value will strongly discriminate the 'good' models from the 'bad' ones (see the details section). If the value of this parameter is set to 'proportional' (default), then the attributed weights are proportional to the evaluation scores given by 'weight.method'(\code{eval.metric})}
+  \item{VarImport}{Number of permutation to estimate variable importance}
 }
 
 \details{
   \enumerate{ 
     \item{\bold{Models sub-selection (\code{chosen.models})}}{
 
-      Useful to exclude some models that have been selected in the previous steps (\code{modeling.output}). This vector of model names can be access applying \code{getModelsBuiltModels} to your \code{modeling.output} data. It makes easier the selection of models. The default value (i.e. \sQuote{all}) will kept all available models.}
+      Useful to exclude some models that have been selected in the previous steps (\code{modeling.output}). This vector of model names can be access applying \code{get_built_models} to your \code{modeling.output} data. It makes easier the selection of models. The default value (i.e. \sQuote{all}) will kept all available models.}
     
     \item{\bold{Models assembly rules (\code{em.by})}}{
     
@@ -140,7 +142,7 @@ BIOMOD_EnsembleModeling( modeling.output,
 \value{
 A \code{"\link[=BIOMOD.EnsembleModeling.out-class]{BIOMOD.EnsembleModeling.out}"}. This object will be later given to \code{\link[biomod2]{BIOMOD_EnsembleForecasting}} if you want to make some projections of this ensemble-models.
 
-You can access to evaluation scores with the \code{getEMeval} function and to the built models names with the \code{getEMbuiltModels} function (see example).
+You can access to evaluation scores with the \code{get_evaluations} function and to the built models names with the \code{get_built_models} function (see example).
 }
 
 \note{
@@ -157,7 +159,6 @@ Damien Georges & Wilfried Thuiller with participation of Robin Engler
 }
 
 \examples{
-
 # species occurrences
 DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
                                     package="biomod2"), row.names = 1)
@@ -175,7 +176,7 @@ myRespXY <- DataSpecies[,c("X_WGS84","Y_WGS84")]
 
 # Environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
 myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
-                             package="biomod2"),
+                     package="biomod2"),
                 system.file( "external/bioclim/current/bio4.grd", 
                              package="biomod2"), 
                 system.file( "external/bioclim/current/bio7.grd", 
@@ -211,7 +212,7 @@ myBiomodModelOut <- BIOMOD_Modeling( myBiomodData,
 # 4. Doing Ensemble Modelling
 myBiomodEM <- BIOMOD_EnsembleModeling( modeling.output = myBiomodModelOut,
                            chosen.models = 'all',
-                           em.by = 'algo',
+                           em.by = 'all',
                            eval.metric = c('TSS'),
                            eval.metric.quality.threshold = c(0.7),
                            prob.mean = TRUE,
@@ -227,7 +228,7 @@ myBiomodEM <- BIOMOD_EnsembleModeling( modeling.output = myBiomodModelOut,
 myBiomodEM
 
 # get evaluation scores
-getEMeval(myBiomodEM)
+get_evaluations(myBiomodEM)
 
                                     
 }

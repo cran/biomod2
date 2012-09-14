@@ -13,7 +13,7 @@
 <a href="../../../doc/html/packages.html"><img src="../../../doc/html/left.jpg" alt="[Up]" width="30" height="30" border="0"></a>
 <a href="../../../doc/html/index.html"><img src="../../../doc/html/up.jpg" alt="[Top]" width="30" height="30" border="0"></a>
 </div><h2>Documentation for package &lsquo;biomod2&rsquo; 
-version 2.1.15
+version 2.1.41
 </h2>
 
 <ul><li><a href="../DESCRIPTION">DESCRIPTION file</a>.</li>
@@ -31,6 +31,7 @@ version 2.1.15
 <li><a href="#getter_setter_cleaner">getters, setters &amp; cleaner</a></li>
 <li><a href="#biomod2_objects">biomod2 objects</a></li>
 <li><a href="#biomod2_inner">internal functions</a></li>
+<li><a href="#biomod2_deprecated">deprecated functions</a></li>
 <!-- </p> -->
 </ul>
 
@@ -93,6 +94,15 @@ version 2.1.15
 <td>Analysis of the range size changes</td></tr>
 <tr><td width="25%"><a href="BIOMOD_RangeSize.html">BIOMOD_RangeSize-methods</a></td>
 <td>Analysis of the range size changes</td></tr>
+
+<!-- evaluate -->
+<tr><td width="25%"><a href="evaluate.html">evaluate</a></td>
+<td>biomod2 modeling outputs evaluation</td></tr>
+
+<!-- variable importance -->
+<tr><td width="25%"><a href="variables_importance.html">variables_importance</a></td>
+<td>Variables importance calculation</td></tr>
+
 
 <!-- sre -->
 <tr><td width="25%"><a href="sre.html">sre</a></td>
@@ -157,7 +167,15 @@ version 2.1.15
 
 <!-- DF_to_ARRAY -->
 <tr><td width="25%"><a href="DF_to_ARRAY.html">DF_to_ARRAY</a></td>
-<td>Convert a biomod2 data.frame into array</td></tr>
+<td>Convert a biomod2 data.frame (or list) into array</td></tr>
+<tr><td width="25%"><a href="DF_to_ARRAY.html">LIST_to_ARRAY</a></td>
+<td>Convert a biomod2 data.frame (or list) into array</td></tr>
+
+<!-- full_suffling -->
+<tr><td width="25%"><a href="randomise_data.html">randomise_data</a></td>
+<td>data set shuffling tool</td></tr>
+<tr><td width="25%"><a href="full_shuffling.html">full_suffling</a></td>
+<td>data set shuffling tool</td></tr>
 
 </table>
 
@@ -178,62 +196,50 @@ version 2.1.15
 <td>BIOMOD.projection.out setter</td></tr>
 <tr><td width="25%"><a href="BIOMOD.projection.out-methods.html">free-method</a></td>
 <td>BIOMOD.projection.out setter</td></tr>
-<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-methods.html">getEMalgos</a></td>
-<td>BIOMOD.EnsembleModeling.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-methods.html">getEMalgos-method</a></td>
-<td>BIOMOD.EnsembleModeling.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-methods.html">getEMbuiltModels</a></td>
-<td>BIOMOD.EnsembleModeling.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-methods.html">getEMbuiltModels-method</a></td>
-<td>BIOMOD.EnsembleModeling.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-methods.html">getEMeval</a></td>
-<td>BIOMOD.EnsembleModeling.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-methods.html">getEMeval-method</a></td>
-<td>BIOMOD.EnsembleModeling.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-methods.html">getEMkeptModels</a></td>
-<td>BIOMOD.EnsembleModeling.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-methods.html">getEMkeptModels-method</a></td>
-<td>BIOMOD.EnsembleModeling.out getters</td></tr>
-<tr><td width="25%"><a href="biomod2_model-class.html">getFormalModel</a></td>
+<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">get_built_models</a></td>
+<td>BIOMOD.models.out getters</td></tr>
+<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">get_built_models-method</a></td>
+<td>BIOMOD.models.out getters</td></tr>
+<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">get_evaluations</a></td>
+<td>BIOMOD.models.out getters</td></tr>
+<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">get_evaluations-method</a></td>
+<td>BIOMOD.models.out getters</td></tr>
+<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">get_formal_data</a></td>
+<td>BIOMOD.models.out getters</td></tr>
+<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">get_formal_data-method</a></td>
+<td>BIOMOD.models.out getters</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">get_formal_model</a></td>
 <td>biomod2 models objects class and functions</td></tr>
-<tr><td width="25%"><a href="biomod2_model-class.html">getFormalModel-method</a></td>
+<tr><td width="25%"><a href="biomod2_model-class.html">get_formal_model-method</a></td>
 <td>biomod2 models objects class and functions</td></tr>
-<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">getModelsBuiltModels</a></td>
+<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-methods.html">get_kept_models</a></td>
+<td>BIOMOD.EnsembleModeling.out getters</td></tr>
+<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-methods.html">get_kept_models-method</a></td>
+<td>BIOMOD.EnsembleModeling.out getters</td></tr>
+<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-methods.html">get_needed_models</a></td>
+<td>BIOMOD.EnsembleModeling.out getters</td></tr>
+<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-methods.html">get_needed_models-method</a></td>
+<td>BIOMOD.EnsembleModeling.out getters</td></tr>
+<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">get_options</a></td>
 <td>BIOMOD.models.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">getModelsBuiltModels-method</a></td>
+<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">get_options-method</a></td>
 <td>BIOMOD.models.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">getModelsEvaluations</a></td>
+<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">get_predictions</a></td>
 <td>BIOMOD.models.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">getModelsEvaluations-method</a></td>
+<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">get_predictions-method</a></td>
 <td>BIOMOD.models.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">getModelsInputData</a></td>
-<td>BIOMOD.models.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">getModelsInputData-method</a></td>
-<td>BIOMOD.models.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">getModelsOptions</a></td>
-<td>BIOMOD.models.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">getModelsOptions-method</a></td>
-<td>BIOMOD.models.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">getModelsPrediction</a></td>
-<td>BIOMOD.models.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">getModelsPrediction-method</a></td>
-<td>BIOMOD.models.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">getModelsPredictionEval</a></td>
-<td>BIOMOD.models.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">getModelsPredictionEval-method</a></td>
-<td>BIOMOD.models.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">getModelsVarImport</a></td>
-<td>BIOMOD.models.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">getModelsVarImport-method</a></td>
-<td>BIOMOD.models.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.projection.out-methods.html">getProjection</a></td>
+<tr><td width="25%"><a href="BIOMOD.projection.out-methods.html">get_projected_models</a></td>
 <td>BIOMOD.projection.out getters</td></tr>
-<tr><td width="25%"><a href="BIOMOD.projection.out-methods.html">getProjection-method</a></td>
+<tr><td width="25%"><a href="BIOMOD.projection.out-methods.html">get_projected_models-method</a></td>
 <td>BIOMOD.projection.out getters</td></tr>
-<tr><td width="25%"><a href="biomod2_model-class.html">getScalingModel</a></td>
+<tr><td width="25%"><a href="biomod2_model-class.html">get_scaling_model</a></td>
 <td>biomod2 models objects class and functions</td></tr>
-<tr><td width="25%"><a href="biomod2_model-class.html">getScalingModel-method</a></td>
+<tr><td width="25%"><a href="biomod2_model-class.html">get_scaling_model-method</a></td>
 <td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">get_variables_importance</a></td>
+<td>BIOMOD.models.out getters</td></tr>
+<tr><td width="25%"><a href="BIOMOD.models.out-methods.html">get_variables_importance-method</a></td>
+<td>BIOMOD.models.out getters</td></tr>
 </table>
 
 
@@ -264,6 +270,10 @@ version 2.1.15
 <tr><td width="25%"><a href="biomod2_model-class.html">biomod2_model</a></td>
 <td>biomod2 models objects class and functions</td></tr>
 <tr><td width="25%"><a href="biomod2_model-class.html">biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">biomod2_ensemble_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">biomod2_ensemble_model-class</a></td>
 <td>biomod2 models objects class and functions</td></tr>
 
 <!-- EnsembleModeling -->
@@ -301,6 +311,7 @@ version 2.1.15
 
 <h4> biomod2 individual models </h4>
 <table width="100%">
+
 <!-- ANN -->
 <tr><td width="25%"><a href="biomod2_model-class.html">ANN_biomod2_model</a></td>
 <td>biomod2 models objects class and functions</td></tr>
@@ -351,11 +362,41 @@ version 2.1.15
 <td>biomod2 models objects class and functions</td></tr>
 <tr><td width="25%"><a href="biomod2_model-class.html">SRE_biomod2_model-class</a></td>
 <td>biomod2 models objects class and functions</td></tr>
+<!-- EM -->
+<tr><td width="25%"><a href="biomod2_model-class.html">EMca_biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">EMca_biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">EMci_biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">EMci_biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">EMcv_biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">EMcv_biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">EMmean_biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">EMmean_biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">EMmedian_biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">EMmedian_biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">EMwmean_biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">EMwmean_biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
 <!-- Predict -->
 <tr><td width="25%"><a href="biomod2_model-class.html">predict-method</a></td>
 <td>biomod2 models objects class and functions</td></tr>
-<<!-- Show -->
+<!-- Show -->
 <tr><td width="25%"><a href="biomod2_model-class.html">show-method</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<!-- getter and setter -->
+<tr><td width="25%"><a href="biomod2_model-class.html">get_var_range</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">get_var_type</a></td>
 <td>biomod2 models objects class and functions</td></tr>
 </table>
 
@@ -368,6 +409,10 @@ version 2.1.15
 <tr><td width="25%"><a href="BIOMOD.stored.objects-class.html">BIOMOD.stored.array</a></td>
 <td>BIOMOD.stored.xxx objects class</td></tr>
 <tr><td width="25%"><a href="BIOMOD.stored.objects-class.html">BIOMOD.stored.array-class</a></td>
+<td>BIOMOD.stored.xxx objects class</td></tr>
+<tr><td width="25%"><a href="BIOMOD.stored.objects-class.html">BIOMOD.stored.data.frame</a></td>
+<td>BIOMOD.stored.xxx objects class</td></tr>
+<tr><td width="25%"><a href="BIOMOD.stored.objects-class.html">BIOMOD.stored.data.frame-class</a></td>
 <td>BIOMOD.stored.xxx objects class</td></tr>
 <tr><td width="25%"><a href="BIOMOD.stored.objects-class.html">BIOMOD.stored.data</a></td>
 <td>BIOMOD.stored.xxx objects class</td></tr>
@@ -393,6 +438,11 @@ version 2.1.15
 <td>BIOMOD.stored.xxx objects class</td></tr>
 <tr><td width="25%"><a href="BIOMOD.stored.objects-class.html">BIOMOD.stored.raster.stack-class</a></td>
 <td>BIOMOD.stored.xxx objects class</td></tr>
+<!-- getter and setter -->
+<tr><td width="25%"><a href="BIOMOD.stored.objects-methods.html">load_stored_object</a></td>
+<td>BIOMOD.stored.objects functions</td></tr>
+<tr><td width="25%"><a href="BIOMOD.stored.objects-methods.html">load_stored_object-method</a></td>
+<td>BIOMOD.stored.objects functions</td></tr>
 
 </table>
 
@@ -430,6 +480,78 @@ version 2.1.15
 <td>biomod2 internal functions</td></tr>
 <tr><td width="25%"><a href="biomod2.inner-methods.html">.transform.outputs-method</a></td>
 <td>biomod2 internal functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">check_data_range</a></td>
+<td>biomod2 models objects class and functions</td></tr>
 </table>
+
+<h3><a name="biomod2_deprecated">-- deprecated functions --</a></h3>
+<table width="100%">
+
+<tr><td width="25%"><a href="response.plot.html">response.plot</a></td>
+<td>Analysis of the response curves of a model within Biomod</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getEMalgos</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getEMalgos-method</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getEMbuiltModels</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getEMbuiltModels-method</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getEMeval</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getEMeval-method</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getEMkeptModels</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getEMkeptModels-method</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getEM_needed_models</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getEM_needed_models-method</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getFormalModel</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getFormalModel-method</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getModelsBuiltModels</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getModelsBuiltModels-method</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getModelsEvaluations</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getModelsEvaluations-method</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getModelsInputData</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getModelsInputData-method</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getModelsOptions</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getModelsOptions-method</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getModelsPrediction</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getModelsPrediction-method</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getModelsPredictionEval</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getModelsPredictionEval-method</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getModelsVarImport</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getModelsVarImport-method</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getProjection</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getProjection-method</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getScalingModel</a></td>
+<td>biomod2 deprecated functions</td></tr>
+<tr><td width="25%"><a href="deprecated_functions.html">getScalingModel-method</a></td>
+<td>biomod2 deprecated functions</td></tr>
+
+</table>
+
+
 
 </body></html>

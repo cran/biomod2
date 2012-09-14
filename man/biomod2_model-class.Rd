@@ -4,13 +4,18 @@
 
 \alias{biomod2_model-class}
 \alias{biomod2_model}
+\alias{biomod2_ensemble_model-class}
+\alias{biomod2_ensemble_model}
 
 % biomod2_model-method
 \alias{show,biomod2_model-method}
-\alias{getFormalModel}
-\alias{getFormalModel,biomod2_model-method}
-\alias{getScalingModel}
-\alias{getScalingModel,biomod2_model-method}
+\alias{get_formal_model}
+\alias{get_formal_model,biomod2_model-method}
+\alias{get_scaling_model}
+\alias{get_scaling_model,biomod2_model-method}
+\alias{check_data_range}
+\alias{get_var_range}
+\alias{get_var_type}
 
 
 \alias{ANN_biomod2_model-class}
@@ -53,11 +58,35 @@
 \alias{SRE_biomod2_model}
 \alias{predict,SRE_biomod2_model-method}
 
+\alias{EMca_biomod2_model-class}
+\alias{EMca_biomod2_model}
+\alias{predict,EMca_biomod2_model-method}
+
+\alias{EMci_biomod2_model-class}
+\alias{EMci_biomod2_model}
+\alias{predict,EMci_biomod2_model-method}
+
+\alias{EMcv_biomod2_model-class}
+\alias{EMcv_biomod2_model}
+\alias{predict,EMcv_biomod2_model-method}
+
+\alias{EMmean_biomod2_model-class}
+\alias{EMmean_biomod2_model}
+\alias{predict,EMmean_biomod2_model-method}
+
+\alias{EMmedian_biomod2_model-class}
+\alias{EMmedian_biomod2_model}
+\alias{predict,EMmedian_biomod2_model-method}
+
+\alias{EMwmean_biomod2_model-class}
+\alias{EMwmean_biomod2_model}
+\alias{predict,EMwmean_biomod2_model-method}
+
 
 \title{ biomod2 models objects class and functions}
 
 \description{
-  This objects represent all biomod2 models as it was a 'classical' \R model. It is produce during \code{\link[biomod2]{BIOMOD_Modeling}} step. It can be printed. \code{\link{predict}} function is also implemented for this object and supports \code{\link{data.frame}} and \code{{RasterStack}} inputs. You cen rise formal models with \code{getFormalModel} and the associated scaling GLM (if exists) with \code{getScalingModel}. All this object have also their own \code{predict} function.
+  This objects represent all biomod2 models as it was a 'classical' \R model. It is produce during \code{\link[biomod2]{BIOMOD_Modeling}} step. It can be printed. \code{\link{predict}} function is also implemented for this object and supports \code{\link{data.frame}} and \code{{RasterStack}} inputs. You cen rise formal models with \code{get_formal_model} and the associated scaling GLM (if exists) with \code{get_scaling_model}. All this object have also their own \code{predict} function.
 
 }
 
@@ -66,7 +95,7 @@
 
   \describe{
     \item{\code{model_name}:}{ "character", model name }
-    \item{\code{model_class}:}{"character", type of model (e.g. 'GLM', 'RF', 'MAXENT')}
+    \item{\code{model_class}:}{"character", type of model (e.g. 'GLM', 'RF', 'MAXENT','EMmean')}
     \item{\code{model_options}:}{ "list", list of options used for model building }
     \item{\code{model}:}{"ANY", the formal R model (if exists)}
     \item{\code{scaling_model}:}{"ANY", the associated glm to scale prediction on 0-1 (if exists)}
@@ -89,4 +118,5 @@
 showClass("ANN_biomod2_model")
 }
 
-\keyword{models, predict}
+\keyword{models}
+\keyword{predict}

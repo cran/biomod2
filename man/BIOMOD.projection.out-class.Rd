@@ -7,7 +7,7 @@
 
 % BIOMOD.projection.out-method
 \alias{show,BIOMOD.projection.out-method}
-\alias{plot,BIOMOD.projection.out-method}
+\alias{plot,BIOMOD.projection.out,missing-method}
 
 \title{ BIOMOD_Projection() outputs objects class}
 

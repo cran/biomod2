@@ -6,7 +6,19 @@
   Enables to plot data with 2-dimensional geographical coordinates
 }
 \usage{
-level.plot(data.in, XY, color.gradient = "red", cex = 1, level.range = c(min(data.in), max(data.in)), show.scale = TRUE, title = "level plot", SRC=FALSE, save.file="no", ImageSize="small", AddPresAbs=NULL, PresAbsSymbol=c(cex*0.8,16,4), ...)
+level.plot( data.in, 
+            XY,
+            color.gradient = "red",
+            cex = 1,
+            level.range = c(min(data.in), max(data.in)),
+            show.scale = TRUE,
+            title = "level plot",
+            SRC=FALSE,
+            save.file="no",
+            ImageSize="small",
+            AddPresAbs=NULL,
+            PresAbsSymbol=c(cex*0.8,16,4),
+            ...)
 }
 
 \arguments{

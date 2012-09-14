@@ -64,7 +64,7 @@ myRespXY <- DataSpecies[,c("X_WGS84","Y_WGS84")]
 
 # Environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
 myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
-                             package="biomod2"),
+                     package="biomod2"),
                 system.file( "external/bioclim/current/bio4.grd", 
                              package="biomod2"), 
                 system.file( "external/bioclim/current/bio7.grd", 
@@ -87,11 +87,10 @@ myBiomodOption <- BIOMOD_ModelingOptions()
 # 3. Doing Modelisation
 
 myBiomodModelOut <- BIOMOD_Modeling( myBiomodData, 
-                                       models = c('SRE','RF'), 
+                                       models = c('RF'), 
                                        models.options = myBiomodOption, 
                                        NbRunEval=2, 
                                        DataSplit=70, 
-                                       Prevalence=0.5,
                                        models.eval.meth = c('TSS'),
                                        SaveObj = TRUE,
                                        do.full.models = FALSE)

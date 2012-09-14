@@ -34,7 +34,7 @@
     
     # oppen the divice if filename
     if(length(filename)){
-      switch(tools:::file_ext(filename),
+      switch(tools::file_ext(filename),
              pdf = pdf(filename),
              jpeg = jpeg(filename),
              tiff = tiff(filename),
@@ -67,7 +67,7 @@
     out$stats <- cbind(lower_limit,upper_limit)
       
     if(!is.null(groups)){
-      if(! (length(filename) | one_plot)) x11()
+      if(! (length(filename) | one_plot)) dev.new()
       par(mfrow=c(1,nrow(groups)))
       
       color.samp <- list()                                          
@@ -97,7 +97,7 @@
       area2 <- (apply(projections[which(initial==1),],2,sum) / sum(initial==1) -1) * 100
       area3 <- area - area2
       
-      if(! (length(filename) | one_plot)) x11()
+      if(! (length(filename) | one_plot)) dev.new()
       par(mfrow=c(1,nrow(groups))) 
       
       for(i in 1:nrow(groups)){
@@ -118,7 +118,7 @@
     
     #if plot of distribution plot wanted
     if(plothist){
-      if(! (length(filename) | one_plot)) x11()
+      if(! (length(filename) | one_plot)) dev.new()
       par(mfrow=c(1,1))
       
       col_list <- colorRampPalette(c("dodgerblue1","steelblue1","slategray1","aliceblue"))(length(lim))
@@ -211,8 +211,8 @@
   
   # check saving options
   if(!is.null(filename)){
-    if( ! (tools:::file_ext(filename) %in% c("pdf","jpeg","tiff","eps","png"))){
-      filename <- paste(tools:::file_path_sans_ext(filename),".pdf",sep="")
+    if( ! (tools::file_ext(filename) %in% c("pdf","jpeg","tiff","eps","png"))){
+      filename <- paste(tools::file_path_sans_ext(filename),".pdf",sep="")
       cat("\n\t! 'filename' extension unknown => outputs will be stored in :", filename)
     }
   }

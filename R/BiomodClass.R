@@ -12,14 +12,72 @@ require(sp, quietly=TRUE)
 require(raster, quietly=TRUE)
 require(rasterVis, quietly=TRUE)
 
-# if('mgcv' %in% rownames(installed.packages())){
-#   require(mgcv, quietly=TRUE)
-# } else{
-#   require(gam, quietly=TRUE)
-# }
-# 
-# require(rpart, quietly=TRUE)
-# require(mda, quietly=TRUE)
+# 0. Generic Functions definition -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=- #
+setGeneric("get_predictions",
+           function(obj, ...){
+             standardGeneric("get_predictions")
+           })
+
+setGeneric("get_projected_models",
+           function(obj, ...){
+             standardGeneric("get_projected_models")
+           })
+
+setGeneric("get_evaluations",
+           function(obj, ...){
+             standardGeneric("get_evaluations")
+           })
+
+setGeneric("get_variables_importance",
+           function(obj, ...){
+             standardGeneric("get_variables_importance")
+           })
+
+setGeneric("get_options",
+           function(obj, ...){
+             standardGeneric("get_options")
+           })
+
+setGeneric("get_formal_data",
+           function(obj, ...){
+             standardGeneric("get_formal_data")
+           })
+
+setGeneric("get_built_models",
+           function(obj, ...){
+             standardGeneric("get_built_models")
+           })
+
+setGeneric("get_needed_models",
+           function(obj, ...){
+             standardGeneric("get_needed_models")
+           })
+
+setGeneric("get_kept_models",
+           function(obj, ...){
+             standardGeneric("get_kept_models")
+           })
+
+setGeneric("load_stored_object",
+           function(obj, ...){
+             standardGeneric("load_stored_object")
+           })
+
+setGeneric("RemoveProperly",
+           function(obj, obj.name=deparse(substitute(obj)), ...){
+             standardGeneric("RemoveProperly")
+           })
+
+setGeneric("free",
+           function(obj, ...){
+             standardGeneric("free")
+           })
+
+setGeneric( ".Models.prepare.data", 
+            def = function(data, ...){
+              standardGeneric( ".Models.prepare.data" )
+            } )
+
 
 # 1. The BIOMOD.formated.data -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=- #
 # this object is the basic one
@@ -91,7 +149,7 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='data.frame' ),
       rowToRm <- unique(unlist(lapply(BFD@data.env.var,function(x){return(which(is.na(x)))})))
       if(length(rowToRm)){
         cat("\n\t\t\t! Some NAs have been automaticly removed from your data")
-        BFD@coord <- BFD@coord[-rowToRm,]
+        BFD@coord <- BFD@coord[-rowToRm,,drop=FALSE]
         BFD@data.species <- BFD@data.species[-rowToRm]
         BFD@data.env.var <- BFD@data.env.var[-rowToRm,,drop=FALSE]
       }
@@ -99,7 +157,7 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='data.frame' ),
         rowToRm <- unique(unlist(lapply(BFD@eval.data.env.var,function(x){return(which(is.na(x)))})))
         if(length(rowToRm)){
           cat("\n\t\t\t! Some NAs have been automaticly removed from your evaluation data")
-          BFD@eval.coord <- BFD@eval.coord[-rowToRm,]
+          BFD@eval.coord <- BFD@eval.coord[-rowToRm,,drop=FALSE]
           BFD@eval.data.species <- BFD@eval.data.species[-rowToRm]
           BFD@eval.data.env.var <- BFD@eval.data.env.var[-rowToRm,,drop=FALSE]
         }      
@@ -142,11 +200,12 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='matrix' ),
           
 setMethod('BIOMOD.formated.data', signature(sp='numeric', env='RasterStack' ), 
   function(sp,env,xy=NULL,sp.name=NULL, eval.sp=NULL, eval.env=NULL, eval.xy=NULL, na.rm=TRUE){
-    categorial_var <- names(env)[is.factor(env)]
+    categorial_var <- names(env)[raster::is.factor(env)]
     
     # take the same eval environemental variables than calibrating ones 
     if(!is.null(eval.sp)){
       if(is.null(eval.env)){
+#         eval.env_levels <- levels(eval.env)
         eval.env <- as.data.frame(extract(env,eval.xy))
         if(length(categorial_var)){
           for(cat_var in categorial_var){
@@ -158,46 +217,70 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='RasterStack' ),
     
     if(is.null(xy)) xy <- as.data.frame(coordinates(env))
       
-    data.mask = reclassify(raster:::subset(env,1,drop=T), c(-Inf,Inf,-1))
+    data.mask = reclassify(raster::subset(env,1,drop=T), c(-Inf,Inf,-1))
     data.mask[cellFromXY(data.mask,xy[which(sp==1),])] <- 1
     data.mask[cellFromXY(data.mask,xy[which(sp==0),])] <- 0
     data.mask <- stack(data.mask)
     names(data.mask) <- sp.name
     
-    env <- as.data.frame(extract(env,xy))
+#     env_levels <- levels(env)
+    env <- as.data.frame(extract(env,xy, factors=T))
+    
     
     if(length(categorial_var)){
       for(cat_var in categorial_var){
         env[,cat_var] <- as.factor(env[,cat_var])
+#         cat("\n***",which(colnames(env)==cat_var))
+#         
+#         levels(env[,cat_var]) <- env_levels[[which(colnames(env)==cat_var)]][[1]][,ncol(env_levels[[which(colnames(env)==cat_var)]][[1]])]
       }
     }
     
     BFD <- BIOMOD.formated.data(sp,env,xy,sp.name,eval.sp, eval.env, eval.xy, na.rm=na.rm, data.mask=data.mask)
-    .bmCat('Done')
     return(BFD)
   }
 )
 
 # 1.3 Other Functions
-if( !isGeneric( "plot" ) ) {
-  setGeneric( "plot", 
-              def = function(x, ...){
-  	                  standardGeneric( "plot" )
-                      } )
-}
+# if( !isGeneric( "plot" ) ) {
+#   setGeneric( "plot", 
+#               def = function(x, ...){
+#   	                  standardGeneric( "plot" )
+#                       } )
+# }
 
-setMethod('plot', signature(x='BIOMOD.formated.data'),
+setMethod('plot', signature(x='BIOMOD.formated.data', y="missing"),
           function(x,coord=NULL,col=NULL){
             if(nlayers(x@data.mask)>0){
+              require(rasterVis)
               
-              ## define the breaks of the color key
-              my.at <- seq(-1.5,1.5,by=1)
-              ## the labels will be placed vertically centered
-              my.labs.at <- seq(-1,1,by=1)
-              ## define the labels
-              my.lab = c("undifined","absences","presences")
+              ## check that there is some undefined areas to prevent from strange plotting issues
+              if(min(cellStats(x@data.mask,min)) == -1){ # there is undifined area
+                ## define the breaks of the color key
+                my.at <- seq(-1.5,1.5,by=1)
+                ## the labels will be placed vertically centered
+                my.labs.at <- seq(-1,1,by=1)
+                ## define the labels
+                my.lab <- c("undifined","absences","presences")
+                ## define colors
+                my.col.regions = c("lightgrey","red4","green4")
+                ## defined cuts
+                my.cuts <- 2
+              } else{ # no undefined area.. remove it from plot 
+                ## define the breaks of the color key
+                my.at <- seq(-0.5,1.5,by=1)
+                ## the labels will be placed vertically centered
+                my.labs.at <- seq(0,1,by=1)
+                ## define the labels
+                my.lab <- c("absences","presences")
+                ## define colors
+                my.col.regions = c("red4","green4")
+                ## defined cuts
+                my.cuts <- 1
+              }
+
               
-              levelplot(x@data.mask, at=my.at, margin=T, col.regions=c("lightgrey","red4","green4"),
+              levelplot(x@data.mask, at=my.at, cuts=my.cuts, margin=T, col.regions=my.col.regions,
                         main=paste(x@sp.name,"datasets"),
                         colorkey=list(labels=list(
                           labels=my.lab,
@@ -294,7 +377,10 @@ BIOMOD.formated.data.PA <-  function(sp, env, xy, sp.name,
                                      PA.table = NULL,
                                      na.rm=TRUE){
   
-  if(inherits(env,'Raster')) categorial_var <- names(env)[is.factor(env)] else categorial_var <- NULL
+  if(inherits(env,'Raster')){
+    categorial_var <- names(env)[raster::is.factor(env)]
+  }  else categorial_var <- NULL
+  
   
   # take the same eval environemental variables than calibrating ones 
   if(!is.null(eval.sp)){
@@ -340,23 +426,30 @@ BIOMOD.formated.data.PA <-  function(sp, env, xy, sp.name,
       }
     }
     
+    
     if(na.rm){
       rowToRm <- unique(unlist(lapply(pa.data.tmp$env,function(x){return(which(is.na(x)))})))
       if(length(rowToRm)){
         cat("\n\t\t\t! Some NAs have been automaticly removed from your data")
-        pa.data.tmp$xy <- pa.data.tmp$xy[-rowToRm,]
-        pa.data.tmp$sp <- pa.data.tmp$sp[-rowToRm]
-        pa.data.tmp$env <- pa.data.tmp$env[-rowToRm,]
-        pa.data.tmp$pa.tab <- pa.data.tmp$pa.tab[-rowToRm,]
+        pa.data.tmp$xy <- pa.data.tmp$xy[-rowToRm,,drop=FALSE]        
+        pa.data.tmp$sp <- pa.data.tmp$sp[-rowToRm, drop=FALSE]
+        pa.data.tmp$env <- pa.data.tmp$env[-rowToRm,,drop=FALSE]
+        pa.data.tmp$pa.tab <- pa.data.tmp$pa.tab[-rowToRm,,drop=FALSE]
+#         cat("\n***\n")
+#         cat("\ndim(xy) <-", dim(pa.data.tmp$xy))
+#         cat("\nclass(sp) <- ", class(pa.data.tmp$sp))
+#         cat("\ndim(sp) <-", dim(pa.data.tmp$sp))
+#         cat("\ndim(env) <-", dim(pa.data.tmp$env))
+#         cat("\ndim(pa.tab) <-", dim(pa.data.tmp$pa.tab))
+        
       }      
     }
+    
     
     # data counting
 #     pa.data.tmp$data.counting <- apply(pa.data.tmp$pa.tab,2,function(x){nbPres <- sum(pa.data.tmp$sp[x],na.rm=T) ; return(c(nbPres,sum(x)-nbPres))})
 #     colnames(pa.data.tmp$data.counting) <- colnames(pa.data.tmp$pa.tab)
-    
-    
-      
+
     BFD <- BIOMOD.formated.data(sp=pa.data.tmp$sp,
                                 env=pa.data.tmp$env,
                                 xy=as.data.frame(pa.data.tmp$xy),
@@ -369,7 +462,7 @@ BIOMOD.formated.data.PA <-  function(sp, env, xy, sp.name,
     if(inherits(env,'Raster')){
       
       ## create data.mask for ploting
-      data.mask.tmp <- reclassify(raster:::subset(env,1), c(-Inf,Inf,-1))
+      data.mask.tmp <- reclassify(raster::subset(env,1), c(-Inf,Inf,-1))
       data.mask <- stack(data.mask.tmp)
       xy_pres <- pa.data.tmp$xy[which(pa.data.tmp$sp==1),]
       xy_abs <- pa.data.tmp$xy[which(pa.data.tmp$sp==0),]
@@ -411,8 +504,7 @@ BIOMOD.formated.data.PA <-  function(sp, env, xy, sp.name,
     } else{
       data.mask <- stack()
     }
-    
-      
+
     BFDP <- new('BIOMOD.formated.data.PA',
                 sp.name = BFD@sp.name,
                 coord = BFD@coord,
@@ -443,25 +535,44 @@ BIOMOD.formated.data.PA <-  function(sp, env, xy, sp.name,
   
   rm(list = "pa.data.tmp" )
   
-  .bmCat('Done')
   return(BFDP)
 
 }
 
 
 # 2.3 other functions
-setMethod('plot', signature(x='BIOMOD.formated.data.PA'),
+setMethod('plot', signature(x='BIOMOD.formated.data.PA', y="missing"),
           function(x,coord=NULL,col=NULL){
             if(nlayers(x@data.mask)>0){
+              require(rasterVis)
               
-              ## define the breaks of the color key
-              my.at <- seq(-1.5,1.5,by=1)
-              ## the labels will be placed vertically centered
-              my.labs.at <- seq(-1,1,by=1)
-              ## define the labels
-              my.lab = c("undifined","absences","presences")
+              ## check that there is some undefined areas to prevent from strange plotting issues
+              if(min(cellStats(x@data.mask,min)) == -1){ # there is undifined area
+                ## define the breaks of the color key
+                my.at <- seq(-1.5,1.5,by=1)
+                ## the labels will be placed vertically centered
+                my.labs.at <- seq(-1,1,by=1)
+                ## define the labels
+                my.lab <- c("undifined","absences","presences")
+                ## define colors
+                my.col.regions = c("lightgrey","red4","green4")
+                ## defined cuts
+                my.cuts <- 2
+              } else{ # no undefined area.. remove it from plot 
+                ## define the breaks of the color key
+                my.at <- seq(-0.5,1.5,by=1)
+                ## the labels will be placed vertically centered
+                my.labs.at <- seq(0,1,by=1)
+                ## define the labels
+                my.lab <- c("absences","presences")
+                ## define colors
+                my.col.regions = c("red4","green4")
+                ## defined cuts
+                my.cuts <- 1
+              }
               
-              levelplot(x@data.mask, at=my.at, margin=T, col.regions=c("lightgrey","red4","green4"),
+              
+              levelplot(x@data.mask, at=my.at, cuts=my.cuts, margin=T, col.regions=my.col.regions,
                         main=paste(x@sp.name,"datasets"),
                         colorkey=list(labels=list(
                           labels=my.lab,
@@ -557,25 +668,35 @@ setClass("BIOMOD.Model.Options",
                                interaction.level = 0,
                                myFormula = NULL,
                                test = 'AIC',
-                               family = 'binomial',
+                               family = binomial(link='logit'),
                                mustart = 0.5,
                                control = glm.control(maxit = 50)),
                    
                    GBM = list(  distribution = 'bernoulli',
+                                n.trees = 2500,
                                 interaction.depth = 7,
+                                n.minobsinnode = 5,
                                 shrinkage = 0.001,
                                 bag.fraction = 0.5,
                                 train.fraction = 1,
-                                n.trees = 500,
-                                cv.folds = 5),
+                                cv.folds = 3,
+                                keep.data = FALSE,
+                                verbose = FALSE,
+#                                 class.stratify.cv = 'bernoulli',
+                                perf.method = 'cv'),
                    
                    GAM = list( algo = "GAM_mgcv",
                                type = "s_smoother",
                                k = NULL,
                                interaction.level = 0,
                                myFormula = NULL,
-                               family = 'binomial',
-                               control = list(epsilon = 1e-06, trace = FALSE ,maxit = 100)), 
+                               family = binomial(link='logit'),
+                               control = list(epsilon = 1e-06, trace = FALSE ,maxit = 100),
+                               method = "GCV.Cp",
+                               optimizer=c("outer","newton"),
+                               select=FALSE,
+                               knots=NULL,
+                               paraPen=NULL), 
                    
                    CTA = list(method = 'class',
                               parms = 'default',
@@ -599,10 +720,13 @@ setClass("BIOMOD.Model.Options",
                                prune = TRUE),
                    
                    RF = list(do.classif = TRUE,
-                             ntree = 50,
-                             mtry = 'default'),
+                             ntree = 500,
+                             mtry = 'default',
+                             nodesize = 5,
+                             maxnodes= NULL),
                    
                    MAXENT = list(path_to_maxent.jar = getwd(),
+                                 memory_allocated = 512,
                                  maximumiterations = 200,
                                  visible = FALSE,
                                  linear = TRUE,
@@ -619,7 +743,217 @@ setClass("BIOMOD.Model.Options",
                                  beta_hinge = -1.0,
                                  defaultprevalence = 0.5)
                    
-                   ))
+                   ),
+         validity = function(object){
+           test <- TRUE
+           ## GLM ##
+           if(!(object@GLM$type %in% c('simple','quadratic','polynomial','user.defined'))){ cat("\nGLM$type must be 'simple',  'quadratic', 'polynomial' or 'user.defined'"); test <- FALSE}
+           if(!is.numeric(object@GLM$interaction.level)){ cat("\nGLM$interaction.level must be a integer"); test <- FALSE } else{
+             if(object@GLM$interaction.level < 0 | object@GLM$interaction.level%%1!=0){ cat("\nGLM$interaction.level must be a positive integer"); test <- FALSE }
+           }
+           if(!is.null(object@GLM$myFormula)) if(class(object@GLM$myFormula) != "formula"){ cat("\nGLM$myFormula must be NULL or a formula object"); test <- FALSE }
+           if(!(object@GLM$test %in% c('AIC','BIC','none'))){ cat("\nGLM$test must be 'AIC','BIC' or 'none'"); test <- FALSE}
+           fam <- 'none'
+           if(class(object@GLM$family) != "family"){ cat("\nGLM$family must be a valid family object"); test <- FALSE }
+           if(!is.list(object@GLM$control)){cat("\nGLM$control must be a list like that returned by glm.control"); test <- FALSE}
+           
+           
+           ## GBM ##
+           if(! object@GBM$distribution %in% c("bernoulli","huberized", "multinomial", "adaboost")){cat("\nGBM$distribution must be 'bernoulli', 'huberized', 'multinomial'or  'adaboost'") }
+
+           if(!is.numeric(object@GBM$n.trees)){ cat("\nGBM$n.trees must be a integer"); test <- FALSE } else{
+             if(object@GBM$n.trees < 0 | floor(object@GBM$n.trees) != object@GBM$n.trees){ cat("\nGBM$n.trees must be a positive integer"); test <- FALSE }
+           }
+           
+           if(!is.numeric(object@GBM$interaction.depth)){ cat("\nGBM$interaction.depth must be a integer"); test <- FALSE } else{
+             if(object@GBM$interaction.depth < 0 | object@GBM$interaction.depth%%1!=0){ cat("\nGBM$interaction.depth must be a positive integer"); test <- FALSE }
+           }
+           
+           if(!is.numeric(object@GBM$n.minobsinnode)){ cat("\nGBM$n.minobsinnode must be a integer"); test <- FALSE } else{
+             if(object@GBM$n.minobsinnode < 0 | object@GBM$n.minobsinnode%%1!=0){ cat("\nGBM$n.minobsinnode must positive "); test <- FALSE }
+           }
+           
+           if(!is.numeric(object@GBM$shrinkage)){ cat("\nGBM$shrinkage must be a numeric"); test <- FALSE } else{
+             if(object@GBM$shrinkage < 0 ){ cat("\nGBM$shrinkage must positive "); test <- FALSE }
+           }
+           
+           if(!is.numeric(object@GBM$bag.fraction)){ cat("\nGBM$bag.fraction must be a numeric"); test <- FALSE } else{
+             if(object@GBM$bag.fraction < 0 | object@GBM$bag.fraction > 1){ cat("\nGBM$bag.fraction must be a 0 to 1 numeric"); test <- FALSE }
+           }
+           
+           if(!is.numeric(object@GBM$train.fraction)){ cat("\nGBM$train.fraction must be a numeric"); test <- FALSE } else{
+             if(object@GBM$train.fraction < 0 | object@GBM$train.fraction > 1){ cat("\nGBM$train.fraction must be a 0 to 1 numeric"); test <- FALSE }
+           }
+           
+           if(!is.numeric(object@GBM$cv.folds)){ cat("\nGBM$cv.folds must be a integer"); test <- FALSE } else{
+             if(object@GBM$cv.folds < 0 | object@GBM$cv.folds%%1!=0){ cat("\nGBM$cv.folds must be a positive integer"); test <- FALSE }
+           }
+            
+           if(!is.logical(object@GBM$keep.data)){ cat("\nGBM$keep.data must be a logical"); test <- FALSE }
+           
+           if(!is.logical(object@GBM$verbose)){ cat("\nGBM$verbose must be a logical"); test <- FALSE }
+
+#            if(! object@GBM$class.stratify.cv %in% c("bernoulli", "multinomial")){cat("\nGBM$class.stratify.cv must be 'bernoulli' or 'multinomial'") }
+           
+           if(! object@GBM$perf.method %in% c('OOB', 'test', 'cv')){cat("\nGBM$perf.method must be 'OOB', 'test' or 'cv'"); test <- FALSE }
+           
+           
+           ## GAM ##
+           if(! object@GAM$algo %in% c('GAM_mgcv','GAM_gam', 'BAM_mgcv')){cat("\nGAM$algo must be 'GAM_mgcv','GAM_gam' or  'BAM_mgcv'"); test <- FALSE }
+           
+           if(! object@GAM$type %in% c('s_smoother','s', 'lo', 'te')){cat("\nGAM$type must be c('s_smoother','s', 'lo' or 'te'"); test <- FALSE }
+
+           if(! is.null(object@GAM$k)){
+             if(! is.numeric(object@GAM$k)  ){ cat("\nGAM$k must be a integer"); test <- FALSE } else{
+               if(object@GAM$k < -1 | object@GAM$k%%1!=0){ cat("\nGAM$k must be > -1"); test <- FALSE }
+             }
+           }
+
+           
+           if(!is.numeric(object@GAM$interaction.level)){ cat("\nGAM$interaction.level must be a integer"); test <- FALSE } else{
+             if(object@GAM$interaction.level < 0 | object@GAM$interaction.level%%1!=0){ cat("\nGAM$interaction.level must be a positive integer"); test <- FALSE }
+           }
+           
+           if(!is.null(object@GAM$myFormula)) if(class(object@GAM$myFormula) != "formula"){ cat("\nGAM$myFormula must be NULL or a formula object"); test <- FALSE }
+           
+           if(class(object@GAM$family) != "family"){ cat("\nGAM$family must be a valid family object"); test <- FALSE }
+           
+           if(!is.list(object@GAM$control)){cat("\nGAM$control must be a list like that returned by gam.control"); test <- FALSE}
+           if(! object@GAM$method %in% c('GCV.Cp','GACV.Cp','REML', 'P-REML', 'ML', 'P-ML')){cat("\nGAM$method must be 'GCV.Cp','GACV.Cp','REML', 'P-REML', 'ML'or 'P-ML'"); test <- FALSE}
+           
+           if(sum(! object@GAM$optimizer %in% c('perf','outer', 'newton', 'bfgs', 'optim', 'nlm', 'nlm.fd')) > 0 ){cat("\nGAM$optimizer bad definition (see ?mgcv::gam)") ; test <- FALSE}
+           
+           if(!is.logical(object@GAM$select)){ cat("\nGAM$select must be a logical"); test <- FALSE }
+
+#            knots=NULL,
+#            paraPen=NULL
+           
+           
+           ## CTA ##
+           if(! object@CTA$method %in% c( 'anova', 'poisson', 'class', 'exp')){cat("\nCTA$method must be 'anova', 'poisson', 'class' or 'exp'"); test <- FALSE }
+           
+           #parms = 'default',
+
+           if(!is.list(object@CTA$control)){cat("\nCTA$control must be a list like that returned by rpart.control"); test <- FALSE}                           
+           if(length(object@CTA$cost)){
+             if(!is.numeric(object@CTA$cost)){cat("\nCTA$cost must be a non negative cost vector"); test <- FALSE}
+           }
+           
+           
+           
+           ## ANN ##
+           if(!is.numeric(object@ANN$NbCV)){ cat("\nANN$NbCV must be a integer"); test <- FALSE } else{
+             if(object@ANN$NbCV < 0 | object@ANN$NbCV%%1!=0){ cat("\nANN$NbCV must be a positive integer"); test <- FALSE }
+           }
+           
+           if(!is.numeric(object@ANN$rang)){ cat("\nANN$rang must be a numeric"); test <- FALSE } else{
+             if(object@ANN$rang < 0 ){ cat("\nANN$rang must be positive"); test <- FALSE }
+           }
+           
+           if(!is.numeric(object@ANN$maxit)){ cat("\nANN$maxit must be a integer"); test <- FALSE } else{
+             if(object@ANN$maxit < 0 | object@ANN$maxit%%1!=0){ cat("\nANN$maxit must be a positive integer"); test <- FALSE }
+           }
+           
+           
+           
+           ## FDA ##
+           if(! object@FDA$method %in% c( 'polyreg', 'mars', 'bruto')){cat("\nFDA$method must be 'polyreg', 'mars' or 'bruto'"); test <- FALSE }
+           
+           
+           
+           ## SRE ##
+           if(!is.numeric(object@SRE$quant)){ cat("\nSRE$quant must be a numeric"); test <- FALSE } else{
+             if(object@SRE$quant >= 0.5 | object@SRE$quant < 0){ cat("\nSRE$quant must between 0 and 0.5"); test <- FALSE }
+           }
+           
+           
+           
+           ## MARS ##
+           if(!is.numeric(object@MARS$degree)){ cat("\nMARS$degree must be a integer"); test <- FALSE } else{
+             if(object@MARS$degree < 0 | object@MARS$degree%%1!=0){ cat("\nMARS$degree must be a positive integer"); test <- FALSE }
+           }
+           
+           if(!is.numeric(object@MARS$penalty)){ cat("\nMARS$penalty must be a integer"); test <- FALSE } else{
+             if(object@MARS$penalty < 0 | object@MARS$penalty%%1!=0){ cat("\nMARS$penalty must be a positive integer"); test <- FALSE }
+           }
+           
+           if(!is.numeric(object@MARS$thresh)){ cat("\nMARS$thresh must be a numeric"); test <- FALSE } else{
+             if(object@MARS$thresh < 0 ){ cat("\nMARS$thresh must be positive"); test <- FALSE }
+           }
+           
+           if(!is.logical(object@MARS$prune)){ cat("\nMARS$prune must be a logical"); test <- FALSE }
+           
+           
+           
+           ## RF ##
+           if(!is.logical(object@RF$do.classif)){ cat("\nRF$do.classif must be a logical"); test <- FALSE }
+           
+           if(!is.numeric(object@RF$ntree)){ cat("\nRF$ntree must be a integer"); test <- FALSE } else{
+             if(object@RF$ntree < 0 | object@RF$ntree%%1!=0){ cat("\nRF$ntree must be a positive integer"); test <- FALSE }
+           }
+           
+           if( object@RF$mtry != 'default'){
+             if(!is.numeric(object@RF$mtry)){ cat("\nRF$mtry must be a integer"); test <- FALSE } else{
+               if(object@RF$mtry < 0 | object@RF$mtry%%1!=0){ cat("\nRF$mtry must be a positive integer"); test <- FALSE }
+             }
+           }
+           
+           if(!is.numeric(object@RF$nodesize)){ cat("\nRF$nodesize must be a integer"); test <- FALSE } else{
+             if(object@RF$nodesize < 0 | object@RF$nodesize%%1!=0){ cat("\nRF$nodesize must be a positive integer"); test <- FALSE }
+           }
+           
+           if(length(object@RF$maxnodes)){
+             if(!is.numeric(object@RF$maxnodes)){ cat("\nRF$maxnodes must be a integer"); test <- FALSE } else{
+               if(object@RF$maxnodes < 0 | object@RF$maxnodes%%1!=0){ cat("\nRF$maxnodes must be a positive integer"); test <- FALSE }
+             }             
+           }
+
+           
+           
+           ## MAXENT ##
+           if(!is.character(object@MAXENT$path_to_maxent.jar)){ cat("\nMAXENT$path_to_maxent.jar must be a character"); test <- FALSE }
+           if(!is.null(object@MAXENT$memory_allocated)){
+             if(!is.numeric(object@MAXENT$memory_allocated)){
+               cat("\nMAXENT$memory_allocated must be a positive integer or NULL for unlimited memory allocation"); test <- FALSE }
+             }
+           
+           
+           if(!is.numeric(object@MAXENT$maximumiterations)){ cat("\nMAXENT$maximumiterations must be a integer"); test <- FALSE } else{
+             if(object@MAXENT$maximumiterations < 0 | object@MAXENT$maximumiterations%%1!=0){ cat("\nMAXENT$maximumiterations must be a positive integer"); test <- FALSE }
+           }
+           
+           if(!is.logical(object@MAXENT$visible)){ cat("\nMAXENT$visible must be a logical"); test <- FALSE }
+           
+           if(!is.logical(object@MAXENT$linear)){ cat("\nMAXENT$linear must be a logical"); test <- FALSE }
+           
+           if(!is.logical(object@MAXENT$quadratic)){ cat("\nMAXENT$quadratic must be a logical"); test <- FALSE }
+           
+           if(!is.logical(object@MAXENT$product)){ cat("\nMAXENT$product must be a logical"); test <- FALSE }
+           
+           if(!is.logical(object@MAXENT$threshold)){ cat("\nMAXENT$threshold must be a logical"); test <- FALSE }
+           
+           if(!is.logical(object@MAXENT$hinge)){ cat("\nMAXENT$hinge must be a logical"); test <- FALSE }
+           
+           if(!is.numeric(object@MAXENT$lq2lqptthreshold)){ cat("\nMAXENT$lq2lqptthreshold must be a numeric"); test <- FALSE }
+           
+           if(!is.numeric(object@MAXENT$l2lqthreshold)){ cat("\nMAXENT$l2lqthreshold must be a numeric"); test <- FALSE }
+           
+           if(!is.numeric(object@MAXENT$lq2lqptthreshold)){ cat("\nMAXENT$lq2lqptthreshold must be a numeric"); test <- FALSE }
+           
+           if(!is.numeric(object@MAXENT$hingethreshold)){ cat("\nMAXENT$hingethreshold must be a numeric"); test <- FALSE }
+           
+           if(!is.numeric(object@MAXENT$beta_threshold)){ cat("\nMAXENT$beta_threshold must be a numeric"); test <- FALSE }
+           
+           if(!is.numeric(object@MAXENT$beta_categorical)){ cat("\nMAXENT$beta_categorical must be a numeric"); test <- FALSE }
+           
+           if(!is.numeric(object@MAXENT$beta_lqp)){ cat("\nMAXENT$beta_lqp must be a numeric"); test <- FALSE }
+           
+           if(!is.numeric(object@MAXENT$beta_hinge)){ cat("\nMAXENT$beta_hinge must be a numeric"); test <- FALSE }
+           
+           if(!is.numeric(object@MAXENT$defaultprevalence)){ cat("\nMAXENT$defaultprevalence must be a numeric"); test <- FALSE }
+                    
+           return(test)
+         })
 
 setMethod('show', signature('BIOMOD.Model.Options'),
           function(object){
@@ -631,19 +965,24 @@ setMethod('show', signature('BIOMOD.Model.Options'),
             cat("\n            interaction.level = ", object@GLM$interaction.level, ",", sep="")
             cat("\n            myFormula = ",  ifelse(length(object@GLM$myFormula) < 1,'NULL',paste(object@GLM$myFormula[2],object@GLM$myFormula[1],object@GLM$myFormula[3])), ",", sep="")
             cat("\n            test = '", object@GLM$test, "',", sep="")
-            cat("\n            family = '", object@GLM$family, "',", sep="")
+            cat("\n            family = ", object@GLM$family$family,"(link = '",object@GLM$family$link,"'),", sep="")
             cat("\n            mustart = ", object@GLM$mustart, ",", sep="")
             cat("\n            control = glm.control(", .print.control(object@GLM$control), ") ),", sep="", fill=.Options$width)
             
             ## GBM options
             cat("\n")
             cat("\nGBM = list( distribution = '", object@GBM$distribution, "',", sep="")
+            cat("\n            n.trees = ", object@GBM$n.trees, ",", sep="")
             cat("\n            interaction.depth = ", object@GBM$interaction.depth, ",", sep="")
+            cat("\n            n.minobsinnode = ", object@GBM$n.minobsinnode, ",", sep="")
             cat("\n            shrinkage = ", object@GBM$shrinkage, ",", sep="")
             cat("\n            bag.fraction = ", object@GBM$bag.fraction, ",", sep="")
             cat("\n            train.fraction = ", object@GBM$train.fraction, ",", sep="")
-            cat("\n            n.trees = ", object@GBM$n.trees, ",", sep="")
-            cat("\n            cv.folds = ", object@GBM$cv.folds, "),", sep="")
+            cat("\n            cv.folds = ", object@GBM$cv.folds, ",", sep="")
+            cat("\n            keep.data = ", object@GBM$keep.data, ",", sep="")
+            cat("\n            verbose = ", object@GBM$verbose, ",", sep="")
+#             cat("\n            class.stratify.cv = '", object@GBM$class.stratify.cv, "',", sep="")
+            cat("\n            perf.method = '", object@GBM$perf.method, "'),", sep="")
             
             ## GAM options
             cat("\n")
@@ -652,15 +991,26 @@ setMethod('show', signature('BIOMOD.Model.Options'),
             cat("\n            k = ", ifelse(length(object@GAM$k) < 1,'NULL',object@GAM$k), ",", sep="")
             cat("\n            interaction.level = ", object@GAM$interaction.level, ",", sep="")
             cat("\n            myFormula = ", ifelse(length(object@GAM$myFormula) < 1,'NULL',paste(object@GAM$myFormula[2],object@GAM$myFormula[1],object@GAM$myFormula[3])), ",", sep="")
-            cat("\n            family = '", object@GAM$family, "',", sep="")
-            cat("\n            control = gam.control(", .print.control(object@GAM$control), ") ),", sep="", fill=.Options$width)
+            cat("\n            family = ", object@GAM$family$family,"(link = '",object@GAM$family$link,"'),", sep="")
+            
+            if(object@GAM$algo=='GAM_mgcv'){
+              cat("\n            method = '", object@GAM$method, "',", sep="")
+              cat("\n            optimizer = c('", paste(object@GAM$optimizer,collapse="','"), "'),", sep="")
+              cat("\n            select = ", object@GAM$select, ",", sep="")
+              cat("\n            knots = ",  ifelse(length(object@GLM$knots) < 1,'NULL',"'user.defined'"), ",", sep="")
+              cat("\n            paraPen = ",  ifelse(length(object@GLM$paraPen) < 1,'NULL',"'user.defined'"), ",", sep="")
+            }
+            
+            cat("\n            control = list(", .print.control(object@GAM$control), ") ),", sep="", fill=.Options$width)
+            
+            
 
             ## CTA options
             cat("\n")
             cat("\nCTA = list( method = '", object@CTA$method, "',", sep="")
             cat("\n            parms = '", object@CTA$parms, "',", sep="")
             cat("\n            cost = ", ifelse(length(object@CTA$cost)<1,'NULL',object@CTA$cost), ",", sep="")
-            cat("\n            control = rpart.control(", .print.control(object@CTA$control), ") ),", sep="", fill=.Options$width)
+            cat("\n            control = list(", .print.control(object@CTA$control), ") ),", sep="", fill=.Options$width)
             
             ## ANN options
             cat("\n")
@@ -687,11 +1037,14 @@ setMethod('show', signature('BIOMOD.Model.Options'),
             cat("\n")
             cat("\nRF = list( do.classif = ", object@RF$do.classif, ",", sep="")
             cat("\n           ntree = ", object@RF$ntree, ",", sep="")
-            cat("\n           mtry = '", object@RF$mtry, "'),", sep="")
+            cat("\n           mtry = '", object@RF$mtry, "',", sep="")
+            cat("\n           nodesize = ", object@RF$nodesize, ",", sep="")
+            cat("\n           maxnodes = ", ifelse(length(object@RF$maxnodes) < 1,'NULL',object@RF$maxnodes), "),", sep="")
                    
             ## MAXENT options
             cat("\n")
             cat("\nMAXENT = list( path_to_maxent.jar = '", object@MAXENT$path_to_maxent.jar, "',", sep="")
+            cat("\n               memory_allocated = ", ifelse(length(object@MAXENT$memory_allocated) < 1,'NULL',object@MAXENT$memory_allocated), ",", sep="")
             cat("\n               maximumiterations = ", object@MAXENT$maximumiterations, ",", sep="")
             cat("\n               visible = ", object@MAXENT$visible, ",", sep="")
             cat("\n               linear = ", object@MAXENT$linear, ",", sep="")
@@ -715,8 +1068,17 @@ setMethod('show', signature('BIOMOD.Model.Options'),
   out <-  paste(names(ctrl)[1], " = ", ctrl[[1]], sep="")
   
   if(length(ctrl) > 1){
-    for (i in 2:length(ctrl)){
-      out <- c(out, paste(", ", names(ctrl)[i], " = ", ctrl[[i]], sep=""))
+    i=2
+    while(i <= length(ctrl)){
+      if(is.list(ctrl[[i]])){
+        out <- c(out, paste(", ", names(ctrl)[i], " = list(",
+                            paste(names(ctrl[[i]]), "=",unlist(ctrl[[i]]), sep="", collapse=", "),")", sep=""))
+#         i <- i+length(ctrl[[i]])
+        i <- i+1
+      } else {
+        out <- c(out, paste(", ", names(ctrl)[i], " = ", ctrl[[i]], sep=""))
+        i <- i+1
+      }
     }    
   }
 #   return(toString(out))
@@ -739,6 +1101,14 @@ setClass("BIOMOD.stored.array",
          contains = "BIOMOD.stored.data",
          representation(val = 'array'),
          prototype(val = array()),
+         validity = function(object){
+           return(TRUE)
+         })
+
+setClass("BIOMOD.stored.data.frame",
+         contains = "BIOMOD.stored.data",
+         representation(val = 'data.frame'),
+         prototype(val = data.frame()),
          validity = function(object){
            return(TRUE)
          })
@@ -774,6 +1144,55 @@ setClass("BIOMOD.stored.models.options",
          validity = function(object){
            return(TRUE)
          })
+
+setMethod("load_stored_object", "BIOMOD.stored.data",
+          function(obj){
+            if(obj@inMemory){
+              return(obj@val)
+            }
+            
+            # different comportement with raster
+            if(inherits(obj, "BIOMOD.stored.raster.stack")){
+              if( length(obj@link) == 1 & all(grepl(".RData", obj@link)) ){
+                return(get(load(obj@link)))
+              } else if(all(grepl(".grd", obj@link) | grepl(".img", obj@link))){
+                out <- raster::stack(x = obj@link)
+                ## rename layer in case of individual projections
+                if(all(grepl("individual_projections",obj@link))){
+                  # remove directories arch and extention
+                  xx <- sub("[:.:].+$", "", sub("^.+individual_projections/", "",obj@link))
+                  # remove projection name
+                  to_rm <- unique(sub("[^_]+[:_:][^_]+[:_:][^_]+[:_:][^_]+$", "", xx))                  
+                  xx <- sub(to_rm,"", xx)
+                  names(out) <- xx
+                }
+                return(out)
+              } # else {
+#                 filesToLoad <- list.files(path=sub("/individual_projections","", obj@link), full.names=T)
+#                 toMatch <- c('.grd$','.img$')
+#                 filesToLoad <- grep(pattern=paste(toMatch,collapse="|"), filesToLoad, value=T)  
+#                 if(length(filesToLoad)){
+#                   return(raster::stack(filesToLoad[1]))
+#                 } else {
+#                   filesToLoad <- list.files(path=obj@link, full.names=T)
+#                   toMatch <- c('.grd$','.img$')
+#                   filesToLoad <- grep(pattern=paste(toMatch,collapse="|"), filesToLoad, value=T)
+#                   toMatch <- obj@models.projected
+#                   filesToLoad <- grep(pattern=paste(toMatch,collapse="|"), filesToLoad, value=T)
+#                   proj <- raster::stack(filesToLoad)
+#                   toMatch <- c(obj@link,".img$",'.grd$', .Platform$file.sep)
+#                   names(proj) <- gsub(pattern=paste(toMatch,collapse="|"), "", filesToLoad)
+#                   return(proj)
+#                 }   
+#               } 
+            } else { # for all other stored objects
+              return(get(load(obj@link)))
+            }
+          }
+
+)
+
+
 
 setClass("BIOMOD.models.out",
          representation(modeling.id = 'character', 
@@ -840,106 +1259,57 @@ setClass("BIOMOD.stored.models.out",
          })
 
 ### GETTEURS ###
-setGeneric("getModelsPrediction",
-           function(obj,...){
-             standardGeneric("getModelsPrediction")
-           })
 
-setMethod("getModelsPrediction", "BIOMOD.models.out",
-          function(obj, as.data.frame = FALSE){
+setMethod("get_predictions", "BIOMOD.models.out",
+          function(obj, as.data.frame = FALSE, evaluation = FALSE){
+            # check evaluation data avialability
+            if( evaluation & (! obj@has.evaluation.data) ){
+              warning("calibration data returned because no evaluation data available")
+              evaluation = FALSE
+            }
+            
+            # select calibration or eval data
+            if(evaluation) pred <- obj@models.prediction else pred <- obj@models.prediction.eval
+            
             if(!as.data.frame){
-              if(obj@models.prediction@inMemory ){
-                return(obj@models.prediction@val)
+              if(pred@inMemory ){
+                return(pred@val)
               } else{
-                if(obj@models.prediction@link != ''){
-#                   load(obj@models.prediction@link)
-#                   return(models.prediction)
-                  
-                  return(get(load(obj@models.prediction@link)))
+                if(pred@link != ''){
+                  return(get(load(pred@link)))
                 } else{ return(NULL) }
               }              
             } else {
-              if(obj@models.prediction@inMemory ){
-                mod.pred <- as.data.frame(obj@models.prediction@val)
+              if(pred@inMemory ){
+                mod.pred <- as.data.frame(pred@val)
                 names(mod.pred) <- unlist(lapply(strsplit(names(mod.pred),".", fixed=TRUE), 
                                                  function(x){
                                                    return(paste(obj@sp.name, x[3], x[2], x[1],sep="_"))
-                                                   }))
+                                                 }))
                 return(mod.pred)
               } else{
-                if(obj@models.prediction@link != ''){
-#                   load(obj@models.prediction@link)
-#                   mod.pred <- as.data.frame(models.prediction)
-                  mod.pred <- as.data.frame(get(load(obj@models.prediction@link)))                  
+                if(pred@link != ''){
+                  #                   load(obj@models.prediction@link)
+                  #                   mod.pred <- as.data.frame(models.prediction)
+                  mod.pred <- as.data.frame(get(load(pred@link)))                  
                   names(mod.pred) <- unlist(lapply(strsplit(names(mod.pred),".", fixed=TRUE), 
-                                   function(x){
-                                     return(paste(obj@sp.name, x[3], x[2], x[1],sep="_"))
-                                     }))
-                return(mod.pred)
+                                                   function(x){
+                                                     return(paste(obj@sp.name, x[3], x[2], x[1],sep="_"))
+                                                   }))
+                  return(mod.pred)
                 } else{ return(NULL) }
               }
               
             }
           }
-          )
+)
 
-
-
-
-setGeneric("getModelsPredictionEval",
-           function(obj,...){
-             standardGeneric("getModelsPredictionEval")
-           })
-
-setMethod("getModelsPredictionEval", "BIOMOD.models.out",
-          function(obj, as.data.frame = FALSE){
-            if(!as.data.frame){
-              if(obj@models.prediction.eval@inMemory ){
-                return(obj@models.prediction.eval@val)
-              } else{
-                if(obj@models.prediction.eval@link != ''){
-                  load(obj@models.prediction.eval@link)
-                  return(models.prediction.eval)
-                } else{ return(NULL) }
-              }              
-            } else {
-              if(obj@models.prediction.eval@inMemory ){
-                mod.pred <- as.data.frame(obj@models.prediction.eval@val)
-                names(mod.pred) <- unlist(lapply(strsplit(names(mod.pred),".", fixed=TRUE), 
-                                                 function(x){
-                                                   return(paste(obj@sp.name, x[3], x[2], x[1],sep="_"))
-                                                   }))
-                return(mod.pred)
-              } else{
-                if(obj@models.prediction.eval@link != ''){
-                  load(obj@models.prediction.eval@link)
-                  mod.pred <- as.data.frame(models.prediction.eval)
-                  names(mod.pred) <- unlist(lapply(strsplit(names(mod.pred),".", fixed=TRUE), 
-                                   function(x){
-                                     return(paste(obj@sp.name, x[3], x[2], x[1],sep="_"))
-                                     }))
-                return(mod.pred)
-                } else{ return(NULL) }
-              }
-              
-            }
-          }
-          )
-
-
-setGeneric("getModelsEvaluations",
-           function(obj){
-             standardGeneric("getModelsEvaluations")
-           })
-
-setMethod("getModelsEvaluations", "BIOMOD.models.out",
-          function(obj){
+setMethod("get_evaluations", "BIOMOD.models.out",
+          function(obj, ...){
             if(obj@models.evaluation@inMemory ){
               return(obj@models.evaluation@val)
             } else{
               if(obj@models.evaluation@link != ''){
-#                 load(obj@models.evaluation@link)
-#                 return(models.evaluation)
                 return(get(load(obj@models.evaluation@link)))                
               } else{ return(NA) }
             }
@@ -947,19 +1317,12 @@ setMethod("getModelsEvaluations", "BIOMOD.models.out",
           )
 
 
-setGeneric("getModelsVarImport",
-           function(obj){
-             standardGeneric("getModelsVarImport")
-           })
-
-setMethod("getModelsVarImport", "BIOMOD.models.out",
-          function(obj){
+setMethod("get_variables_importance", "BIOMOD.models.out",
+          function(obj, ...){
             if(obj@variables.importances@inMemory ){
               return(obj@variables.importances@val)
             } else{
               if(obj@variables.importances@link != ''){
-#                 load(obj@variables.importances@link)
-#                 return(variables.importances)
                 return(get(load(obj@variables.importances@link)))
               } else{ return(NA) }
             }
@@ -967,43 +1330,32 @@ setMethod("getModelsVarImport", "BIOMOD.models.out",
           )
 
 
-setGeneric("getModelsOptions",
-           function(obj){
-             standardGeneric("getModelsOptions")
-           })
 
-setMethod("getModelsOptions", "BIOMOD.models.out",
+setMethod("get_options", "BIOMOD.models.out",
           function(obj){
             if(obj@models.options@inMemory ){
               return(obj@models.options@val)
             } else{
               if(obj@models.options@link != ''){
-#                 load(obj@models.options@link)
-#                 return(models.options)
                 return(get(load(obj@models.options@link)))                
               } else{ return(NA) }
             }
           }
           )
 
-setGeneric("getModelsInputData",
-           function(obj, ...){
-             standardGeneric("getModelsInputData")
-           })
-
-setMethod("getModelsInputData", "BIOMOD.models.out",
+setMethod("get_formal_data", "BIOMOD.models.out",
           function(obj, subinfo = NULL){
             if(is.null(subinfo)){
               if(obj@formated.input.data@inMemory ){
                 return(obj@formated.input.data@val)
               } else{
                 if(obj@formated.input.data@link != ''){
-                  load(obj@formated.input.data@link)
+                  data <- get(load(obj@formated.input.data@link))
                   return(data)
-                } else{ return(NA) }
+                } else{ cat("\n***"); return(NA) }
               }              
             } else if(subinfo == 'MinMax'){
-              return(apply(getModelsInputData(obj)@data.env.var,2, function(x){
+              return(apply(get_formal_data(obj, "expl.var"),2, function(x){
                   if(is.numeric(x)){
                     return( list(min = min(x,na.rm=T), max = max(x, na.rm=T) ) )
                   } else if(is.factor(x)){
@@ -1011,11 +1363,15 @@ setMethod("getModelsInputData", "BIOMOD.models.out",
                   }
                 }) )
             } else if(subinfo == 'expl.var'){
-              return(getModelsInputData(obj)@data.env.var)
+              return(as.data.frame(get_formal_data(obj)@data.env.var))
             } else if(subinfo == 'expl.var.names'){
               return(obj@expl.var.names)
             } else if(subinfo == 'resp.var'){
-              return(getModelsInputData(obj)@data.species)
+              return(as.numeric(get_formal_data(obj)@data.species))
+            } else if(subinfo == 'eval.resp.var'){
+              return(as.numeric(get_formal_data(obj)@eval.data.species))
+            } else if(subinfo == 'eval.expl.var'){
+              return(as.data.frame(get_formal_data(obj)@eval.data.env.var))
             } else{
               stop("Unknow subinfo tag")
             }
@@ -1023,22 +1379,12 @@ setMethod("getModelsInputData", "BIOMOD.models.out",
           }
           )
 
-setGeneric("getModelsBuiltModels",
-           function(obj){
-             standardGeneric("getModelsBuiltModels")
-           })
-
-setMethod("getModelsBuiltModels", "BIOMOD.models.out",
-          function(obj){
+setMethod("get_built_models", "BIOMOD.models.out",
+          function(obj, ...){
             return(obj@models.computed)
           }
           )
 
-
-setGeneric("RemoveProperly",
-           function(obj,obj.name=deparse(substitute(obj))){
-             standardGeneric("RemoveProperly")
-           })
 
 setMethod("RemoveProperly", "BIOMOD.models.out",
           function(obj, obj.name=deparse(substitute(obj))){
@@ -1105,54 +1451,84 @@ setClass("BIOMOD.projection.out",
            return(TRUE)
            })
 
-setGeneric("getProjection",
-           function(obj, ...){
-             standardGeneric("getProjection")
-           })
+setMethod("get_projected_models", "BIOMOD.projection.out",
+          function(obj){
+            return(obj@models.projected)
+          })
 
-setMethod("getProjection", "BIOMOD.projection.out",
-          function(obj, model = NULL, as.data.frame = FALSE){
-            if(!as.data.frame & is.null(model)){
-              if(obj@proj@inMemory ){
-                return(obj@proj@val)
-              } else {
-                if( grepl(".RData", obj@proj@link) ){
-                  return(get(load(obj@proj@link)))
-                } else if(grepl(".grd", obj@proj@link) | grepl(".img", obj@proj@link)){
-                  return(stack(obj@proj@link))
-                } else {
-                  cat("\n!! You have to load your projections by yourself !!")
-                  return(NA) 
-                }
-              } 
-            } else if(as.data.frame){
-              if(obj@proj@inMemory ){
-                proj <- as.data.frame(obj@proj@val)
-                names(proj) <- unlist(lapply(strsplit(names(proj),".", fixed=TRUE), 
-                                                 function(x){
-                                                   return(paste(obj@sp.name, x[3], x[2], x[1],sep="_"))
-                                                   }))
-                return(proj)
-              } else{
-                if(obj@proj@link != ''){
-                  load(obj@proj@link)
-                  project <- as.data.frame(proj)
-                  names(project) <- unlist(lapply(strsplit(names(project),".", fixed=TRUE), 
-                                   function(x){
-                                     return(paste(obj@sp.name, x[3], x[2], x[1],sep="_"))
-                                     }))
-                return(project)
-                } else{ return(NA) }
-              }
-            }
+setMethod("get_predictions", "BIOMOD.projection.out",
+          function(obj, as.data.frame=FALSE, full.name=NULL, model=NULL, run.eval=NULL, data.set=NULL){
+            models_selected <- get_projected_models(obj)
+            if(length(full.name)){
+              # models subselection according to model names
+              models_selected <- grep(pattern=paste(full.name,collapse="|"), models_selected, value=T)
+            } else if(length(model) | length(run.eval) | length(data.set)){
+              # models subselection according to model, run.eval and sata.set parameters
+              if(length(model)) grep_model <- paste("(",paste(model,collapse="|"),")", sep="") else grep_model = "*"
+              if(length(run.eval)) grep_run.eval <- paste("(",paste(run.eval,collapse="|"),")", sep="") else grep_run.eval = "*"
+              if(length(data.set)) grep_data.set <- paste("(",paste(data.set,collapse="|"),")", sep="") else grep_data.set = "*"
+              grep_full <- paste(grep_data.set,"_",grep_run.eval,"_",grep_model,"$",sep="")
               
-          }
-          )
+              models_selected <- grep(pattern=grep_full, models_selected, value=T)
+            }
+            
+#             cat("\n*** models_selected = ", models_selected)
+            
+            if (length(models_selected)){
+              proj <- load_stored_object(obj@proj)
+              if(inherits(proj,'Raster')){
+                proj <- raster::subset(proj,models_selected,drop=FALSE)
+              } else {
+                if(length(dim(proj)) == 4){ ## 4D arrays
+                  proj <- proj[,.extractModelNamesInfo(model.names=models_selected,info='models'),
+                               .extractModelNamesInfo(model.names=models_selected,info='run.eval'),
+                               .extractModelNamesInfo(model.names=models_selected,info='data.set'), drop=FALSE]
+                } else{ ## matrix (e.g. from ensemble models projections)
+                  proj <- proj[,models_selected,drop=FALSE]
+                }
+
+              }
+               
+              if(as.data.frame){
+                proj <- as.data.frame(proj)
+                ## set correct names
+                
+                if(obj@type == 'array' & sum(!(names(proj) %in% models_selected))>0 ){ ## from array & not valid names
+                  names(proj) <- unlist(lapply(strsplit(names(proj),".", fixed=TRUE), 
+                                               function(x){
+                                                 return(paste(obj@sp.name, x[3], x[2], x[1],sep="_"))
+                                               }))
+                }
+                
+                # reorder the data.frame
+                proj <- proj[,models_selected]
+
+              }  
+            } else{
+              proj <- NULL
+            }
+            
+            return(proj)          
+          })
+
+
+
 
 # 2.3 other functions
-setMethod('plot', signature(x='BIOMOD.projection.out'),
+setMethod('plot', signature(x='BIOMOD.projection.out', y="missing"),
           function(x,col=NULL, str.grep=NULL){
+            models_selected <- x@models.projected 
+            if(length(str.grep)){
+              models_selected <- grep(paste(str.grep,collapse="|"), models_selected,value=T)
+            } 
+            
+            if(!length(models_selected)) stop("invalid str.grep arg")
+            
+            
+            
             if(class(x@proj) == "BIOMOD.stored.raster.stack"){
+              require(rasterVis)
+              
               ## define the breaks of the color key
               my.at <- seq(0,1000,by=100)
               ## the labels will be placed vertically centered
@@ -1160,38 +1536,22 @@ setMethod('plot', signature(x='BIOMOD.projection.out'),
               ## define the labels
               my.lab <- seq(0,1000,by=250)
               ## define colors
-              my.col <- colorRampPalette(c("red4","orange4","yellow4","green4"))(100)
+#               my.col <- colorRampPalette(c("red4","orange4","yellow4","green4"))(100)
+              my.col <- colorRampPalette(c("grey90","yellow4","green4"))(100)
               
-              
-              if(is.null(str.grep)){
-                levelplot(getProjection(x),
-                          at=my.at, margin=T, col.regions=my.col,
-                          main=paste(x@sp.name,x@proj.names,"projections"),
-                          colorkey=list(labels=list(
-                            labels=my.lab,
-                            at=my.labs.at)))
+              levelplot(get_predictions(x, full.name=models_selected),
+                        at=my.at, margin=T, col.regions=my.col,
+                        main=paste(x@sp.name,x@proj.names,"projections"),
+                        colorkey=list(labels=list(
+                          labels=my.lab,
+                          at=my.labs.at)))
                 
-              } else if(length(grep(str.grep, x@models.projected,value=T))>0){
-                levelplot(raster:::subset(getProjection(x), grep(str.grep, x@models.projected,value=T)),
-                          at=my.at, margin=T, col.regions=my.col,
-                          main=paste(x@sp.name,x@proj.names,"projections"),
-                          colorkey=list(labels=list(
-                            labels=my.lab,
-                            at=my.labs.at)))
-                
-              } else{ stop("invalid str.grep arg")}
-              
-            } else if(class(x@proj) == "BIOMOD.stored.array"){
+              } else if(class(x@proj) == "BIOMOD.stored.array"){
               if(ncol(x@xy.coord) != 2){
                 cat("\n ! Impossible to plot projections because xy coordinates are not available !")
               } else {
-                if(is.null(str.grep)){
-                  multiple.plot(Data = getProjection(x,as.data.frame=T), coor = x@xy.coord)
-                } else if(length(grep(str.grep, x@models.projected,value=T))>0){
-                  multiple.plot(Data = getProjection(x, model=grep(str.grep, x@models.projected,value=T) ,as.data.frame=T), coor = x@xy.coord)
-                } else{ stop("invalid str.grep arg")}               
+                multiple.plot(Data = get_predictions(x, full.name=models_selected, as.data.frame=T), coor = x@xy.coord)
               }
-
               
             } else {cat("\n !  Biomod Projection plotting issue !", fill=.Options$width)}
 
@@ -1211,10 +1571,6 @@ setMethod('show', signature('BIOMOD.projection.out'),
             .bmCat()
           })
 
-setGeneric("free",
-           function(obj){
-             standardGeneric("free")
-           })
 
 setMethod(f='free', 
                  signature='BIOMOD.projection.out',
@@ -1233,7 +1589,7 @@ setMethod(f='free',
 
 ####################################################################################################
 ### BIOMOD Storing Ensemble Modeling Objects #######################################################
-####################################################################################################           
+####################################################################################################   
 setClass("BIOMOD.EnsembleModeling.out",
          representation(sp.name = 'character',
                         expl.var.names = 'character',
@@ -1242,29 +1598,35 @@ setClass("BIOMOD.EnsembleModeling.out",
                         eval.metric.quality.threshold = 'numeric',
                         em.computed = 'character',
                         em.by = 'character',
-#                         em.models.kept = 'list',
-#                         em.prediction = 'BIOMOD.stored.array',
-#                         em.evaluation = 'BIOMOD.stored.array',
-                        em.res = 'list',
-                        em.ci.alpha = 'numeric',
-                        em.weight = 'list',
-                        em.bin.tresh = 'list'),
+                        em.models = 'ANY',
+                        modeling.id = 'character',
+                        link = 'character'),
+                        #                         em.models.kept = 'list',
+                        #                         em.prediction = 'BIOMOD.stored.array',
+                        #                         em.evaluation = 'BIOMOD.stored.array',
+#                         em.res = 'list',
+#                         em.ci.alpha = 'numeric',
+#                         em.weight = 'list',
+#                         em.bin.tresh = 'list'),
          prototype( sp.name = '',
                     expl.var.names = '',
                     models.out.obj = new('BIOMOD.stored.models.out'),
                     eval.metric = '',
-                    eval.metric.quality.threshold = NULL,
-#                     em.computed = '',
-#                     em.models.kept = NULL,
-#                     em.prediction = NULL,
-#                     em.evaluation = NULL,
-                    em.res = list(),
-                    em.ci.alpha = 0.05,
-                    em.weight = list(),
-                    em.bin.tresh = list()),
+                    eval.metric.quality.threshold = 0,
+                    em.models = NULL,
+                    em.computed = character(),
+                    modeling.id = '.',
+                    link = ''),
+                    #                     em.models.kept = NULL,
+                    #                     em.prediction = NULL,
+#                     #                     em.evaluation = NULL,
+#                     em.res = list(),
+#                     em.ci.alpha = 0.05,
+#                     em.weight = list(),
+#                     em.bin.tresh = list()),
          validity = function(object){
            return(TRUE)
-           })
+         })
 
 
 setMethod('show', signature('BIOMOD.EnsembleModeling.out'),
@@ -1274,49 +1636,146 @@ setMethod('show', signature('BIOMOD.EnsembleModeling.out'),
             cat("\nexpl.var.names :", object@expl.var.names, fill=.Options$width)
             cat("\n")
             cat("\nmodels computed:", toString(object@em.computed), fill=.Options$width)
-
+            
             .bmCat()
           })
 
+# setClass("BIOMOD.EnsembleModeling.out",
+#          representation(sp.name = 'character',
+#                         expl.var.names = 'character',
+#                         models.out.obj = 'BIOMOD.stored.models.out',
+#                         eval.metric = 'character',
+#                         eval.metric.quality.threshold = 'numeric',
+#                         em.computed = 'character',
+#                         em.by = 'character',
+# #                         em.models.kept = 'list',
+# #                         em.prediction = 'BIOMOD.stored.array',
+# #                         em.evaluation = 'BIOMOD.stored.array',
+#                         em.res = 'list',
+#                         em.ci.alpha = 'numeric',
+#                         em.weight = 'list',
+#                         em.bin.tresh = 'list'),
+#          prototype( sp.name = '',
+#                     expl.var.names = '',
+#                     models.out.obj = new('BIOMOD.stored.models.out'),
+#                     eval.metric = '',
+#                     eval.metric.quality.threshold = NULL,
+# #                     em.computed = '',
+# #                     em.models.kept = NULL,
+# #                     em.prediction = NULL,
+# #                     em.evaluation = NULL,
+#                     em.res = list(),
+#                     em.ci.alpha = 0.05,
+#                     em.weight = list(),
+#                     em.bin.tresh = list()),
+#          validity = function(object){
+#            return(TRUE)
+#            })
+# 
+# 
+# setMethod('show', signature('BIOMOD.EnsembleModeling.out'),
+#           function(object){
+#             .bmCat("'BIOMOD.EnsembleModeling.out'")
+#             cat("\nsp.name :", object@sp.name, fill=.Options$width)
+#             cat("\nexpl.var.names :", object@expl.var.names, fill=.Options$width)
+#             cat("\n")
+#             cat("\nmodels computed:", toString(object@em.computed), fill=.Options$width)
+# 
+#             .bmCat()
+#           })
 
-setGeneric("getEMalgos",
-           function(obj, model){
-             standardGeneric("getEMalgos")
-           })
+# ######
+# setMethod('predict', signature(object = 'BIOMOD.EnsembleModeling.out'),
+#           function(object, newdata, subset=1, ...){
+#             
+#             args <- list(...)
+#             
+#             if(inherits(newdata, 'Raster')){            
+#               return(.predict.EM_biomod2_model.RasterStack(object, newdata, subset, ... ))
+#             } else if(inherits(newdata, 'data.frame') | inherits(newdata, 'matrix')){
+#               return(.predict.EM_biomod2_model.data.frame(object, newdata, subset, ... ))
+#             } else{ stop("invalid newdata input") }
+#             
+#           })
+# 
+# .predict.ANN_biomod2_model.RasterStack <- function(object, newdata, subset, ...){
+#   args <- list(...)
+#   filename <- args$filename
+#   overwrite <- args$overwrite
+#   on_0_1000 <- args$on_0_1000
+#   
+#   if (is.null(overwrite)) overwrite <- TRUE
+#   if (is.null(on_0_1000)) on_0_1000 <- FALSE
+#   
+#   set.seed(555)
+#   proj <- predict(newdata, get_formal_model(object), type="raw")
+#   
+#   if(length(getScalingModel(object))){
+#     names(proj) <- "pred"
+#     proj <- .testnull(object = getScalingModel(object), Prev = 0.5 , dat = proj)
+#   }
+#   
+#   if(on_0_1000) proj <- round(proj*1000)
+#   
+#   # save raster on hard drive ?
+#   if(!is.null(filename)){
+#     cat("\n\t\tWriting projection on hard drive...")
+#     writeRaster(proj, filename=filename, overwrite=overwrite)
+#     proj <- raster(filename)
+#   }
+#   
+#   return(proj)
+# }
+# 
+# .predict.EM_biomod2_model.data.frame <- function(object, newdata, subset, ...){
+#   args <- list(...)
+#   on_0_1000 <- args$on_0_1000
+#   
+#   if (is.null(on_0_1000)) on_0_1000 <- FALSE
+#   
+#   set.seed(555)
+#   proj <- as.numeric( predict(get_formal_model(object), newdata, type="raw") )
+#   
+#   if(length(getScalingModel(object))){
+#     proj <- data.frame(pred = proj)
+#     proj <- .testnull(object = getScalingModel(object), Prev = 0.5 , dat = proj)
+#   }
+#   
+#   if(on_0_1000) proj <- round(proj*1000)
+#   
+#   return(proj)
+# }
+# ######
 
-setMethod("getEMalgos", "BIOMOD.EnsembleModeling.out",
-          function(obj, model){
+
+setMethod("get_needed_models", "BIOMOD.EnsembleModeling.out",
+          function(obj, subset='all', ...){
+            add.args <- list(...)
+            needed_models <- lapply(obj@em.models, function(x){
+              return(x@model)
+            })
+            needed_models <- unique(unlist(needed_models))
+            return(needed_models)
+          }
+)
+
+
+
+setMethod("get_kept_models", "BIOMOD.EnsembleModeling.out",
+          function(obj, model, ...){
             if(is.character(model) | is.numeric(model)){
-              return(obj@em.res[[model]]$em.algo)
+              return(obj@em.models[[model]]@model)
             } else{
-              return(NULL)
+              kept_mod <- lapply(obj@em.models, function(x){return(x@model)})
+              names(kept_mod) <- names(obj@em.models)
+              return(kept_mod)
             }
 
           }
           )
 
-setGeneric("getEMkeptModels",
-           function(obj, model){
-             standardGeneric("getEMkeptModels")
-           })
 
-setMethod("getEMkeptModels", "BIOMOD.EnsembleModeling.out",
-          function(obj, model){
-            if(is.character(model) | is.numeric(model)){
-              return(obj@em.res[[model]]$em.models.kept)
-            } else{
-              return(NULL)
-            }
-
-          }
-          )
-
-setGeneric("getEMeval",
-           function(obj, ...){
-             standardGeneric("getEMeval")
-           })
-
-setMethod("getEMeval", "BIOMOD.EnsembleModeling.out",
+setMethod("get_evaluations", "BIOMOD.EnsembleModeling.out",
           function(obj, model=NULL, met=NULL){
             if(is.null(model)){
               model <- obj@em.computed
@@ -1325,9 +1784,9 @@ setMethod("getEMeval", "BIOMOD.EnsembleModeling.out",
               lout <- list()
               for(mod in model){
                 if(is.null(met)){
-                  lout[[mod]] <- obj@em.res[[mod]]$em.cross.validation[,,,drop=F]
+                  lout[[mod]] <- obj@em.models[[mod]]@model_evaluation[,,drop=F]
                 } else if(!is.null(meth)){
-                  lout[[mod]] <- (obj@em.res[[mod]]$em.cross.validation[met,,,drop=F])
+                  lout[[mod]] <- (obj@em.rmodels[[mod]]@model_evaluation[met,,drop=F])
                 } 
               }
               return(lout)
@@ -1338,13 +1797,9 @@ setMethod("getEMeval", "BIOMOD.EnsembleModeling.out",
           }
           )
 
-setGeneric("getEMbuiltModels",
-           function(obj){
-             standardGeneric("getEMbuiltModels")
-           })
 
-setMethod("getEMbuiltModels", "BIOMOD.EnsembleModeling.out",
-          function(obj){
+setMethod("get_built_models", "BIOMOD.EnsembleModeling.out",
+          function(obj, ...){
             return(obj@em.computed)
           })
 
@@ -1355,10 +1810,6 @@ setMethod("getEMbuiltModels", "BIOMOD.EnsembleModeling.out",
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
 
 # if( !isGeneric( ".Models.prepare.data" ) ) {
-  setGeneric( ".Models.prepare.data", 
-              def = function(data, ...){
-                      standardGeneric( ".Models.prepare.data" )
-                      } )
 # }
 
 setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data'),
@@ -1436,7 +1887,6 @@ setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data.PA'),
                 } else {
                   calibLines <- asub(DataSplitTable,pa,3,drop=TRUE)
                 }
-                cat("\n***", dim(calibLines))
                 colnames(calibLines) <- paste('_RUN',1:ncol(calibLines), sep='')
                 calibLines[which(!data@PA[,pa]),] <- NA
               } else{

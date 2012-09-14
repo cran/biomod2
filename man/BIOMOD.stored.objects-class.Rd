@@ -3,19 +3,21 @@
 \docType{class}
 
 \alias{BIOMOD.stored.data}
-\alias{BIOMOD.stored.files-class}
-\alias{BIOMOD.stored.array-class}
-\alias{BIOMOD.stored.array}
 \alias{BIOMOD.stored.data-class}
 \alias{BIOMOD.stored.files}
-\alias{BIOMOD.stored.formated.data-class}
+\alias{BIOMOD.stored.files-class}
+\alias{BIOMOD.stored.data.frame}
+\alias{BIOMOD.stored.data.frame-class}
+\alias{BIOMOD.stored.array}
+\alias{BIOMOD.stored.array-class}
 \alias{BIOMOD.stored.formated.data}
-\alias{BIOMOD.stored.models.options-class}
+\alias{BIOMOD.stored.formated.data-class}
 \alias{BIOMOD.stored.models.options}
-\alias{BIOMOD.stored.models.out-class}
+\alias{BIOMOD.stored.models.options-class}
 \alias{BIOMOD.stored.models.out}
-\alias{BIOMOD.stored.raster.stack-class}
+\alias{BIOMOD.stored.models.out-class}
 \alias{BIOMOD.stored.raster.stack}
+\alias{BIOMOD.stored.raster.stack-class}
 
 \title{ BIOMOD.stored.xxx objects class}
 
@@ -43,4 +45,7 @@ Each BIOMOD.stored.xxx objects has 3 slot:
 showClass("BIOMOD.stored.files")
 }
 
-\keyword{models, ensemble, object, storing}
+\keyword{models}
+\keyword{ensemble}
+\keyword{object}
+\keyword{storing}

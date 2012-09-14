@@ -3,24 +3,32 @@
 
 \title{ Ensemble projections of species over space and time }
 \description{
-This function use projections of \sQuote{individual models} and ensemble models from code{\link[biomod2]{BIOMOD_EnsembleModeling}} to build an ensemble of species' projections over space and time.
+This function use projections of \sQuote{individual models} and ensemble models from \code{\link[biomod2]{BIOMOD_EnsembleModeling}} to build an ensemble of species' projections over space and time.
 }
 \usage{
-BIOMOD_EnsembleForecasting( projection.output,
-                            EM.output,
-                            total.consensus = FALSE,
+BIOMOD_EnsembleForecasting( EM.output,
+                            projection.output = NULL,
+                            new.env = NULL,
+                            xy.new.env = NULL,
+                            selected.models = 'all',
+                            proj.name = NULL,
                             binary.meth = NULL,
                             filtered.meth = NULL,
+                            compress = TRUE,
                             ...)
 }
 
 
 \arguments{
-  \item{projection.output}{a \code{"\link[=BIOMOD.projection.out-class]{BIOMOD.projection.out}"} returned by \code{\link[biomod2]{BIOMOD_Projection}} }
   \item{EM.output}{ a \code{"\link[=BIOMOD.EnsembleModeling.out-class]{BIOMOD.EnsembleModeling.out}"} returned by \code{\link[biomod2]{BIOMOD_EnsembleModeling}}}
-  \item{total.consensus}{Deprecated, construct ensemble-models setting \code{em.by} argument to \code{'all'} to get total consensus-models}
+  \item{projection.output}{a \code{"\link[=BIOMOD.projection.out-class]{BIOMOD.projection.out}"} returned by \code{\link[biomod2]{BIOMOD_Projection}} }
+  \item{new.env}{ a \code{RasterStack} or a \code{data.frame} object containing explanatory data for the studied area. Needed only if \code{projection.output} is \code{NULL}. Prefer to use \code{"\link[=BIOMOD.projection.out-class]{BIOMOD.projection.out}"} if you have ever done the calculations.}
+  \item{xy.new.env}{the matching coordinates of \code{new.env} if \code{new.env} is defined and if it is a \code{data.frame}}
+  \item{selected.models}{ if not 'all', a character vector containing a subset of ensemble-models you want make projacion}
+  \item{proj.name}{the projection name (results will be saved within proj_proj.name directory). Only needed if \code{projection.output} is \code{NULL} }
   \item{binary.meth}{vector specifying the names of evaluation metrics and associated thresholds to transform the probabilities of presence into presence and absence (binary transformation).  }
   \item{filtered.meth}{vector specifying the names of evaluation metrics and associated thresholds to transform into 0 the probabilities of presence lower than the thresholds.}
+  \item{compress}{boolean or character, the compression format of objects stored on your hard drive. May be one of \sQuote{TRUE}, \sQuote{FALSE}, \sQuote{xz} or \sQuote{gzip} (see \code{\link{save}})}
   \item{\ldots}{ further arguments (see details)}
 }
 
@@ -47,7 +55,6 @@ Wilfried Thuiller, Damien Georges, Robin Engler
 
 \examples{
 # 0. Load data & Selecting Data
-
 # species occurrences
 DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
                                     package="biomod2"), row.names = 1)
@@ -65,7 +72,7 @@ myRespXY <- DataSpecies[,c("X_WGS84","Y_WGS84")]
 
 # Environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
 myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
-                             package="biomod2"),
+                     package="biomod2"),
                 system.file( "external/bioclim/current/bio4.grd", 
                              package="biomod2"), 
                 system.file( "external/bioclim/current/bio7.grd", 
@@ -86,10 +93,10 @@ myBiomodOption <- BIOMOD_ModelingOptions()
 
 # 3. Running the models 
 myBiomodModelOut <- BIOMOD_Modeling( myBiomodData, 
-                                       models = c('SRE','RF'), 
+                                       models = c('RF'), 
                                        models.options = myBiomodOption, 
                                        NbRunEval=2, 
-                                       DataSplit=80, 
+                                       DataSplit=60, 
                                        Yweights=NULL, 
                                        VarImport=0, 
                                        models.eval.meth = c('TSS'),
@@ -98,28 +105,32 @@ myBiomodModelOut <- BIOMOD_Modeling( myBiomodData,
                                        do.full.models = FALSE)
                                        
 # 4. Creating the ensemble models 
-myBiomodEM <- BIOMOD_EnsembleModeling( modeling.output = myBiomodModelOut,
-                                       chosen.models = grep('_RF', getModelsBuiltModels(myBiomodModelOut), value=TRUE),
-                                       em.by = 'algo',
-                                       eval.metric = c('TSS'),
-                                       eval.metric.quality.threshold = c(0.7),
-                                       prob.mean = FALSE,
-                                       prob.cv = FALSE,
-                                       prob.ci = FALSE,
-                                       prob.ci.alpha = 0.05,
-                                       prob.median = FALSE,
-                                       committee.averaging = FALSE,
-                                       prob.mean.weight = TRUE,
-                                       prob.mean.weight.decay = 'proportional' )
+myBiomodEM <- BIOMOD_EnsembleModeling( 
+                 modeling.output = myBiomodModelOut,
+                 chosen.models = grep('_RF', get_built_models(myBiomodModelOut), 
+                                  value=TRUE),
+                 em.by = 'algo',
+                 eval.metric = c('TSS'),
+                 eval.metric.quality.threshold = c(0.7),
+                 prob.mean = TRUE,
+                 prob.cv = FALSE,
+                 prob.ci = FALSE,
+                 prob.ci.alpha = 0.05,
+                 prob.median = FALSE,
+                 committee.averaging = FALSE,
+                 prob.mean.weight = FALSE,
+                 prob.mean.weight.decay = 'proportional' )
                                        
 # 5. Individual models projections on current environmental conditions
-myBiomodProjection <- BIOMOD_Projection(modeling.output = myBiomodModelOut,
-                                        new.env = myExpl,
-                                        proj.name = 'current',
-                                        selected.models = grep('_RF', getModelsBuiltModels(myBiomodModelOut), value=TRUE),
-                                        compress = 'NULL',
-                                        build.clamping.mask = FALSE)
-                                          
+myBiomodProjection <- BIOMOD_Projection(
+                        modeling.output = myBiomodModelOut,
+                        new.env = myExpl,
+                        proj.name = 'current',
+                        selected.models = grep('_RF', get_built_models(
+                                                myBiomodModelOut), value=TRUE),
+                        compress = FALSE,
+                        build.clamping.mask = FALSE)
+                          
 
 # 4. Creating the ensemble projections
 BIOMOD_EnsembleForecasting( projection.output = myBiomodProjection,

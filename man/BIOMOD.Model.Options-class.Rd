@@ -5,7 +5,7 @@
 \alias{BIOMOD.Model.Options-class}
 
 % BIOMOD.Model.Options-method
-\alias{show,BIOMOD.Model.Options}
+\alias{show,BIOMOD.Model.Options-method}
 
 \title{ BIOMOD_ModelingOptions() outputs objects class}
 

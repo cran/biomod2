@@ -1,13 +1,13 @@
 \name{BIOMOD.EnsembleModeling.out-method}
 
-\alias{getEMalgos}
-\alias{getEMalgos,BIOMOD.EnsembleModeling.out-method}
-\alias{getEMbuiltModels}
-\alias{getEMbuiltModels,BIOMOD.EnsembleModeling.out-method}
-\alias{getEMeval}
-\alias{getEMeval,BIOMOD.EnsembleModeling.out-method}
-\alias{getEMkeptModels}
-\alias{getEMkeptModels,BIOMOD.EnsembleModeling.out-method}
+%%\alias{get_built_models}
+%%\alias{get_built_models,BIOMOD.EnsembleModeling.out-method}
+%%\alias{get_evaluations}
+%%\alias{get_evaluations,BIOMOD.EnsembleModeling.out-method}
+\alias{get_kept_models}
+\alias{get_kept_models,BIOMOD.EnsembleModeling.out-method}
+\alias{get_needed_models}
+\alias{get_needed_models,BIOMOD.EnsembleModeling.out-method}
 
 \title{ BIOMOD.EnsembleModeling.out getters }
 
@@ -16,19 +16,23 @@ Functions to get attributs of \code{\link[biomod2]{BIOMOD_EnsembleModeling}} out
 }
 
 \usage{
-  getEMalgos(obj, model)
-  getEMbuiltModels(obj)
-  getEMeval(obj, ...)
-  getEMkeptModels(obj, model)
+  %get_built_models(obj, ...)
+  %get_evaluations(obj, ...)
+  get_kept_models(obj, ...)
+  get_needed_models(obj, ...)
 }
 
 
 
 \arguments{
   \item{obj}{ \code{"\link[=BIOMOD.EnsembleModeling.out-class]{BIOMOD.EnsembleModeling.out}"} object }
-  \item{model}{"character" or "numeric" refering to model names (getEMbuiltModels()) or model id }
   \item{...}{ extra arguments (see details) }
 }
+
+\note{
+\code{\link{get_built_models}} & \code{\link{get_evaluations}} are also available for \code{"\link[=BIOMOD.EnsembleModeling.out-class]{BIOMOD.EnsembleModeling.out}"} object.
+}
+
 
 \details{
 
@@ -36,12 +40,20 @@ Functions to get attributs of \code{\link[biomod2]{BIOMOD_EnsembleModeling}} out
   
   \itemize{
   
-    \item{\bold{getEMeval}}{
+    \item{\bold{get_evaluations}}{
       \itemize{
         \item{\code{model}:}{"character", model name }
         \item{\code{met}:}{"character", evaluation metric name}
       }
     }
+    
+    \item{\bold{get_kept_models}}{
+      \itemize{
+        \item{model}{"character" or "numeric" refering to model names (get_built_models()) or model id }
+      }
+    }
+    
+    
   } 
 }
 
@@ -49,13 +61,15 @@ Functions to get attributs of \code{\link[biomod2]{BIOMOD_EnsembleModeling}} out
 \value{
 
   \enumerate{
-    \item{\bold{getEMalgos: }}{ a \code{character} vector indicating set of ensemble-modeling algorithms ran}
+    \item{\bold{get_built_models: }}{ a \code{character} vector indicating set of ensemble-modeling algorithms ran}
     
-    \item{\bold{getEMbuiltModels: }}{ a \code{character} vector indicating the names of ensemble models computed }
+    \item{\bold{get_built_models: }}{ a \code{character} vector indicating the names of ensemble models computed }
     
-    \item{\bold{getEMeval: }}{ an \code{array} or a \code{data.frame} containing ensemble models evaluation scores}
+    \item{\bold{get_evaluations: }}{ an \code{array} or a \code{data.frame} containing ensemble models evaluation scores}
     
-    \item{\bold{getEMkeptModels: }}{ an \code{character} vector indicating names of selected models for ensemble-models building}
+    \item{\bold{get_kept_models: }}{ an \code{character} vector indicating names of selected models for ensemble-models building}
+    
+    \item{\bold{get_needed_models: }}{ an \code{character} vector indicating names of all needed models required to build all ensemble-models}
     
   }
 }
@@ -65,3 +79,5 @@ Functions to get attributs of \code{\link[biomod2]{BIOMOD_EnsembleModeling}} out
 \seealso{ \code{\link{help}}}
 
 \keyword{ models }
+\keyword{ ensemble }
+\keyword{ get }

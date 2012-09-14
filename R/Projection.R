@@ -16,7 +16,7 @@ setMethod( 'Projection', signature(new.env.data = 'data.frame'),
            filtred.proj = NULL,
 #            models.evaluation = NULL,
 #            models.options = NULL,
-           compress="xz",
+           compress = TRUE,
 #            scaled.models=TRUE,
            do.stack = FALSE){
         
@@ -125,7 +125,7 @@ setMethod( 'Projection', signature(new.env.data = 'RasterStack'),
            models.evaluation = NULL,
            models.options = NULL,
            stack = TRUE,
-           compress="xz",
+           compress = TRUE,
            scaled.models=TRUE,
            do.stack = FALSE){
         
@@ -539,7 +539,7 @@ setMethod('.Projection.do.proj', signature(env='RasterStack'),
 #       sre.out <- eval(parse(text=paste("sre(Data_",model.name,"$Response, Data_",
 #                                    model.name,"$Explanatory, env, Data_",model.name,
 #                                    "$Quant)*1000", sep="")))
-      sre.out <- raster:::subset(sre(data.sre$Response, data.sre$Explanatory, env, data.sre$Quant), 1, drop=TRUE) * 1000
+      sre.out <- raster::subset(sre(data.sre$Response, data.sre$Explanatory, env, data.sre$Quant), 1, drop=TRUE) * 1000
       
       return(sre.out)
     }

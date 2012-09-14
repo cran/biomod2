@@ -14,9 +14,9 @@
 
 % BIOMOD.models.out-method
 \alias{show,BIOMOD.formated.data-method}
-\alias{plot,BIOMOD.formated.data-method}
+\alias{plot,BIOMOD.formated.data,missing-method}
 \alias{show,BIOMOD.formated.data.PA-method}
-\alias{plot,BIOMOD.formated.data.PA-method}
+\alias{plot,BIOMOD.formated.data.PA,missing-method}
 
 \title{ BIOMOD_FormatingData() outputs objects class}
 

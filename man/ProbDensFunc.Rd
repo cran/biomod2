@@ -69,9 +69,9 @@ ProbDensFunc(initial,
   myRespXY <- DataSpecies[-rm_id,c("X_WGS84","Y_WGS84")]
   
   
-  # Environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
+  # Environmental variables extracted from BIOCLIM 
   myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
-                               package="biomod2"),
+                       package="biomod2"),
                   system.file( "external/bioclim/current/bio4.grd", 
                                package="biomod2"), 
                   system.file( "external/bioclim/current/bio7.grd", 
@@ -79,8 +79,8 @@ ProbDensFunc(initial,
                   system.file( "external/bioclim/current/bio11.grd", 
                                package="biomod2"), 
                   system.file( "external/bioclim/current/bio12.grd", 
-                               package="biomod2"))
-  
+                             package="biomod2"))
+    
   # 1. Formatting Data
   myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
                                        expl.var = myExpl,
@@ -93,15 +93,15 @@ ProbDensFunc(initial,
   
   # 3. Doing Modelisation
   myBiomodModelOut <- BIOMOD_Modeling( myBiomodData, 
-                                       models = c('CTA','RF','GLM','GAM','ANN','MARS'), 
-                                       models.options = myBiomodOption, 
-                                       NbRunEval=5, 
-                                       DataSplit=70, 
-                                       Prevalence=0.5,
-                                       models.eval.meth = c('TSS'),
-                                       do.full.models = FALSE,
-                                       rescal.all.models=T,
-                                       modeling.id='test')
+                       models = c('CTA','RF','GLM','GAM','ANN','MARS'), 
+                       models.options = myBiomodOption, 
+                       NbRunEval=5, 
+                       DataSplit=70, 
+                       Prevalence=0.5,
+                       models.eval.meth = c('TSS'),
+                       do.full.models = FALSE,
+                       rescal.all.models=T,
+                       modeling.id='test')
   
   # 4. Build ensemble-models that will be taken as reference
   myBiomodEM <- BIOMOD_EnsembleModeling( modeling.output = myBiomodModelOut,
@@ -118,7 +118,7 @@ ProbDensFunc(initial,
                                           proj.name = 'current',
                                           selected.models = 'all',
                                           binary.meth = 'TSS',
-                                          compress = 'xz',
+                                          compress = FALSE,
                                           build.clamping.mask = TRUE)
   
   BIOMOD_EnsembleForecasting(projection.output=myBiomodProjection,
@@ -126,8 +126,10 @@ ProbDensFunc(initial,
                              binary.meth='TSS')
   
   # 6. load binary projections
-  consensusBin <- stack('GuloGulo/proj_current/proj_current_GuloGulo_TotalConsensus_EMbyTSS_TSSbin.grd')
-  projectionsBin <- stack('GuloGulo/proj_current/proj_current_GuloGulo_TSSbin.grd')
+  consensusBin <- stack('GuloGulo/proj_current/
+  proj_current_GuloGulo_TotalConsensus_EMbyTSS_TSSbin.grd')
+  projectionsBin <- stack('GuloGulo/proj_current/
+  proj_current_GuloGulo_TSSbin.grd')
   
   # 7. build a ref state based on ensemble-models
   ref <- sampleRandom(subset(consensusBin, 1, drop=T), size=5000, sp=T, na.rm=T)

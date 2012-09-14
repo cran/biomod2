@@ -31,7 +31,7 @@ function(Data, coor, color.gradient='red', plots.per.window=9, cex=1, save.file=
     if(save.file=="postscript") postscript(paste(name, ".eps", sep=""))    
     
     for(W in 1:NbWindows){
-        if(save.file=="no") x11()
+        if(save.file=="no") dev.new()
         
         Wstart <- (W-1)*plots.per.window + 1
         if(W*plots.per.window > NbPlots) Wfinal <- NbPlots  else Wfinal <- W*plots.per.window

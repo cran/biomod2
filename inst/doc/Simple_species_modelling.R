@@ -5,11 +5,12 @@
 ### code chunk number 1: options
 ###################################################
 options(prompt = " ", continue = "  ", width = 60, digits=4)
-.CurFileName <- "biomod2_getting_started"
+.CurFileName <- "simple_species"
 # .PrefixName <- strsplit(.CurFileName, "\\.")[[1]][1]
-.PrefixName <- .CurFileName
+.PrefixName <- file.path("figs",.CurFileName)
 .RversionName <- R.version.string
 .PkgVersion <- packageDescription("biomod2")$Version
+.SupportedDataVignette <- paste("run:",system.file('doc/Simple_species_modelling.pdf',package='biomod2'),sep="")
 
 
 ###################################################
@@ -34,7 +35,8 @@ myResp <- as.numeric(DataSpecies[,myRespName])
 myRespXY <- DataSpecies[,c("X_WGS84","Y_WGS84")]
 
 
-# load the environmental raster layers (could be .img, ArcGIS rasters or any supported format by the raster package)
+# load the environmental raster layers (could be .img, ArcGIS 
+# rasters or any supported format by the raster package)
 
 # Environmental variables extracted from Worldclim (bio_3, bio_4, 
 # bio_7, bio_11 & bio_12)
@@ -109,7 +111,7 @@ myBiomodModelOut
 ### code chunk number 9: modeling_model_evaluation
 ###################################################
 # get all models evaluation                                     
-myBiomodModelEval <- getModelsEvaluations(myBiomodModelOut)
+myBiomodModelEval <- get_evaluations(myBiomodModelOut)
                                      
 # print the dimnames of this object
 dimnames(myBiomodModelEval)
@@ -126,7 +128,7 @@ myBiomodModelEval["ROC","Testing.data",,,]
 ### code chunk number 10: modeling_variable_importance
 ###################################################
 # print variable importances                                    
-getModelsVarImport(myBiomodModelOut)
+get_variables_importance(myBiomodModelOut)
 
 
 ###################################################
@@ -155,14 +157,14 @@ myBiomodEM <- BIOMOD_EnsembleModeling(
 myBiomodEM
                      
 # get evaluation scores
-getEMeval(myBiomodEM)
+get_evaluations(myBiomodEM)
 
 
 ###################################################
 ### code chunk number 13: projection_curent
 ###################################################
 # projection over the globe under current conditions
-myBiomomodProj <- BIOMOD_Projection(
+myBiomodProj <- BIOMOD_Projection(
                          modeling.output = myBiomodModelOut,
                          new.env = myExpl,
                          proj.name = 'current',
@@ -173,7 +175,7 @@ myBiomomodProj <- BIOMOD_Projection(
                          output.format = '.grd')
 
 # summary of crated oject
-myBiomomodProj
+myBiomodProj
 
 # files created on hard drive
 list.files("GuloGulo/proj_current/")
@@ -184,14 +186,14 @@ list.files("GuloGulo/proj_current/")
 ### code chunk number 14: projection_curent_plot
 ###################################################
 # make some plots sub-selected by str.grep argument
-plot(myBiomomodProj, str.grep = 'MARS')
+plot(myBiomodProj, str.grep = 'MARS')
 
 
 ###################################################
 ### code chunk number 15: projection_curent_getProj
 ###################################################
 # if you want to make custom plots, you can also get the projected map
-myCurrentProj <- getProjection(myBiomomodProj)
+myCurrentProj <- get_predictions(myBiomodProj)
 myCurrentProj
 
 
@@ -210,7 +212,7 @@ myExplFuture = stack( system.file( "external/bioclim/future/bio3.grd",
                     system.file( "external/bioclim/future/bio12.grd",
                                  package="biomod2"))
 
-myBiomomodProjFuture <- BIOMOD_Projection(
+myBiomodProjFuture <- BIOMOD_Projection(
                               modeling.output = myBiomodModelOut,
                               new.env = myExplFuture,
                               proj.name = 'future',
@@ -227,27 +229,27 @@ myBiomomodProjFuture <- BIOMOD_Projection(
 ### code chunk number 17: projection_current_plot
 ###################################################
 # make some plots, sub-selected by str.grep argument
-plot(myBiomomodProjFuture, str.grep = 'MARS')
+plot(myBiomodProjFuture, str.grep = 'MARS')
 
 
 ###################################################
 ### code chunk number 18: EnsembleForecasting_current
 ###################################################
 myBiomodEF <- BIOMOD_EnsembleForecasting( 
-                      projection.output = myBiomomodProj,
-                      EM.output = myBiomodEM )
+                      EM.output = myBiomodEM,
+                      projection.output = myBiomodProj)
 
 
 ###################################################
 ### code chunk number 19: EnsembleForecasting_loading_res
 ###################################################
-proj_current_GuloGulo_TotalConsensus_EMbyTSS <- stack("GuloGulo/proj_current/proj_current_GuloGulo_TotalConsensus_EMbyTSS.grd")
-proj_current_GuloGulo_TotalConsensus_EMbyTSS
+myBiomodEF
 
 
 ###################################################
 ### code chunk number 20: EnsembleForecasting_plotting_res
 ###################################################
-plot(proj_current_GuloGulo_TotalConsensus_EMbyTSS)
+# reduce layer names for plotting convegences
+plot(myBiomodEF)
 
 

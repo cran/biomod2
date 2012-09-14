@@ -40,7 +40,7 @@
                                VarImport=0, 
                                models.eval.meth = c('KAPPA','TSS','ROC'), 
                                SaveObj = TRUE,
-                               rescal.all.models = TRUE,
+                               rescal.all.models = FALSE,
                                do.full.models = TRUE,
                                modeling.id=as.character(format(Sys.time(), "%s")),
                                ...){
@@ -51,7 +51,7 @@
   # 1. args checking =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
   args <- .Models.check.args(data, models, models.options, NbRunEval, DataSplit,
                              Yweights, VarImport, models.eval.meth, Prevalence, 
-                             do.full.models, ...)
+                             do.full.models, SaveObj,...)
   # updating Models arguments
   models <- args$models
   models.options <- args$models.options
@@ -63,7 +63,9 @@
   Prevalence <- args$Prevalence
   do.full.models <- args$do.full.models
   DataSplitTable <- args$DataSplitTable
-
+  SaveObj <- args$SaveObj
+  compress.arg = TRUE#ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+  
   rm(args)
   models.out <- new('BIOMOD.models.out',
                     sp.name = data@sp.name,
@@ -85,11 +87,11 @@
   # 3. Saving Data and Model.option objects -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
   if(SaveObj){
     # save Input Data
-    save(data, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"formated.input.data"), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+    save(data, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"formated.input.data"), compress = compress.arg)
     models.out@formated.input.data@inMemory <- FALSE
     models.out@formated.input.data@link <- file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"formated.input.data")
     # save Model Options
-    save(models.options, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.options"), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+    save(models.options, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.options"), compress = compress.arg)
     models.out@models.options@inMemory <- FALSE
     models.out@models.options@link <- file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.options")
 
@@ -109,7 +111,7 @@
     }
   }
   # save calib.lines
-  save(calib.lines, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"calib.lines"), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+  save(calib.lines, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"calib.lines"), compress = compress.arg)
   models.out@calib.lines@inMemory <- FALSE
   models.out@calib.lines@link <- file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"calib.lines")
   rm(calib.lines)
@@ -130,6 +132,7 @@
                           SavePred = SaveObj,
                           scal.models = rescal.all.models
                           )
+  
   # put outputs in good format and save those
 
   models.out@models.computed <- .transform.outputs(modeling.out, out='models.run')
@@ -138,7 +141,7 @@
   if(SaveObj){
     # save model evaluation
     models.evaluation <- .transform.outputs(modeling.out, out='evaluation')
-    save(models.evaluation, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.evaluation"), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+    save(models.evaluation, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.evaluation"), compress = compress.arg)
     models.out@models.evaluation@inMemory <- TRUE
     models.out@models.evaluation@link <- file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.evaluation")
     models.out@models.evaluation@val <- models.evaluation
@@ -147,13 +150,14 @@
     # save model variables importances
     if(VarImport > 0 ){
       variables.importances <- .transform.outputs(modeling.out, out='var.import')
+
       ## trick to put appropriate dimnames
-      vi.dim.names <- dimnames(variables.importances)
-      vi.dim.names[[1]] <- models.out@expl.var.names
-      dimnames(variables.importances) <- vi.dim.names
-      rm('vi.dim.names')
+#       vi.dim.names <- dimnames(variables.importances)
+#       vi.dim.names[[1]] <- models.out@expl.var.names
+#       dimnames(variables.importances) <- vi.dim.names
+#       rm('vi.dim.names')
     
-      save(variables.importances, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"variables.importance"), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+      save(variables.importances, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"variables.importance"), compress = compress.arg)
       models.out@variables.importances@inMemory <- TRUE
       models.out@variables.importances@link <-file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"variables.importance")
       models.out@variables.importances@val <- variables.importances
@@ -162,7 +166,7 @@
 
     # save model predictions
     models.prediction <- .transform.outputs(modeling.out, out='prediction')
-    save(models.prediction, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.prediction"), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+    save(models.prediction, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.prediction"),  compress=compress.arg)
     models.out@models.prediction@inMemory <- FALSE
     models.out@models.prediction@link <- file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.prediction")
 #     models.out@models.prediction@val <- .transform.outputs(modeling.out, out='prediction')
@@ -170,7 +174,7 @@
     
     # save evaluation model predictions
     models.prediction.eval <- .transform.outputs(modeling.out, out='prediction.eval')
-    save(models.prediction.eval, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.prediction.eval"), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+    save(models.prediction.eval, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.prediction.eval"), compress = compress.arg)
     models.out@models.prediction.eval@inMemory <- FALSE
     models.out@models.prediction.eval@link <- file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"models.prediction.eval")
 #     models.out@models.prediction@val <- .transform.outputs(modeling.out, out='prediction')
@@ -179,9 +183,9 @@
   }
   
   # removing MAXENT tmp dir
-  if('MAXENT' %in% models){
-    .Delete.Maxent.WorkDir(species.name=models.out@sp.name)
-  }
+#   if('MAXENT' %in% models){
+#     .Delete.Maxent.WorkDir(species.name=models.out@sp.name, modeling.id=models.out@modeling.id)
+#   }
   
   rm(modeling.out)
   
@@ -203,38 +207,38 @@
 .Models.dependencies <- function(silent=TRUE, models.options = NULL){
   # Loading all required libraries
   cat('\n\nLoading required library...')
-  require(nnet, quietly=silent)
-  require(rpart, quietly=silent)
-  require(MASS, quietly=silent)
-  require(gbm, quietly=silent)
-  require(mda, quietly=silent)
-  require(randomForest, quietly=silent)
-  
-  if(!is.null(models.options)){
-    if(grepl('mgcv', models.options@GAM$algo)){
-      if("package:gam" %in% search() ) detach(package:gam)
-      require(mgcv, quietly=silent)
-    } else{
-      if("package:mgcv" %in% search() ) detach(package:mgcv)
-      require(gam, quietly=silent)
-    }
-  } else {
-    if('mgcv' %in% rownames(installed.packages())){
-      if("package:gam" %in% search() ) detach(package:gam)
-      require(mgcv, quietly=silent)
-    } else{
-      if("package:mgcv" %in% search() ) detach(package:mgcv)
-      require(gam, quietly=silent)
-    }    
-  }
-
-  require(abind, quietly=silent)
+#   require(nnet, quietly=silent)
+#   require(rpart, quietly=silent)
+#   require(MASS, quietly=silent)
+#   require(gbm, quietly=silent)
+#   require(mda, quietly=silent)
+#   require(randomForest, quietly=silent)
+#   
+#   if(!is.null(models.options)){
+#     if(grepl('mgcv', models.options@GAM$algo)){
+#       if("package:gam" %in% search() ) detach(package:gam)
+#       require(mgcv, quietly=silent)
+#     } else{
+#       if("package:mgcv" %in% search() ) detach(package:mgcv)
+#       require(gam, quietly=silent)
+#     }
+#   } else {
+#     if('mgcv' %in% rownames(installed.packages())){
+#       if("package:gam" %in% search() ) detach(package:gam)
+#       require(mgcv, quietly=silent)
+#     } else{
+#       if("package:mgcv" %in% search() ) detach(package:mgcv)
+#       require(gam, quietly=silent)
+#     }    
+#   }
+# 
+#   require(abind, quietly=silent)
 }
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
 
 .Models.check.args <- function(data, models, models.options, NbRunEval, DataSplit,
-                               Yweights, VarImport, models.eval.meth, Prevalence, do.full.models,...){
+                               Yweights, VarImport, models.eval.meth, Prevalence, do.full.models, SaveObj, ...){
   cat('\n\nChecking Models arguments...\n')
   add.args <- list(...)
   
@@ -280,7 +284,8 @@
   if( is.null(models.options)){
     warning("Models will run with 'defaults' parameters", immediate.=T)
     # create a default models.options object
-    models.options = new("BIOMOD.Model.Options")
+    models.options <- BIOMOD_ModelingOptions() # MAXENT = list( path_to_maxent.jar = getwd()) 
+    
   }
   
   # MAXENT specific checking
@@ -288,14 +293,12 @@
     if(!file.exists(file.path(models.options@MAXENT$path_to_maxent.jar ,"maxent.jar")) ){
       models = models[-which(models=='MAXENT')]
       warning("The maxent.jar file is missing. You need to download this file (http://www.cs.princeton.edu/~schapire/maxent) and put the maxent.jar file in your working directory -> MAXENT was switched off")
-    }
-    if(!.check.java.installed()){
+    } else if(!.check.java.installed()){
       models = models[-which(models=='MAXENT')]
-    } else{
-      if(nrow(data@coord)==1){ # no coordinates
-        warning("You must give XY coordinates if you want to run MAXENT -> MAXENT was switched off")
-        models = models[-which(models=='MAXENT')]
-      }
+    } else if(nrow(data@coord)==1){
+     # no coordinates
+      warning("You must give XY coordinates if you want to run MAXENT -> MAXENT was switched off")
+      models = models[-which(models=='MAXENT')]
     } 
   }
   
@@ -384,7 +387,14 @@
       }
     }
   }
-
+  
+  ##### TO BE CHANGE BUT PREVENT FROM BUGS LATTER
+  # Force object saving parameter
+  if(!SaveObj){
+    cat("\n\t SaveObj param was automaticaly set to TRUE to prevent from bugs.")
+    SaveObj <- TRUE
+  }
+  
 #   cat('\nChecking done!\n')
   return(list(models = models,
               models.options = models.options,
@@ -395,6 +405,7 @@
               models.eval.meth = models.eval.meth,
               Prevalence = Prevalence,
               do.full.models = do.full.models,
+              SaveObj = SaveObj,
               DataSplitTable=add.args$DataSplitTable))
 }
 
@@ -404,7 +415,7 @@
   cat("\nCreating suitable Workdir...\n")
   dir.create(sp.name, showWarnings=FALSE, recursive=TRUE)
   dir.create(file.path(sp.name,".BIOMOD_DATA",modeling.id), showWarnings=FALSE, recursive=TRUE)
-  dir.create(file.path(sp.name, "models",modeling.id,"scaling_models"), showWarnings=FALSE, recursive=T)
+  dir.create(file.path(sp.name, "models",modeling.id), showWarnings=FALSE, recursive=T)
 
 #   if(sum(models.list %in% c('MARS', 'FDA', 'ANN')) > 0 ){
 #     dir.create(paste(getwd(),"/",sp.name, "/models/scaling_models", sep=""), showWarnings=FALSE, recursive=T)

@@ -22,15 +22,17 @@ function(data.in, XY, color.gradient='red', cex=1, level.range=c(min(data.in),ma
             SRC <- F
         } else {    
             SRCvalues <- sort(unique(data.in))
-			gg <- data.in + 3
+			      col_id <- data.in + 3
             color.system <- c("red", "lightgreen", "grey", "darkgreen")
             title <- paste("SRC plot ", title, sep="")
         }
     } else
 	{    if(color.gradient=='grey') {
-          color.system <- c()
-          for(i in seq(93,10,length.out=100)) color.system <- c(color.system, gray(i/100))
-          color.system <- c(gray(0.93), color.system, gray(0))
+#           color.system <- c()
+#           for(i in seq(93,10,length.out=100)) color.system <- c(color.system, gray(i/100))
+#           color.system <- c(gray(0.93), color.system, gray(0))
+	        color.system <- gray(seq(0.95,0, length.out=102))
+            
         }
         if(color.gradient=='blue') {
           color.system <- c('grey88',
@@ -54,16 +56,22 @@ function(data.in, XY, color.gradient='red', cex=1, level.range=c(min(data.in),ma
       #if(level.range[1]<min(data.in)) level.range[1] <- min(data.in)  
       #if(level.range[2]>max(data.in)) level.range[2] <- max(data.in)  
     
-      #determine the color code to assess to each value  
-      g <- gg <- data.in
-      gg[gg <= level.range[1]]  <- level.range[1]
-      gg[gg >= level.range[2]] <- level.range[2]
-      gg <- gg-min(g) 
-      gg <- gg/max(gg)*100 + 1
-   
-      #over and under-ranged values set to limits of color range
-      gg[g < level.range[1]] <- 1
-      gg[g > level.range[2]] <- 102
+      #determine the color code to assess to each value
+      
+      # define a vector for make a correspundance between values and colors
+      val_seq <- c(seq(level.range[1], level.range[2], length.out=101),Inf)  
+      col_id <- sapply(data.in, function(x){return(which(x<=val_seq)[1])})
+       
+       
+#       g <- gg <- data.in
+#       gg[gg <= level.range[1]]  <- level.range[1]
+#       gg[gg >= level.range[2]] <- level.range[2]
+#       gg <- gg-min(g) 
+#       gg <- gg/max(gg)*100 + 1
+#    
+#       #over and under-ranged values set to limits of color range
+#       gg[g < level.range[1]] <- 1
+#       gg[g > level.range[2]] <- 102
     }
     
     # define plotting symbols for presence and absences if required by user
@@ -84,7 +92,7 @@ function(data.in, XY, color.gradient='red', cex=1, level.range=c(min(data.in),ma
     if(show.scale){
         
         if(!multiple.plot) layout(matrix(c(1,2),nrow=1), widths=c(5,1), heights=c(1,1))
-        plot(XY[,2]~XY[,1], col=color.system[gg], cex=cex, pch=19, xlab='', ylab='', xaxt='n', yaxt='n', main=title)
+        plot(XY[,2]~XY[,1], col=color.system[col_id], cex=cex, pch=19, xlab='', ylab='', xaxt='n', yaxt='n', main=title)
         #Add Presence and Absence locations if requested by user:
         if(!is.null(AddPresAbs)){points(AddPresAbs[AddPresAbs[,3]==1,1:2], col="black", pch=pchPres, cex=cex2); points(AddPresAbs[AddPresAbs[,3]==0,1:2], col="black", pch=pchAbs, cex=cex2)}
      
@@ -95,7 +103,7 @@ function(data.in, XY, color.gradient='red', cex=1, level.range=c(min(data.in),ma
         if(SRC){ legend(0,0.8,legend=list(' (1) new', ' (0) stable', '(-1) kept', '(-2) lost'),cex=1, fill=rev(color.system),bty='n') 
          } else {
           if(level.range[1] == min(data.in)) lmin <- round(level.range[1], digits=2) else lmin <- paste(round(level.range[1], digits=2), " or lower", sep="")
-          if(level.range[2] == max(data.in)) lmax <- round(level.range[2], digits=2) else {lmax <- paste(round(level.range[2], digits=2), " or over", sep="") ; color.system[102] <- "grey70"}
+          if(level.range[2] == max(data.in)) lmax <- round(level.range[2], digits=2) else {lmax <- paste(round(level.range[2], digits=2), " or over", sep="") }
 
           if(!multiple.plot){
               legend(0.2,0.92,legend=list(lmax,'','','','',round((3*level.range[2]+level.range[1])/4, digits=2),'','','','',round(sum(level.range)/2, digits=2),
@@ -107,7 +115,7 @@ function(data.in, XY, color.gradient='red', cex=1, level.range=c(min(data.in),ma
         }
     }
      else{
-          plot(XY[,2]~XY[,1], col=color.system[gg], cex=cex, pch=19, xlab='', ylab='', xaxt='n', yaxt='n', main=title)
+          plot(XY[,2]~XY[,1], col=color.system[col_id], cex=cex, pch=19, xlab='', ylab='', xaxt='n', yaxt='n', main=title)
           #Add Presence and Absence locations if requested by user:
           if(!is.null(AddPresAbs)){points(AddPresAbs[AddPresAbs[,3]==1,1:2], col="black", pch=pchPres, cex=cex2); points(AddPresAbs[AddPresAbs[,3]==0,1:2], col="black", pch=pchAbs, cex=cex2)}
      }

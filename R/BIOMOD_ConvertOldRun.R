@@ -1,5 +1,7 @@
 BIOMOD_ConvertOldRun <- function(savedObj, path = NULL){
   .bmCat("BIOMOD results migration")
+  
+  compress.arg = TRUE #ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz')
   # 1. Check path exists and all objects needed exists too -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if(!file.exists(savedObj)){
     stop("Input object doesn't exist")
@@ -68,7 +70,7 @@ BIOMOD_ConvertOldRun <- function(savedObj, path = NULL){
                     PA = data.frame(PAtmp))
     }
     # save Input Data
-    save(data, file = paste(models.out@sp.name,"/.BIOMOD_DATA/formated.input.data",sep=""), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+    save(data, file = paste(models.out@sp.name,"/.BIOMOD_DATA/formated.input.data",sep=""), compress=compress.arg)
     models.out@formated.input.data@inMemory <- FALSE
     models.out@formated.input.data@link <- paste(models.out@sp.name,"/.BIOMOD_DATA/formated.input.data",sep="")
     rm(PAtmp,data)
@@ -77,7 +79,7 @@ BIOMOD_ConvertOldRun <- function(savedObj, path = NULL){
     cat("\n\tBIOMOD.Model.Options creation")
     models.options <- BIOMOD_ModelingOptions()
     # save Model Options
-    save(models.options, file = paste(models.out@sp.name,"/.BIOMOD_DATA/models.options",sep=""), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+    save(models.options, file = paste(models.out@sp.name,"/.BIOMOD_DATA/models.options",sep=""),  compress=compress.arg)
     models.out@models.options@inMemory <- FALSE
     models.out@models.options@link <- paste(models.out@sp.name,"/.BIOMOD_DATA/models.options",sep="")
     rm(models.options)
@@ -205,7 +207,7 @@ BIOMOD_ConvertOldRun <- function(savedObj, path = NULL){
     }#)
     
     # save model evaluation
-    save(models.evaluation, file = paste(models.out@sp.name,"/.BIOMOD_DATA/models.evaluation",sep=""), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+    save(models.evaluation, file = paste(models.out@sp.name,"/.BIOMOD_DATA/models.evaluation",sep=""),  compress=compress.arg)
     models.out@models.evaluation@inMemory <- TRUE
     models.out@models.evaluation@link <- paste(models.out@sp.name,"/.BIOMOD_DATA/models.evaluation",sep="")
     models.out@models.evaluation@val <- models.evaluation
@@ -217,7 +219,7 @@ BIOMOD_ConvertOldRun <- function(savedObj, path = NULL){
     # save model variables importances
     if(!is.null(VarImportance)){
       variables.importances <- t(VarImportance[[sp.name]])
-      save(variables.importances, file = paste(models.out@sp.name,"/.BIOMOD_DATA/variables.importances",sep=""), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+      save(variables.importances, file = paste(models.out@sp.name,"/.BIOMOD_DATA/variables.importances",sep=""),  compress=compress.arg)
       models.out@variables.importances@inMemory <- TRUE
       models.out@variables.importances@link <- paste(models.out@sp.name,"/.BIOMOD_DATA/variables.importances",sep="")
       models.out@variables.importances@val <- variables.importances
@@ -258,7 +260,7 @@ BIOMOD_ConvertOldRun <- function(savedObj, path = NULL){
       }
         
       # save model predictions
-      save(models.prediction, file = paste(models.out@sp.name,"/.BIOMOD_DATA/models.prediction",sep=""), compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+      save(models.prediction, file = paste(models.out@sp.name,"/.BIOMOD_DATA/models.prediction",sep=""),  compress=compress.arg)
       models.out@models.prediction@inMemory <- FALSE
       models.out@models.prediction@link <- paste(models.out@sp.name,"/.BIOMOD_DATA/models.prediction",sep="")
       rm(models.prediction)
