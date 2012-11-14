@@ -1,5 +1,5 @@
 `makeFormula` <-
-function(respName, explVar, type = 'simple', interaction.level = 0)
+function(respName, explVar, type = 'simple', interaction.level = 0, ...)
 {
   # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   # This function return a string in a well formated way. May be give as formula argument to a "basic"
@@ -8,6 +8,7 @@ function(respName, explVar, type = 'simple', interaction.level = 0)
   #
   # D.GEORGES 12/2011
   # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
+  sup_args <- list(...)
   
   # 0. Supported Types =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
   availableTypes = c("simple", "quadratic", "polynomial", "s_smoother")
@@ -34,10 +35,10 @@ function(respName, explVar, type = 'simple', interaction.level = 0)
   interaction.level <- min(interaction.level, ncol(explVar))
   
   # 2. Create the formula =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
-  junk <- c()  
+  junk <- c(1)  
   
   switch(EXPR=type,
-         "simple" = {junk <- explVarNames},
+         "simple" = {junk <- c(junk,explVarNames) },
   
          "quadratic" = { 
            for (v in 1:ncol(explVar) ){
@@ -52,24 +53,27 @@ function(respName, explVar, type = 'simple', interaction.level = 0)
          "polynomial" = {
            for (v in 1:ncol(explVar) ){
              if(is.numeric(explVar[,v])){
-#                junk <- c(junk, paste(explVarNames[v],
-#                                       "+I(", explVarNames[v],
-#                                       "^2)+I(",explVarNames[v],
-#                                       "^3)+poly(",explVarNames[v],
-#                                       ",2)+poly(",explVarNames[v],
-#                                       ",3)",sep="") )
-                  junk <- c(junk, paste(explVarNames[v],
-                                      "+poly(",explVarNames[v],
-                                      ",3)",sep="") )               
+               junk <- c(junk, paste(explVarNames[v],
+                                      "+I(", explVarNames[v],
+                                      "^2)+I(",explVarNames[v],
+                                      "^3)",sep="") )
+#                   junk <- c(junk, paste(explVarNames[v],
+#                                       "+poly(",explVarNames[v],
+#                                       ",3)",sep="") )               
              } else { junk <- c(junk, explVarNames[v]) }
            } },
          
          "s_smoother" = {
            for (v in 1:ncol(explVar) ){
              if(is.numeric(explVar[,v])){
-                  junk <- c(junk, paste(explVarNames[v],
-                                      "+s(",explVarNames[v],
-                                      ")",sep="") )               
+               if(is.null(sup_args$k)){
+                 junk <- c(junk, paste("s(",explVarNames[v],
+                                       ")",sep="") )                 
+               } else{
+                 junk <- c(junk, paste("s(",explVarNames[v],
+                                       ",k=",sup_args$k,")",sep="") )                 
+               }
+
              } else { junk <- c(junk, explVarNames[v]) }
            } })
   

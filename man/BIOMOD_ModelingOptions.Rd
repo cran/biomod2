@@ -81,7 +81,7 @@ Please refer to \code{\link[gbm]{gbm}} help file to get the meaning of this opti
 
 }
 
-\section{=-=-= GAM =-=-=  (\code{\link[gam]{gam}})}{
+\section{=-=-= GAM =-=-=  (\code{\link[gam]{gam}} or \code{\link[mgcv]{gam}})}{
   \itemize{
   
     \item{algo : either "GAM_mgcv" (default), "GAM_gam" or "BAM_mgcv" defining the chosen GAM function (see \code{\link[mgcv]{gam}}, \code{\link[gam]{gam}} resp. \code{\link[mgcv]{bam}} for more details)}
@@ -95,7 +95,7 @@ Please refer to \code{\link[gbm]{gbm}} help file to get the meaning of this opti
     \item{or construct specific formula}
     }}
     
-    \item{spline : a smooth term in a formula argument to gam (see \code{\link[gam]{s}})}
+    \item{k : a smooth term in a formula argument to gam (see \pkg{gam} \code{\link[gam]{s}} or \pkg{mgcv} \code{\link[mgcv]{s}})}
 %    \item{test : Information criteria for the stepwise selection procedure: AIC for Akaike Information Criteria, and BIC for Bayesian Information Criteria ('AIC' or 'BIC')}  
     \item{family : a description of the error distribution and link function to be used in the model. This can be a character string naming a family function, a family function or the result of a call to a family function. (See \link{family} for details of family functions.) . BIOMOD only runs on presence-absence data so far, so binomial family by default. }
     \item{control : see \code{\link[mgcv]{gam.control}} or \code{\link[gam]{gam.control}}}  

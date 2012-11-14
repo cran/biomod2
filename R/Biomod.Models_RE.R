@@ -179,12 +179,13 @@
 
     ### Old version
     if(Options@GAM$algo == 'GAM_gam'){ ## gam package
+      cat('\n\t> GAM (gam) modelling...')
 
       gamStart <- eval(parse(text=paste("gam(",colnames(Data)[1] ,"~1 ," ,
                             " data = Data[calibLines,], family = ", eval(Options@GAM$family),
                             ", weights = Yweights[calibLines])" ,sep="")))
       
-      model.sp <- try( step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s", Options@GAM$spline),
+      model.sp <- try( step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s", Options@GAM$k),
                            data = Data[calibLines,],
                            keep = .functionkeep, 
                            direction = "both",
@@ -193,18 +194,21 @@
 
     } else { ## mgcv package
       if(is.null(Options@GLM$myFormula)){
-        gam.formula <- makeFormula(colnames(Data)[1],head(Data[,-ncol(Data)]),Options@GAM$type, Options@GAM$interaction.level)
+        cat("\n\tAutomatic formula generation...")
+        gam.formula <- makeFormula(colnames(Data)[1],head(Data[,-ncol(Data)]),Options@GAM$type, Options@GAM$interaction.level, k=Options@GAM$k)
       } else{
         gam.formula <- Options@GLM$myFormula
       }
       
       if (Options@GAM$algo == 'GAM_mgcv'){
+        cat('\n\t> GAM (mgcv) modelling...')
         model.sp <- try(mgcv:::gam(gam.formula, 
                             data=Data, 
                             family=Options@GAM$family, 
                             weights = Yweights,
                             control = control.list))
       } else if (Options@GAM$algo == 'BAM_mgcv'){ ## big data.frame gam version
+        cat('\n\t> BAM (mgcv) modelling...')
         model.sp <- try(mgcv:::bam(gam.formula, 
                             data=Data, 
                             family=Options@GAM$family,
@@ -740,9 +744,8 @@
        
         cat("\n\tEvaluating Predictor Contributions...", "\n")
         TempVarImp <- as.data.frame(matrix(data = 0, nrow = 1,ncol = (ncol(Data) - 1 )) )
-        colnames(TempVarImp) <- colnames(Data)[-1]
 
-        if (Model %in% c("CTA","ANN","GBM","FDA")){TempVarImp <- TempVarImp[,-ncol(TempVarImp)]} # remove weights column
+        if (Model %in% c("CTA","ANN","GBM","FDA","GAM")){TempVarImp <- TempVarImp[,-ncol(TempVarImp)]} # remove weights column
      
         for (J in 1:(ncol(Data) - 1 )) {
             for (K in 1:VarImport) {
@@ -767,16 +770,29 @@
                   } 
                 }
               
-                if (Model %in% c("GLM","GAM") )
-                  TempVarImp[1, J] <- TempVarImp[1, J] + cor(g.pred[, 
-                    ], as.integer(as.numeric(.testnull(model.sp, 
-                    Prev, TempDS)) * 1000))
+                if (Model %in% c("GLM","GAM") ){
+                  if(J < ncol(TempDS)){
+                    if(length(unique(as.numeric(g.pred[,])))>1){
+                      TempVarImp[1, J] <- TempVarImp[1, J] + cor(g.pred[, 
+                      ], as.integer(as.numeric(.testnull(model.sp, 
+                      Prev, TempDS)) * 1000))
+                    } else{
+                      TempVarImp[1, J] <- TempVarImp[1, J] + 0
+                    }
+                  }
+                }
+
 
                 if (Model == "GBM"){
                   if(J < ncol(TempDS)){
-                    TempVarImp[1, J] <- TempVarImp[1, J] + cor(g.pred[, 
-                      ], as.integer(as.numeric(predict.gbm(model.sp, 
-                      TempDS, best.iter, type = "response")) * 1000))
+                    if(length(unique(g.pred[,]))>1){
+                      TempVarImp[1, J] <- TempVarImp[1, J] + 
+                        cor(g.pred[,], 
+                            as.integer(as.numeric(predict.gbm(model.sp,TempDS, best.iter, type = "response")) * 1000))                      
+                    } else{
+                      TempVarImp[1, J] <- TempVarImp[1, J] + 0
+                    }
+
                   }
                 }
               
