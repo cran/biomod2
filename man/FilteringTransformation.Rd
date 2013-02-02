@@ -4,6 +4,7 @@
 \alias{FilteringTransformation,data.frame-method}
 \alias{FilteringTransformation,matrix-method}
 \alias{FilteringTransformation,numeric-method}
+\alias{FilteringTransformation,array-method}
 \alias{FilteringTransformation,RasterBrick-method}
 \alias{FilteringTransformation,RasterLayer-method}
 \alias{FilteringTransformation,RasterStack-method}
@@ -19,6 +20,8 @@
 \S4method{FilteringTransformation}{matrix}(data, threshold)
 
 \S4method{FilteringTransformation}{data.frame}(data, threshold)
+
+\S4method{FilteringTransformation}{array}(data, threshold)
 
 \S4method{FilteringTransformation}{RasterLayer}(data, threshold)
 

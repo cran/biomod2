@@ -2,8 +2,7 @@
 ### TO DO :
 ### Add SpatialDataFrame Response Case
 
-
-sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.025){
+sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.025, return_extremcond=FALSE){
 
   # 1. Checking of input arguments validity
   args <- .check.params.sre(Response, Explanatory, NewData, Quant)
@@ -22,8 +21,10 @@ sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.
     for(j in 1:nb.resp){
       occ.pts <- which(Response[,j]==1)
       extrem.cond <- t(apply(as.data.frame(Explanatory[occ.pts,]), 2, 
-                           quantile, probs = c(0 + Quant, 1 - Quant), na.rm = TRUE)) 
-      lout[[j]] <- .sre.projection(NewData, extrem.cond)
+                           quantile, probs = c(0 + Quant, 1 - Quant), na.rm = TRUE))
+      
+      if(!return_extremcond)
+        lout[[j]] <- .sre.projection(NewData, extrem.cond)
     }
   }
   
@@ -34,7 +35,9 @@ sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.
       occ.pts <- raster:::subset(Response,j)
       occ.pts[occ.pts != 1] <- NA
       extrem.cond <- quantile(raster:::mask(Explanatory, occ.pts), probs = c(0 + Quant, 1 - Quant), na.rm = TRUE)
-      lout[[j]] <- .sre.projection(NewData, extrem.cond)
+      
+      if(!return_extremcond)
+        lout[[j]] <- .sre.projection(NewData, extrem.cond)
     }
   }
     
@@ -57,25 +60,30 @@ sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.
                    quantile, probs = c(0 + Quant, 1 - Quant), na.rm = TRUE))
       } else { stop("Unsuported case!") } } }
       
-      lout[[j]] <- .sre.projection(NewData, extrem.cond)
+      if(!return_extremcond)
+        lout[[j]] <- .sre.projection(NewData, extrem.cond)
     }
   }
-       
-  # 3. Rearranging the lout object
-  if(is.data.frame(NewData)){
-    lout <- simplify2array(lout)
-    colnames(lout) <- resp.names
-  }
-
-  if(inherits(NewData, 'Raster')){
-    lout <- stack(lout)
-    if(nlayers(lout)==1){
-      lout <- raster:::subset(lout,1,drop=TRUE)
+  
+  if(return_extremcond){
+    return(as.data.frame(extrem.cond))
+  } else{
+    # 3. Rearranging the lout object
+    if(is.data.frame(NewData)){
+      lout <- simplify2array(lout)
+      colnames(lout) <- resp.names
     }
-    names(lout) <- resp.names
+  
+    if(inherits(NewData, 'Raster')){
+      lout <- stack(lout)
+      if(nlayers(lout)==1){
+        lout <- raster:::subset(lout,1,drop=TRUE)
+      }
+      names(lout) <- resp.names
+    }
+  
+    return(lout)
   }
-
-  return(lout)
 }
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
@@ -155,7 +163,7 @@ sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
       
 .sre.projection <- function(NewData, ExtremCond){
-  if(is.data.frame(NewData)){
+  if(is.data.frame(NewData)|is.matrix(NewData)){
     out <- rep(1,nrow(NewData))
     for(j in 1:ncol(NewData)){
       out <- out * as.numeric(NewData[,j] >= ExtremCond[j,1] &  NewData[,j] <= ExtremCond[j,2])

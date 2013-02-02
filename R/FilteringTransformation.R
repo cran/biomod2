@@ -48,6 +48,23 @@ setMethod('FilteringTransformation', signature(data='numeric'),
     return(FilteringTransformation(data, threshold))
   })
 
+setMethod('FilteringTransformation', signature(data='array'), 
+          function(data, threshold)
+          {
+            if(length(dim(data)) == length(dim(threshold))){
+              if(sum( dim(data)[-1] != dim(threshold)[-1] ) > 0 ){
+                stop("data and threshold dimentions mismatch")
+              }
+            } else{
+              if(sum( dim(data)[-1] != dim(threshold) ) > 0 ){
+                stop("data and threshold dimentions mismatch")
+              }
+            }  
+            
+            return(sweep(data,2:length(dim(data)),threshold,function(x,y) return(ifelse(x>y,x,0))))
+          })
+
+
 setMethod('FilteringTransformation', signature(data='RasterLayer'), 
   function(data, threshold)
   {
@@ -64,6 +81,7 @@ setMethod('FilteringTransformation', signature(data='RasterStack'),
     for(i in 1:raster:::nlayers(data)){
       StkTmp <- raster:::addLayer(StkTmp, FilteringTransformation(raster:::subset(data,i,drop=TRUE), threshold[i]))
     }
+    names(StkTmp) <- names(data)
     return(StkTmp)
   })
           

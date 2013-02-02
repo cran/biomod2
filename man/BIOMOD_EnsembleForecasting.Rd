@@ -10,7 +10,8 @@ BIOMOD_EnsembleForecasting( projection.output,
                             EM.output,
                             total.consensus = FALSE,
                             binary.meth = NULL,
-                            filtered.meth = NULL )
+                            filtered.meth = NULL,
+                            ...)
 }
 
 
@@ -20,6 +21,7 @@ BIOMOD_EnsembleForecasting( projection.output,
   \item{total.consensus}{Logical. If TRUE, an optional projection averaging all ensemble-models projections will be built }
   \item{binary.meth}{vector specifying the names of evaluation metrics and associated thresholds to transform the probabilities of presence into presence and absence (binary transformation).  }
   \item{filtered.meth}{vector specifying the names of evaluation metrics and associated thresholds to transform into 0 the probabilities of presence lower than the thresholds.}
+  \item{\ldots}{ further arguments (see details)}
 }
 
 \details{
@@ -107,7 +109,7 @@ myBiomodProjection <- BIOMOD_Projection(modeling.output = myBiomodModelOut,
                                         proj.name = 'current',
                                         selected.models = grep('_RF', getModelsBuiltModels(myBiomodModelOut), value=TRUE),
                                         compress = 'NULL',
-                                        clamping.mask = FALSE)
+                                        build.clamping.mask = FALSE)
                                           
 
 # 4. Creating the ensemble projections

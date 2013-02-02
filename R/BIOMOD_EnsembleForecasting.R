@@ -2,27 +2,47 @@
                                           EM.output,
                                           total.consensus = FALSE,
                                           binary.meth = NULL,
-                                          filtered.meth = NULL ){
+                                          filtered.meth = NULL,
+                                          ...){
   .bmCat("Do Ensemble Models Projections")
   
-#   cat("\n*** Dennis Debugged Version ***\n")
   # 1. args checking -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
-  args <- .BIOMOD_EnsembleForecasting.check.args( projection.output,
-                                                  EM.output,
-                                                  total.consensus,
-                                                  binary.meth,
-                                                  filtered.meth )
+  args <- list(...)
   
-  total.consensus <- args$total.consensus
-  rm('args')
+  args_checked <- .BIOMOD_EnsembleForecasting.check.args( projection.output,
+                                                          EM.output,
+                                                          total.consensus,
+                                                          binary.meth,
+                                                          filtered.meth )
+  
+  total.consensus <- args_checked$total.consensus
+  
+  
+  output.format <- args$output.format # raster output format
+  compress <- args$compress # compress or not output
+  do.stack <- args$do.stack # save raster as stack or layers
+  
+  if(is.null(output.format)){
+    if(projection.output@type != 'RasterStack')
+      output.format <- ".RData"
+    else
+      output.format <- ".grd"
+  }
+  
+  if(is.null(compress)) compress <- FALSE
+  if(is.null(do.stack)) do.stack <- TRUE
+    
+  rm(list=c('args_checked','args'))
+  
+  saved.files <- c()
                                                   
   
   # 2. Do the ensemble modeling
   for( em.comp in EM.output@em.computed){
-    cat("\n\n***", em.comp, "...")
+    cat("\n\n\t> Projecting", em.comp, "...")
     cleanWD <- c(ls(),"cleanWD")
     for( em.algo in getEMalgos(EM.output, em.comp) ){
-      cat("\n   >", em.algo)
+      cat("\n\t\t>", em.algo)
       
       # 1. Mean of probabilities -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
       if (em.algo == 'em.mean'){
@@ -367,41 +387,74 @@
     ef.potential <- c('ef.mean','ef.cv','ef.ci.inf','ef.ci.sup','ef.median','ef.ca','ef.pmw')
     ef.computed <- ef.potential[unlist(lapply(ef.potential, exists, envir = environment()))]
     
+    ef.obj.name <- paste("proj_", projection.output@proj.names, "_", em.comp, sep="")
+
+    ## Put created object in the right format
     if(projection.output@type == 'RasterStack' | projection.output@type == 'character'){
-      eval(parse(text = paste(em.comp ,"<- raster:::stack(", toString(ef.computed), ")", sep="")))
-      eval(parse(text = paste("names(", em.comp, ") <-  ef.computed", sep="")))
+      assign(x=ef.obj.name,
+             value=eval(parse(text=paste("raster:::stack(", toString(ef.computed), ")", sep=""))))
+      eval(parse(text = paste("names(",ef.obj.name,") <-  paste(em.comp,ef.computed, sep='_')", sep="")))
     } else if(projection.output@type == 'array'){
-      eval(parse(text = paste(em.comp ," <- cbind(", toString(ef.computed), ")", sep="")))
+      eval(parse(text = paste(ef.obj.name ," <- cbind(", toString(ef.computed), ")", sep="")))
     } else{
       cat("Unsupported yet !")
     }
     
-    eval(parse(text = paste("save(", em.comp, ", file = '", 
-                            projection.output@sp.name, .Platform$file.sep, "proj_",
-                            projection.output@proj.names, .Platform$file.sep,
-                            em.comp, "')", sep="")))
+    ## Save created object
+    if(output.format == '.RData'){
+      save(list=ef.obj.name, 
+           file = file.path(projection.output@sp.name, paste("proj_", projection.output@proj.names, sep=""), 
+                            paste(ef.obj.name, output.format, sep="" )),
+           compress = compress)
+    } else {
+      cat("\n\t\t> Writing", paste(ef.obj.name, output.format, sep="" ), "on hard drive...")
+      writeRaster(x=get(ef.obj.name),
+                  filename=file.path(projection.output@sp.name, paste("proj_", projection.output@proj.names, sep=""), 
+                                     paste(ef.obj.name, output.format, sep="" )), overwrite=TRUE)
+      
+    }
+    
+    saved.files <- c(saved.files,file.path(projection.output@sp.name, paste("proj_", projection.output@proj.names, sep=""), 
+                                           paste(ef.obj.name, output.format, sep="" )))
+    
+
     
     # 8. Doing Binary Transformation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
     if(!is.null(binary.meth)){
       for(bin.meth in binary.meth){
         cuts <- getEMeval(EM.output, em.comp)[[1]][bin.meth, "Cutoff", ]
         cuts <- cuts[sub("ef.","em.", ef.computed)]
-#         cat("\n*** cuts selected !")
-#         cat("\n*** cuts =", cuts)
+
+        ef.bin.obj.name <- paste("proj_", projection.output@proj.names, "_", em.comp,"_", bin.meth,"bin", sep="")
+        
         if(sum(is.na(cuts)) > 0) {
           warning(em.comp, " : ",toString(ef.computed[which(is.na(cuts))])," cuts was automaticly set to 500.. That can lead to strange binary results.") 
           cuts[which(is.na(cuts))] <- 500
           }
 
-        eval(parse(text=paste(em.comp,".bin.", bin.meth," <- BinaryTransformation(", em.comp,", cuts)" , sep="")))
+        assign(x=ef.bin.obj.name,
+               value=BinaryTransformation(get(ef.obj.name),cuts))
           
-        if(projection.output@type == 'RasterStack' | projection.output@type == 'character'){
-          eval(parse(text=paste("names(", em.comp,".bin.", bin.meth ,") <- paste(names(",em.comp,"), '.bin',sep='')", sep="")))
+        ## Put created object in the right format
+        if(inherits(get(ef.bin.obj.name), "Raster")){
+          eval(parse(text = paste("names(",ef.bin.obj.name,") <-  paste(em.comp, '_', ef.computed,'_', bin.meth, 'bin' , sep='')", sep="")))
         }
-        eval(parse(text = paste("save(", em.comp,".bin.", bin.meth, ", file = '", 
-                                projection.output@sp.name, .Platform$file.sep, "proj_",
-                                projection.output@proj.names, .Platform$file.sep,
-                                em.comp,".bin.", bin.meth, "')", sep="")))
+        
+        ## Save created object
+        if(output.format == '.RData'){
+          save(list=ef.bin.obj.name, 
+               file = file.path(projection.output@sp.name, paste("proj_", projection.output@proj.names, sep=""), 
+                                paste(ef.obj.name, output.format, sep="" )),
+               compress = compress)
+        } else {
+          cat("\n\t\t> Writing", paste(ef.bin.obj.name, output.format, sep="" ), "on hard drive...")
+          writeRaster(x=get(ef.bin.obj.name),
+                      filename=file.path(projection.output@sp.name, paste("proj_", projection.output@proj.names, sep=""), 
+                                         paste(ef.bin.obj.name, output.format, sep="" )), overwrite=TRUE)
+        }
+        
+        saved.files <- c(saved.files,file.path(projection.output@sp.name, paste("proj_", projection.output@proj.names, sep=""), 
+                                               paste(ef.bin.obj.name, output.format, sep="" )))
       }
     }
     
@@ -417,64 +470,69 @@
   # Doing Total Consensus Projection -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   ## NOTE : We have to think about the best way to make this concencus.. At time, let's simply do a mean of EF conputed
   if(total.consensus){
-    cat("\n\n*** Projections Consensus...")
-#     if(projection.output@type == 'RasterStack'){
-#       ef.cons <- raster:::stack()
-#     } else if(projection.output@type == 'array'){
-#       ef.cons <- array()
-#     } else { 
-#       cat("Unsupported yet !")
+     cat("\n\n!!! Full consensus not well implemented yet !!!\n You can obtain almost the same (even better) results projecting ensemble models built with argument by='all'")
+# #     if(projection.output@type == 'RasterStack'){
+# #       ef.cons <- raster:::stack()
+# #     } else if(projection.output@type == 'array'){
+# #       ef.cons <- array()
+# #     } else { 
+# #       cat("Unsupported yet !")
+# #     }
+#     ### Initialisation
+#     ef.cons <- get(load(paste(projection.output@sp.name, .Platform$file.sep, "proj_", projection.output@proj.names,
+#                    .Platform$file.sep, EM.output@em.computed[1], sep="")))
+#     
+#     if(class(ef.cons) == 'RasterStack'){
+#       ef.computed <- names(ef.cons)
+#     } else{
+#       ef.computed <- colnames(ef.cons)
 #     }
-    ### Initialisation
-    ef.cons <- get(load(paste(projection.output@sp.name, .Platform$file.sep, "proj_", projection.output@proj.names,
-                   .Platform$file.sep, EM.output@em.computed[1], sep="")))
-    
-    if(class(ef.cons) == 'RasterStack'){
-      ef.computed <- names(ef.cons)
-    } else{
-      ef.computed <- colnames(ef.cons)
-    }
-
-    rm(list = paste(EM.output@em.computed[1], sep=""))
-    
-    ### Filling
-    for(em.comp in EM.output@em.computed[-1]){
-      ef.tmp <- get(load(paste(projection.output@sp.name, .Platform$file.sep, "proj_", projection.output@proj.names,
-                 .Platform$file.sep, em.comp, sep="")))
-      rm(list = paste(em.comp, sep=""))
-      ef.cons <- ef.cons + ef.tmp
-    }
-    
-    eval(parse(text=paste(projection.output@sp.name, "_TotalConsensus <- ef.cons / length(EM.output@em.computed)",sep=""))) 
-    rm(list = c('ef.tmp', 'ef.cons'))
-      
-    ### Saving
-    eval(parse(text = paste("save(", projection.output@sp.name, "_TotalConsensus, file = '", 
-                            projection.output@sp.name, .Platform$file.sep, "proj_",
-                            projection.output@proj.names, .Platform$file.sep,
-                            projection.output@sp.name, "_TotalConsensus')", sep="")))
-    ### Bin Trans
-    if(!is.null(binary.meth)){
-      for(bin.meth in binary.meth){
-        cuts <- t(as.data.frame(sapply(EM.output@em.computed, function(em.comp){
-          return(getEMeval(EM.output, em.comp)[[1]][bin.meth, "Cutoff", ])})))
-        cuts <- apply(cuts,2,mean, na.rm=T)
-        cuts <- cuts[sub("ef.", "em.", ef.computed)]
-    
-        eval(parse(text=paste(projection.output@sp.name, "_TotalConsensus.bin.", bin.meth," <- BinaryTransformation(",
-                              projection.output@sp.name, "_TotalConsensus, cuts)" , sep="")))
-        if(projection.output@type == 'RasterStack' | projection.output@type == 'character'){
-          eval(parse(text=paste("names(", projection.output@sp.name, "_TotalConsensus.bin.", bin.meth,") <- paste(names(",projection.output@sp.name, "_TotalConsensus), '.bin',sep='')", sep="")))
-        }
-        eval(parse(text = paste("save(", projection.output@sp.name, "_TotalConsensus.bin.", bin.meth, ", file = '", 
-                                projection.output@sp.name, .Platform$file.sep, "proj_",
-                                projection.output@proj.names, .Platform$file.sep,
-                                projection.output@sp.name, "_TotalConsensus.bin.", bin.meth, "')", sep="")))
-      }
+# 
+#     rm(list = paste(EM.output@em.computed[1], sep=""))
+#     
+#     ### Filling
+#     for(em.comp in EM.output@em.computed[-1]){
+#       ef.tmp <- get(load(paste(projection.output@sp.name, .Platform$file.sep, "proj_", projection.output@proj.names,
+#                  .Platform$file.sep, em.comp, sep="")))
+#       rm(list = paste(em.comp, sep=""))
+#       ef.cons <- ef.cons + ef.tmp
+#     }
+#     
+#     eval(parse(text=paste(projection.output@sp.name, "_TotalConsensus <- ef.cons / length(EM.output@em.computed)",sep=""))) 
+#     rm(list = c('ef.tmp', 'ef.cons'))
+#       
+#     ### Saving
+#     eval(parse(text = paste("save(", projection.output@sp.name, "_TotalConsensus, file = '", 
+#                             projection.output@sp.name, .Platform$file.sep, "proj_",
+#                             projection.output@proj.names, .Platform$file.sep,
+#                             projection.output@sp.name, "_TotalConsensus')", sep="")))
+#     ### Bin Trans
+#     if(!is.null(binary.meth)){
+#       for(bin.meth in binary.meth){
+#         cuts <- t(as.data.frame(sapply(EM.output@em.computed, function(em.comp){
+#           return(getEMeval(EM.output, em.comp)[[1]][bin.meth, "Cutoff", ])})))
+#         cuts <- apply(cuts,2,mean, na.rm=T)
+#         cuts <- cuts[sub("ef.", "em.", ef.computed)]
+#     
+#         eval(parse(text=paste(projection.output@sp.name, "_TotalConsensus.bin.", bin.meth," <- BinaryTransformation(",
+#                               projection.output@sp.name, "_TotalConsensus, cuts)" , sep="")))
+#         if(projection.output@type == 'RasterStack' | projection.output@type == 'character'){
+#           eval(parse(text=paste("names(", projection.output@sp.name, "_TotalConsensus.bin.", bin.meth,") <- paste(names(",projection.output@sp.name, "_TotalConsensus), '.bin',sep='')", sep="")))
+#         }
+#         eval(parse(text = paste("save(", projection.output@sp.name, "_TotalConsensus.bin.", bin.meth, ", file = '", 
+#                                 projection.output@sp.name, .Platform$file.sep, "proj_",
+#                                 projection.output@proj.names, .Platform$file.sep,
+#                                 projection.output@sp.name, "_TotalConsensus.bin.", bin.meth, "')", sep="")))
+#       }
 
     }
-
-  }
+  
+  cat("\n")
+  cat("\nNothing is returned but you can access created projections by loading them with 'load(...)' for '.RData' files or 'stack(...)' for 'Raster' format files")
+  cat("\n\nAvailable files are :\n")
+  cat(paste("'", saved.files, "'", sep="", collapse="\n"))
+  
+  cat("\n")
   .bmCat("Done") 
 }
 

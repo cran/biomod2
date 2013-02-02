@@ -17,10 +17,10 @@ BIOMOD_LoadModels <- function(bm.out, ... ){
 #     cat("\n   ! MAXENT models can't be load yet ! ")
 #     models.to.load <- models.to.load[- which(grepl('MAXENT',  models.to.load))]
 #   }
-  if(sum(grepl('SRE',  models.to.load)) > 0){
-    cat("\n   ! SRE models can't be load yet ! ")
-    models.to.load <- models.to.load[- which(grepl('SRE',  models.to.load))]
-  }
+#   if(sum(grepl('SRE',  models.to.load)) > 0){
+#     cat("\n   ! SRE models can't be load yet ! ")
+#     models.to.load <- models.to.load[- which(grepl('SRE',  models.to.load))]
+#   }
   
   if(!is.null(add.args$models)){
     model.to.load.tmp <- c()

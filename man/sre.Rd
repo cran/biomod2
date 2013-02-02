@@ -7,7 +7,7 @@
   The SRE performs a simple analysis of within which range of each variable the data is recorded and renders predictions.
 }
 \usage{
-sre(Response = NULL, Explanatory = NULL, NewData = NULL, Quant=0.025)
+sre(Response = NULL, Explanatory = NULL, NewData = NULL, Quant=0.025, return_extremcond = FALSE)
 }
 
 \arguments{
@@ -16,6 +16,7 @@ sre(Response = NULL, Explanatory = NULL, NewData = NULL, Quant=0.025)
   \item{NewData}{ The data for which you want to render predictions with the sre. It must be a matrix (resp. a data.frame, a SpatialPointsDataFrame or a RasterStack ) of the same type as the one given in Explanatory and with precisely the same variable names. }
   \item{Quant}{ the value defines the most extreme values for each variable not to be taken into account
    for determining the tolerance boundaries for the considered species.  }
+   \item{return_extremcond}{ boolean, if TRUE a matrix containing extrem conditions supported is returned}
 }
 \details{
 

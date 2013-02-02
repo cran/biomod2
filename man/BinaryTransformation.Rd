@@ -4,6 +4,7 @@
 \alias{BinaryTransformation,data.frame-method}
 \alias{BinaryTransformation,matrix-method}
 \alias{BinaryTransformation,numeric-method}
+\alias{BinaryTransformation,array-method}
 \alias{BinaryTransformation,RasterBrick-method}
 \alias{BinaryTransformation,RasterLayer-method}
 \alias{BinaryTransformation,RasterStack-method}
@@ -20,6 +21,8 @@ presence-absence object according to a pre-defined threshold(s).
 \S4method{BinaryTransformation}{matrix}(data, threshold)
 
 \S4method{BinaryTransformation}{data.frame}(data, threshold)
+
+\S4method{BinaryTransformation}{array}(data, threshold)
 
 \S4method{BinaryTransformation}{RasterLayer}(data, threshold)
 

@@ -28,6 +28,22 @@ setMethod('BinaryTransformation', signature(data='numeric'),
     return(BinaryTransformation(data, threshold))
   })
 
+setMethod('BinaryTransformation', signature(data='array'), 
+          function(data, threshold)
+          {
+            if(length(dim(data)) == length(dim(threshold))){
+              if(sum( dim(data)[-1] != dim(threshold)[-1] ) > 0 ){
+                stop("data and threshold dimentions mismatch")
+              }
+            } else{
+              if(sum( dim(data)[-1] != dim(threshold) ) > 0 ){
+                stop("data and threshold dimentions mismatch")
+              }
+            }  
+            
+            return(sweep(data,2:length(dim(data)),threshold,function(x,y) return(x>y)))
+          })
+
 setMethod('BinaryTransformation', signature(data='RasterLayer'), 
   function(data, threshold)
   {
@@ -44,6 +60,7 @@ setMethod('BinaryTransformation', signature(data='RasterStack'),
     for(i in 1:raster:::nlayers(data)){
       StkTmp <- raster:::addLayer(StkTmp, BinaryTransformation(raster:::subset(data,i,drop=TRUE), threshold[i]))
     }
+    names(StkTmp) <- names(data)
     return(StkTmp)
   })
           
