@@ -444,7 +444,7 @@
         if(output.format == '.RData'){
           save(list=ef.bin.obj.name, 
                file = file.path(projection.output@sp.name, paste("proj_", projection.output@proj.names, sep=""), 
-                                paste(ef.obj.name, output.format, sep="" )),
+                                paste(ef.bin.obj.name, output.format, sep="" )),
                compress = compress)
         } else {
           cat("\n\t\t> Writing", paste(ef.bin.obj.name, output.format, sep="" ), "on hard drive...")
@@ -470,7 +470,7 @@
   # Doing Total Consensus Projection -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   ## NOTE : We have to think about the best way to make this concencus.. At time, let's simply do a mean of EF conputed
   if(total.consensus){
-     cat("\n\n!!! Full consensus not well implemented yet !!!\n You can obtain almost the same (even better) results projecting ensemble models built with argument by='all'")
+    if(EM.output@em.by != "all") cat("\n\n!!! Full consensus not well implemented yet !!!\n You can obtain almost the same (even better) results reconstructing ensemble-models with argument em.by='all' (BIOMOD_EnsembleModelling() function) and make ensemble-forecasting with this last.")
 # #     if(projection.output@type == 'RasterStack'){
 # #       ef.cons <- raster:::stack()
 # #     } else if(projection.output@type == 'array'){

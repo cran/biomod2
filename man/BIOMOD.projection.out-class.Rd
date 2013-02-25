@@ -29,7 +29,9 @@ BIOMOD.projection.out object is created, used and returned by \pkg{biomod2} func
     \item{\code{sp.name}:}{ "character", species name }
     \item{\code{expl.var.names}:}{ "character", explanatory variables names }
     \item{\code{models.projected}:}{"character", models projected names }
-    \item{\code{rescaled.models}:}{ "logical", was projected models rescaled? }
+    \item{\code{scaled.models}:}{ "logical", was projected models scaled? }
+    \item{\code{modeling.object}:}{"BIOMOD.stored.data", associated modeling objects (link to)} 
+    \item{\code{modeling.object.id}:}{"character",id of associated modeling objects}
     \item{\code{type}:}{ "character", type of projection done (\code{array}, \code{data.frame}, \code{RasterStack}, \code{RasterLayer} \ldots) }
     \item{\code{proj}:}{ "BIOMOD.stored.data", object containing projected values}
     \item{\code{xy.coord}:}{ "matrix", coordinates of projected points}

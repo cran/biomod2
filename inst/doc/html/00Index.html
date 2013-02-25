@@ -13,21 +13,38 @@
 <a href="../../../doc/html/packages.html"><img src="../../../doc/html/left.jpg" alt="[Up]" width="30" height="30" border="0"></a>
 <a href="../../../doc/html/index.html"><img src="../../../doc/html/up.jpg" alt="[Top]" width="30" height="30" border="0"></a>
 </div><h2>Documentation for package &lsquo;biomod2&rsquo; 
-version 1.1.18
+version 2.1.7
 </h2>
 
 <ul><li><a href="../DESCRIPTION">DESCRIPTION file</a>.</li>
 <li><a href="../doc/index.html">Overview of user guides and package vignettes</a>; browse <a href="../doc">directory</a>.</li>
+<li><a href="../NEWS">Package NEWS</a>.</li>
 </ul>
 
 <h2>Help Pages</h2>
 
+<ul>
+<!-- <p align="center">
+<a href="# "> </a> -->
+<li><a href="#main_functions">main functions</a></li>
+<li><a href="#other_functions">other functions</a></li>
+<li><a href="#getter_setter_cleaner">getters, setters &amp; cleaner</a></li>
+<li><a href="#biomod2_objects">biomod2 objects</a></li>
+<li><a href="#biomod2_inner">internal functions</a></li>
+<!-- </p> -->
+</ul>
+
+
 <table width="100%">
 <tr><td width="25%"><a href="biomod2-package.html">biomod2-package</a></td>
 <td>Species Distribution Modeling within an Ensemble Forecasting framework</td></tr>
+<tr><td width="25%"><a href="biomod2-package.html">biomod2</a></td>
+<td>Species Distribution Modeling within an Ensemble Forecasting framework</td></tr>
 </table>
 
-<h3>-- main functions --</h3>
+
+
+<h3><a name="main_functions">-- main functions --</a></h3>
 <table width="100%">
 <!-- BIOMOD_FormatingData -->
 <tr><td width="25%"><a href="BIOMOD_FormatingData.html">BIOMOD_FormatingData</a></td>
@@ -54,7 +71,12 @@ version 1.1.18
 <td>Ensemble projections of species over space and time</td></tr>
 </table>
 
-<h3>-- other functions --</h3>
+
+
+
+
+
+<h3><a name="other_functions">-- other functions --</a></h3>
 <table width="100%">
 <!-- BIOMOD_ConvertOldRun -->
 <tr><td width="25%"><a href="BIOMOD_ConvertOldRun.html">BIOMOD_ConvertOldRun</a></td>
@@ -66,6 +88,10 @@ version 1.1.18
 
 <!-- BIOMOD_RangeSize -->
 <tr><td width="25%"><a href="BIOMOD_RangeSize.html">BIOMOD_RangeSize</a></td>
+<td>Analysis of the range size changes</td></tr>
+<tr><td width="25%"><a href="BIOMOD_RangeSize.html">BIOMOD_RangeSize-method</a></td>
+<td>Analysis of the range size changes</td></tr>
+<tr><td width="25%"><a href="BIOMOD_RangeSize.html">BIOMOD_RangeSize-methods</a></td>
 <td>Analysis of the range size changes</td></tr>
 
 <!-- sre -->
@@ -82,18 +108,24 @@ version 1.1.18
 <tr><td width="25%"><a href="multiple.plot.html">multiple.plot</a></td>
 <td>Plot and compare prediction maps within BIOMOD</td></tr>
 
-<tr><td width="25%"><a href="response.plot.html">response.plot</a></td>
-<td>Analysis of the response curves of a model within Biomod</td></tr>
 <tr><td width="25%"><a href="response.plot2.html">response.plot2</a></td>
 <td>Analysis of the 2D or 3D response curves of a model within biomod2</td></tr>
 
 <!-- binaryTrans -->
 <tr><td width="25%"><a href="BinaryTransformation.html">BinaryTransformation</a></td>
 <td>Convert species' probability of occurrence into binary presence-absence data using a predefined threshold</td></tr>
+<tr><td width="25%"><a href="BinaryTransformation.html">BinaryTransformation-method</a></td>
+<td>Convert species' probability of occurrence into binary presence-absence data using a predefined threshold</td></tr>
+<tr><td width="25%"><a href="BinaryTransformation.html">BinaryTransformation-methods</a></td>
+<td>Convert species' probability of occurrence into binary presence-absence data using a predefined threshold</td></tr>
 
 
 <!-- FilteringTransformation -->
 <tr><td width="25%"><a href="FilteringTransformation.html">FilteringTransformation</a></td>
+<td>Convert species' probability of occurrence into binary presence-absence data using a predefined threshold</td></tr>
+<tr><td width="25%"><a href="FilteringTransformation.html">FilteringTransformation-method</a></td>
+<td>Convert species' probability of occurrence into binary presence-absence data using a predefined threshold</td></tr>
+<tr><td width="25%"><a href="FilteringTransformation.html">FilteringTransformation-methods</a></td>
 <td>Convert species' probability of occurrence into binary presence-absence data using a predefined threshold</td></tr>
 
 <!-- makeFormula -->
@@ -127,8 +159,22 @@ version 1.1.18
 </table>
 
 
-<h3>-- getters &amp; setteurs --</h3>
+
+
+
+
+<h3><a name="getter_setter_cleaner">-- getters , setters &amp; cleaners  --</a></h3>
 <table width="100%">
+<!-- RemoveProperly -->
+<tr><td width="25%"><a href="BIOMOD.models.out-RemoveProperly.html">RemoveProperly</a></td>
+<td>remove properly BIOMOD_Modeling outputs</td></tr>
+<tr><td width="25%"><a href="BIOMOD.models.out-RemoveProperly.html">RemoveProperly-method</a></td>
+<td>remove properly BIOMOD_Modeling outputs</td></tr>
+
+<tr><td width="25%"><a href="BIOMOD.projection.out-methods.html">free</a></td>
+<td>BIOMOD.projection.out setter</td></tr>
+<tr><td width="25%"><a href="BIOMOD.projection.out-methods.html">free-method</a></td>
+<td>BIOMOD.projection.out setter</td></tr>
 <tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-methods.html">getEMalgos</a></td>
 <td>BIOMOD.EnsembleModeling.out getters</td></tr>
 <tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-methods.html">getEMalgos-method</a></td>
@@ -145,6 +191,10 @@ version 1.1.18
 <td>BIOMOD.EnsembleModeling.out getters</td></tr>
 <tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-methods.html">getEMkeptModels-method</a></td>
 <td>BIOMOD.EnsembleModeling.out getters</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">getFormalModel</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">getFormalModel-method</a></td>
+<td>biomod2 models objects class and functions</td></tr>
 <tr><td width="25%"><a href="BIOMOD.models.out-methods.html">getModelsBuiltModels</a></td>
 <td>BIOMOD.models.out getters</td></tr>
 <tr><td width="25%"><a href="BIOMOD.models.out-methods.html">getModelsBuiltModels-method</a></td>
@@ -177,15 +227,19 @@ version 1.1.18
 <td>BIOMOD.projection.out getters</td></tr>
 <tr><td width="25%"><a href="BIOMOD.projection.out-methods.html">getProjection-method</a></td>
 <td>BIOMOD.projection.out getters</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">getScalingModel</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">getScalingModel-method</a></td>
+<td>biomod2 models objects class and functions</td></tr>
 </table>
 
 
-<h3>-- biomod2 objects --</h3>
+<h3><a name="biomod2_objects">-- biomod2 objects --</a></h3>
+
+<h4> main functions outputs</h4>
 <table width="100%">
-<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-class.html">BIOMOD.EnsembleModeling.out</a></td>
-<td>BIOMOD_EnsembleModeling() outputs objects class</td></tr>
-<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-class.html">BIOMOD.EnsembleModeling.out-class</a></td>
-<td>BIOMOD_EnsembleModeling() outputs objects class</td></tr>
+
+<!-- FormatingData -->
 <tr><td width="25%"><a href="BIOMOD.formated.data-class.html">BIOMOD.formated.data</a></td>
 <td>BIOMOD_FormatingData() outputs objects class</td></tr>
 <tr><td width="25%"><a href="BIOMOD.formated.data-class.html">BIOMOD.formated.data-class</a></td>
@@ -196,14 +250,118 @@ version 1.1.18
 <td>BIOMOD_FormatingData() outputs objects class</td></tr>
 <tr><td width="25%"><a href="BIOMOD.formated.data-class.html">BIOMOD.formated.data.PA-class</a></td>
 <td>BIOMOD_FormatingData() outputs objects class</td></tr>
+
+<!-- ModelingOptions -->
 <tr><td width="25%"><a href="BIOMOD.Model.Options-class.html">BIOMOD.Model.Options-class</a></td>
-<td>BIOMOD_ModelingOptions() outputs objects class</td></tr>
+<td>BIOMOD_() outputs objects class</td></tr>
 <tr><td width="25%"><a href="BIOMOD.models.out-class.html">BIOMOD.models.out-class</a></td>
 <td>BIOMOD_modelling() outputs objects class</td></tr>
+
+<!-- Modeling -->
+<tr><td width="25%"><a href="biomod2_model-class.html">biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+
+<!-- EnsembleModeling -->
+<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-class.html">BIOMOD.EnsembleModeling.out</a></td>
+<td>BIOMOD_EnsembleModeling() outputs objects class</td></tr>
+<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-class.html">BIOMOD.EnsembleModeling.out-class</a></td>
+<td>BIOMOD_EnsembleModeling() outputs objects class</td></tr>
+
+<!-- Projection -->
 <tr><td width="25%"><a href="BIOMOD.projection.out-class.html">BIOMOD.projection.out</a></td>
 <td>BIOMOD_Projection() outputs objects class</td></tr>
 <tr><td width="25%"><a href="BIOMOD.projection.out-class.html">BIOMOD.projection.out-class</a></td>
 <td>BIOMOD_Projection() outputs objects class</td></tr>
+
+</table>
+
+<h4>main functions outputs prints and plots</h4>
+<table width="100%">
+<tr><td width="25%"><a href="BIOMOD.formated.data-class.html">plot-method</a></td>
+<td>BIOMOD_FormatingData() outputs objects class</td></tr>
+<tr><td width="25%"><a href="BIOMOD.projection.out-class.html">plot-method</a></td>
+<td>BIOMOD_Projection() outputs objects class</td></tr>
+<tr><td width="25%"><a href="BIOMOD.Model.Options-class.html">show,BIOMOD.Model.Options</a></td>
+<td>BIOMOD_ModelingOptions() outputs objects class</td></tr>
+<tr><td width="25%"><a href="BIOMOD.EnsembleModeling.out-class.html">show-method</a></td>
+<td>BIOMOD_EnsembleModeling() outputs objects class</td></tr>
+<tr><td width="25%"><a href="BIOMOD.formated.data-class.html">show-method</a></td>
+<td>BIOMOD_FormatingData() outputs objects class</td></tr>
+<tr><td width="25%"><a href="BIOMOD.models.out-class.html">show-method</a></td>
+<td>BIOMOD_modelling() outputs objects class</td></tr>
+<tr><td width="25%"><a href="BIOMOD.projection.out-class.html">show-method</a></td>
+<td>BIOMOD_Projection() outputs objects class</td></tr>
+</table>
+
+
+<h4> biomod2 individual models </h4>
+<table width="100%">
+<!-- ANN -->
+<tr><td width="25%"><a href="biomod2_model-class.html">ANN_biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">ANN_biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<!-- CTA -->
+<tr><td width="25%"><a href="biomod2_model-class.html">CTA_biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">CTA_biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<!-- FDA -->
+<tr><td width="25%"><a href="biomod2_model-class.html">FDA_biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">FDA_biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<!-- GAM -->
+<tr><td width="25%"><a href="biomod2_model-class.html">GAM_biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">GAM_biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<!-- GBM -->
+<tr><td width="25%"><a href="biomod2_model-class.html">GBM_biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">GBM_biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<!-- GLM -->
+<tr><td width="25%"><a href="biomod2_model-class.html">GLM_biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">GLM_biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<!-- MARS -->
+<tr><td width="25%"><a href="biomod2_model-class.html">MARS_biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">MARS_biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<!-- MAXENT -->
+<tr><td width="25%"><a href="biomod2_model-class.html">MAXENT_biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">MAXENT_biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<!-- RF -->
+<tr><td width="25%"><a href="biomod2_model-class.html">RF_biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">RF_biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<!-- SRE -->
+<tr><td width="25%"><a href="biomod2_model-class.html">SRE_biomod2_model</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<tr><td width="25%"><a href="biomod2_model-class.html">SRE_biomod2_model-class</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<!-- Predict -->
+<tr><td width="25%"><a href="biomod2_model-class.html">predict-method</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+<<!-- Show -->
+<tr><td width="25%"><a href="biomod2_model-class.html">show-method</a></td>
+<td>biomod2 models objects class and functions</td></tr>
+</table>
+
+
+
+
+<h4> biomod2 storing objects</h4>
+<table width="100%">
+
 <tr><td width="25%"><a href="BIOMOD.stored.objects-class.html">BIOMOD.stored.array</a></td>
 <td>BIOMOD.stored.xxx objects class</td></tr>
 <tr><td width="25%"><a href="BIOMOD.stored.objects-class.html">BIOMOD.stored.array-class</a></td>
@@ -233,12 +391,42 @@ version 1.1.18
 <tr><td width="25%"><a href="BIOMOD.stored.objects-class.html">BIOMOD.stored.raster.stack-class</a></td>
 <td>BIOMOD.stored.xxx objects class</td></tr>
 
-<tr><td width="25%"><a href="maxent_model-class.html">maxent_model-class</a></td>
-<td>biomod2 MAXENT models objects class and functions</td></tr>
-
 </table>
 
-
-
+<h3><a name="biomod2_inner">-- internal functions --</a></h3>
+<table width="100%">
+<tr><td width="25%"><a href="biomod2.inner-methods.html">disk.pseudo.abs.selection</a></td>
+<td>biomod2 internal functions</td></tr>
+<tr><td width="25%"><a href="biomod2.inner-methods.html">disk.pseudo.abs.selection-method</a></td>
+<td>biomod2 internal functions</td></tr>
+<tr><td width="25%"><a href="biomod2.inner-methods.html">random.pseudo.abs.selection</a></td>
+<td>biomod2 internal functions</td></tr>
+<tr><td width="25%"><a href="biomod2.inner-methods.html">random.pseudo.abs.selection-method</a></td>
+<td>biomod2 internal functions</td></tr>
+<tr><td width="25%"><a href="biomod2.inner-methods.html">sre.pseudo.abs.selection</a></td>
+<td>biomod2 internal functions</td></tr>
+<tr><td width="25%"><a href="biomod2.inner-methods.html">sre.pseudo.abs.selection-method</a></td>
+<td>biomod2 internal functions</td></tr>
+<tr><td width="25%"><a href="biomod2.inner-methods.html">user.defined.pseudo.abs.selection</a></td>
+<td>biomod2 internal functions</td></tr>
+<tr><td width="25%"><a href="biomod2.inner-methods.html">user.defined.pseudo.abs.selection-method</a></td>
+<td>biomod2 internal functions</td></tr>
+<tr><td width="25%"><a href="biomod2.inner-methods.html">Projection</a></td>
+<td>biomod2 internal functions</td></tr>
+<tr><td width="25%"><a href="biomod2.inner-methods.html">Projection-method</a></td>
+<td>biomod2 internal functions</td></tr>
+<tr><td width="25%"><a href="biomod2.inner-methods.html">.Models.prepare.data</a></td>
+<td>biomod2 internal functions</td></tr>
+<tr><td width="25%"><a href="biomod2.inner-methods.html">.Models.prepare.data-method</a></td>
+<td>biomod2 internal functions</td></tr>
+<tr><td width="25%"><a href="biomod2.inner-methods.html">.Projection.do.proj</a></td>
+<td>biomod2 internal functions</td></tr>
+<tr><td width="25%"><a href="biomod2.inner-methods.html">.Projection.do.proj-method</a></td>
+<td>biomod2 internal functions</td></tr>
+<tr><td width="25%"><a href="biomod2.inner-methods.html">.transform.outputs</a></td>
+<td>biomod2 internal functions</td></tr>
+<tr><td width="25%"><a href="biomod2.inner-methods.html">.transform.outputs-method</a></td>
+<td>biomod2 internal functions</td></tr>
+</table>
 
 </body></html>

@@ -13,7 +13,7 @@ function(object, Prev = 0.5 , dat){
   
   if(!exists('pred')){
     if(inherits(dat,'Raster')){
-      pred <- subset(dat,1,drop=TRUE)
+      pred <- raster:::subset(dat,1,drop=TRUE)
       if(Prev < 0.5) pred <- reclassify(x=pred, rcl=c(-Inf,Inf,0))
       if(Prev >= 0.5) pred <- reclassify(x=pred, rcl=c(-Inf,Inf,1))
     } else{

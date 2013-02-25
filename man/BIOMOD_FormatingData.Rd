@@ -23,6 +23,7 @@ BIOMOD_FormatingData(resp.var,
                      PA.dist.min = 0,
                      PA.dist.max = NULL,
                      PA.sre.quant = 0.025,
+                     PA.table = NULL,
                      na.rm = TRUE)
 }
 
@@ -46,13 +47,15 @@ BIOMOD_FormatingData(resp.var,
   
   \item{PA.nb.absences}{ number of pseudo-absence selected for each repetition (when PA.nb.rep > 0) of the selection (true absences included)}
   
-  \item{PA.strategy}{ strategy for selecting the Pseudo Absences (must be \sQuote{random}, \sQuote{SRE} or \sQuote{disk})}
+  \item{PA.strategy}{ strategy for selecting the Pseudo Absences (must be \sQuote{random}, \sQuote{SRE}, \sQuote{disk} or \sQuote{user.defined})}
   
   \item{PA.dist.min}{minimal distance to presences for \sQuote{disk} Pseudo Absences selection}
   
   \item{PA.dist.max}{maximal distance to presences for \sQuote{disk} Pseudo Absences selection}
   
   \item{PA.sre.quant}{quantile used for \sQuote{SRE} Pseudo Absences selection}
+  
+  \item{PA.table}{a \code{matrix} (or a \code{data.frame}) having as many rows than \code{resp.var} values. Each column  correspund to a Pseudo-absences selection. It contains \code{TRUE} or \code{FALSE} indicating which values of \code{resp.var} will be considered to build models. It must be used with \sQuote{user.defined} \code{PA.strategy}.}
   
   \item{na.rm}{locical, if TRUE, all points having one or several missing value for environmental data will be removed from analyse }
 }
@@ -142,31 +145,38 @@ BIOMOD_FormatingData(resp.var,
 \seealso{ \code{\link{BIOMOD_Modeling}}}
 \examples{
 
-# 0. Load data & Selecting Data
+# species occurrences
+DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
+                                    package="biomod2"))
+head(DataSpecies)
 
-# species occurances
-species_occ <- read.csv(system.file("external/species/species_occ.csv",package="biomod2"))
+# the name of studied species
+myRespName <- 'GuloGulo'
 
-# we consider only presences of MyocastorCoypus species
-myRespName <- 'MyocastorCoypus'
-myRespCoord <- species_occ[which(!is.na(species_occ[,myRespName])),c('x','y')]
-myResp <- as.numeric(na.omit(species_occ[,myRespName]))
+# the presence/absences data for our species 
+myResp <- as.numeric(DataSpecies[,myRespName])
 
-# Environemental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
-myExpl = raster::stack(system.file("external/climat/current/bio3.grd",package="biomod2"),
-                       system.file("external/climat/current/bio4.grd",package="biomod2"),
-                       system.file("external/climat/current/bio7.grd",package="biomod2"),
-                       system.file("external/climat/current/bio11.grd",package="biomod2"),
-                       system.file("external/climat/current/bio12.grd",package="biomod2"))
+# the XY coordinates of species data
+myRespXY <- DataSpecies[,c("X_WGS84","Y_WGS84")]
 
-# 1. Formating Data
+
+# Environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
+myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
+                             package="biomod2"),
+                system.file( "external/bioclim/current/bio4.grd", 
+                             package="biomod2"), 
+                system.file( "external/bioclim/current/bio7.grd", 
+                             package="biomod2"),  
+                system.file( "external/bioclim/current/bio11.grd", 
+                             package="biomod2"), 
+                system.file( "external/bioclim/current/bio12.grd", 
+                             package="biomod2"))
+
+# 1. Formatting Data
 myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
                                      expl.var = myExpl,
-                                     resp.xy = myRespCoord,
-                                     resp.name = myRespName,
-                                     PA.nb.rep = 2,
-                                     PA.nb.absences = 200,
-                                     PA.strategy = 'random')
+                                     resp.xy = myRespXY,
+                                     resp.name = myRespName)
                                      
 myBiomodData
 plot(myBiomodData)

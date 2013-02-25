@@ -1,6 +1,6 @@
 'BIOMOD_EnsembleModeling' <- function( modeling.output,
                                        chosen.models = 'all',
-                                       em.by = 'PA_dataset+repet',
+                                       em.by = 'all',
                                        eval.metric = 'all',
                                        eval.metric.quality.threshold = NULL,
                                        prob.mean = TRUE,
@@ -48,6 +48,7 @@
   EM <- new('BIOMOD.EnsembleModeling.out',
             sp.name = modeling.output@sp.name,
             expl.var.names = modeling.output@expl.var.names,
+            em.by = em.by,
 #             models.out.obj = new('BIOMOD.stored.models.out',
 #                                  inMemory = FALSE,
 #                                  link = paste(modeling.output@sp.name,"/",modeling.output@sp.name,".models.out",sep="")),
@@ -55,7 +56,7 @@
             eval.metric.quality.threshold = eval.metric.quality.threshold,
             em.ci.alpha = prob.ci.alpha)
   
-  EM@models.out.obj@link <- paste(modeling.output@sp.name,"/",modeling.output@sp.name,".models.out",sep="")
+  EM@models.out.obj@link <- file.path(modeling.output@sp.name,paste(modeling.output@sp.name,".", modeling.output@modeling.id,".models.out",sep="") )
   
   # 2. doing Ensemble modeling
   
@@ -160,7 +161,7 @@
           if(em.by %in% c("PA_dataset",'PA_dataset+algo','PA_dataset+repet')){
             prediction.kept <- as.data.frame(getModelsPrediction(modeling.output, as.data.frame = TRUE)[,models.kept])
           } else{ ## redo prediction on full data.set
-            cat("\n   ! Models projection for whole zonation required...")
+            cat("\n   ! Models projections for whole zonation required...")
             prediction.kept <- BIOMOD_Projection(modeling.output = modeling.output,
                                           new.env = getModelsInputData(modeling.output)@data.env.var,
                                           proj.name = 'Tmp',
@@ -486,7 +487,7 @@
 #     stop("model.names must be a character vector")
 #   }
 #   if(!is.character(info) | length(info) != 1 | !(info %in% c('species', 'data.set', 'models', 'run.eval')) ){
-#     stop("info must be 'specie', 'data.set', 'models' or 'run.eval'")
+#     stop("info must be 'species', 'data.set', 'models' or 'run.eval'")
 #   }
 #                 
 #   info.tmp <- as.data.frame(strsplit(model.names, "_"))

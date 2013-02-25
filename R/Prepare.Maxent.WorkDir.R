@@ -1,10 +1,10 @@
-.Prepare.Maxent.WorkDir <- function(Data, xy, calibLines, RunName=NULL, VarImport=0, evalData=NULL, evalxy=NULL, species.name=NULL ){
+.Prepare.Maxent.WorkDir <- function(Data, xy, calibLines, RunName=NULL, VarImport=0, evalData=NULL, evalxy=NULL, species.name=NULL, modeling.id='' ){
   cat('\n\tCreating Maxent Temp Proj Data..')
   if(is.null(RunName)) RunName <- colnames(Data)[1]
   if(is.null(species.name)) species.name <- colnames(Data)[1]
   
-  dir.create(paste(getwd(),'/',species.name,'/MaxentTmpData', sep=""), showWarnings=FALSE, recursive=TRUE)
-  dir.create(paste(getwd(),'/',species.name,'/models/',RunName,'_MAXENT_outputs',sep=''), showWarnings=FALSE, recursive=TRUE)
+  dir.create(file.path(species.name,'MaxentTmpData'), showWarnings=FALSE, recursive=TRUE)
+  dir.create(file.path(species.name,'models',modeling.id, paste(RunName,'_MAXENT_outputs',sep='')), showWarnings=FALSE, recursive=TRUE)
   
   # Presences Data
   presLines <- which((Data[,1]==1) & calibLines)
@@ -12,7 +12,7 @@
   Sp_swd <- cbind(rep(RunName,length(presLines)),
                       xy[presLines,],
                       Data[presLines,2:ncol(Data)])
-  colnames(Sp_swd) <- c('specie','X','Y',colnames(Data)[2:ncol(Data)])
+  colnames(Sp_swd) <- c('species','X','Y',colnames(Data)[2:ncol(Data)])
   write.table(Sp_swd, file=paste(getwd(),'/',species.name,"/MaxentTmpData/Sp_swd.csv",sep=""), quote=FALSE, row.names=FALSE, sep=",")
   
   # Background Data
@@ -70,8 +70,9 @@ setGeneric(".Prepare.Maxent.Proj.WorkDir",
 setMethod('.Prepare.Maxent.Proj.WorkDir', signature(Data='data.frame'),
           def = function(Data, xy, proj_name=NULL){
             cat('\n\t\tCreating Maxent Temp Proj Data...')
-            
-            if(is.null(proj_name)) proj_name <- colnames(Data)[1]
+            if(is.null(xy)) xy <- matrix(1,nrow=nrow(Data), ncol=2, dimnames=list(NULL, c("X","Y")))
+    
+            if(is.null(proj_name)) proj_name <- format(Sys.time(), "%s")
             dir.create(file.path(getwd(),proj_name,'MaxentTmpData'), showWarnings=FALSE, recursive=TRUE)
             
             # Proj Data

@@ -16,13 +16,15 @@ options(prompt = " ", continue = "  ", width = 60, digits=4)
 ### code chunk number 2: LoadSp_1
 ###################################################
 # 1. loading species occurrences data
+# 1. loading species occurrences data
 library(biomod2)
 
-mySpeciesOcc <- read.csv( system.file( 
-                          "external/species/species_occ.csv", 
+DataSpecies <- read.csv( system.file( 
+                          "external/species/mammals_table.csv", 
                           package="biomod2"))
                             
-head(mySpeciesOcc)
+head(DataSpecies)
+
 
 
 ###################################################
@@ -33,16 +35,17 @@ head(mySpeciesOcc)
 # Environmental variables extracted from Worldclim (bio_3, bio_4, 
 # bio_7, bio_11 & bio_12)
 require(raster)
-myExpl = stack( system.file( "external/climat/current/bio3.grd", 
+myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
                              package="biomod2"),
-                system.file( "external/climat/current/bio4.grd", 
+                system.file( "external/bioclim/current/bio4.grd", 
                              package="biomod2"), 
-                system.file( "external/climat/current/bio7.grd", 
+                system.file( "external/bioclim/current/bio7.grd", 
                              package="biomod2"),  
-                system.file( "external/climat/current/bio11.grd", 
+                system.file( "external/bioclim/current/bio11.grd", 
                              package="biomod2"), 
-                system.file( "external/climat/current/bio12.grd", 
+                system.file( "external/bioclim/current/bio12.grd", 
                              package="biomod2"))
+
 
 
 ###################################################
@@ -50,33 +53,26 @@ myExpl = stack( system.file( "external/climat/current/bio3.grd",
 ###################################################
 
 # define the species of interest
-sp.names <- c("MelesMeles", "MyocastorCoypus")
+sp.names <- c("ConnochaetesGnou", "GuloGulo", "PantheraOnca", "PteropusGiganteus", "TenrecEcaudatus", "VulpesVulpes")
 
 # loop on species == applying the same functions to each species
 for(sp.n in sp.names){
+  myRespName = sp.n
   
-  cat('\n',sp.n,'modeling...')  
+  cat('\n',myRespName,'modeling...')  
   ### definition of data 
   ## i.e keep only the column of our species
-  myResp <- as.numeric(mySpeciesOcc[,sp.n])
-  # get NAs id
-  na.id <- which(is.na(myResp))
-  # remove NAs to force the pseudo-absence extraction from background data 
-  myResp <- myResp[-na.id]  ## presence-only data 
+  myResp <- as.numeric(DataSpecies[,myRespName])
   
-  myRespCoord = mySpeciesOcc[-na.id,c('x','y')]  ## coordinates of the presence-only data 
+  myRespCoord = DataSpecies[c('X_WGS84','Y_WGS84')]  ## coordinates of the presence-only data 
   
-  myRespName = sp.n
+  
   
   ### Initialisation
   myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
                                        expl.var = myExpl,
                                        resp.xy = myRespCoord,
-                                       resp.name = myRespName,
-                                       PA.nb.rep = 2,
-                                       PA.nb.absences = 10*sum(myResp==1, 
-                                                               na.rm=TRUE),
-                                       PA.strategy = 'random')
+                                       resp.name = myRespName)
     
   
   ### Options definition
@@ -84,48 +80,59 @@ for(sp.n in sp.names){
   
   ### Modelling 
   myBiomodModelOut <- BIOMOD_Modeling( 
-                             myBiomodData, 
-                             models = c('SRE','CTA','RF','MARS','FDA'), 
-                             models.options = myBiomodOption, 
-                             NbRunEval=1, 
-                             DataSplit=80, 
-                             Yweights=NULL, 
-                             VarImport=3, 
-                             models.eval.meth = c('TSS','ROC'),
-                             SaveObj = TRUE,
-                             rescal.all.models = TRUE)
+                        myBiomodData, 
+                        models = c('SRE','CTA','RF','MARS','FDA'), 
+                        models.options = myBiomodOption, 
+                        NbRunEval=3, 
+                        DataSplit=80, 
+                        Prevalence=0.5, 
+                        VarImport=3,
+                        models.eval.meth = c('TSS','ROC'),
+                        SaveObj = TRUE,
+                        rescal.all.models = TRUE,
+                        do.full.models = FALSE,
+                        modeling.id = paste(myRespName,"FirstModeling",sep=""))
+  
+  ### save models evaluation scores and variables importance on hard drive
+  capture.output(getModelsEvaluations(myBiomodModelOut),
+                 file=file.path(myRespName, paste(myRespName,"_formal_models_evaluation.txt", sep="")))
+  
+  capture.output(getModelsVarImport(myBiomodModelOut),
+                 file=file.path(myRespName, paste(myRespName,"_formal_models_variables_importance.txt", sep="")))               
+                 
   
   ### Building ensemble-models
   myBiomodEM <- BIOMOD_EnsembleModeling( 
-                       modeling.output = myBiomodModelOut,
-                       chosen.models = 'all',
-                       eval.metric = c('TSS'),
-                       eval.metric.quality.threshold = c(0.85),
-                       prob.mean = T,
-                       prob.cv = T,
-                       prob.ci = T,
-                       prob.ci.alpha = 0.05,
-                       prob.median = T,
-                       committee.averaging = T,
-                       prob.mean.weight = T,
-                       prob.mean.weight.decay = 'proportional' )
+                  modeling.output = myBiomodModelOut,
+                  chosen.models = 'all',
+                  em.by='all',
+                  eval.metric = c('TSS'),
+                  eval.metric.quality.threshold = c(0.7),
+                  prob.mean = T,
+                  prob.cv = T,
+                  prob.ci = T,
+                  prob.ci.alpha = 0.05,
+                  prob.median = T,
+                  committee.averaging = T,
+                  prob.mean.weight = T,
+                  prob.mean.weight.decay = 'proportional' )
   
-  ### Do projections on current variable
+  ### Make projections on current variable
   myBiomomodProj <- BIOMOD_Projection(
-                           modeling.output = myBiomodModelOut,
-                           new.env = myExpl,
-                           proj.name = 'current',
-                           selected.models = 'all',
-                           binary.meth= 'ROC',
-                           compress = 'xz',
-                           clamping.mask = F)
+                      modeling.output = myBiomodModelOut,
+                      new.env = myExpl,
+                      proj.name = 'current',
+                      selected.models = 'all',
+                      binary.meth = 'TSS',
+                      compress = 'xz',
+                      clamping.mask = F,
+                      output.format = '.grd')
   
-  ### Do ensemble-models projections on current variable
+  ### Make ensemble-models projections on current variable
   myBiomodEF <- BIOMOD_EnsembleForecasting( 
-                        projection.output = myBiomomodProj,
-                        EM.output = myBiomodEM,
-                        binary.meth = 'TSS',
-                        total.consensus = TRUE)
+                  projection.output = myBiomomodProj,
+                  EM.output = myBiomodEM,
+                  binary.meth = 'TSS')
 }
 
 
@@ -133,22 +140,13 @@ for(sp.n in sp.names){
 ###################################################
 ### code chunk number 5: alpha1
 ###################################################
-# load the first species binary maps which will define the mask 
-alphaMap <- get(load(paste(sp.names[1],"/proj_current/",
-                           sp.names[1],"_TotalConsensus.bin.TSS",
-                           sep="")))[[1]]
-
-# free up the workspace to avoid memory saturation.  
-rm(list=paste(sp.names[1],"_TotalConsensus.bin.TSS", sep=""))
+# define a mask of studied
+alphaMap <- reclassify(subset(myExpl,1), c(-Inf,Inf,0))
 
 # # add all other species map
-for(sp.n in sp.names[-1]){
+for(sp.n in sp.names){
   # add layer
-  alphaMap <- alphaMap + get(load(paste(sp.n,"/proj_current/",
-                                        sp.n,"_TotalConsensus.bin.TSS",
-                                        sep="")))[[1]]
-  # free space
-  rm(list=paste(sp.n,"_TotalConsensus.bin.TSS", sep=""))
+  alphaMap <- alphaMap + subset(stack(file.path(sp.n,"proj_current",paste("proj_current_",sp.n,"_TotalConsensus_EMbyTSS_TSSbin.grd", sep=""))), 1)
 }
 
 # summary of created raster
@@ -160,7 +158,7 @@ alphaMap
 ### code chunk number 6: alpha_2
 ###################################################
 plot(alphaMap, main = expression( paste(alpha, "-diversity based on",
-                                " TotalConsensus.bin.TSS outputs")))
+                                " TotalConsensus_EMbyTSS_TSSbin outputs")))
 
 
 
@@ -169,79 +167,85 @@ plot(alphaMap, main = expression( paste(alpha, "-diversity based on",
 ###################################################
 MyBiomodSF <- function(sp.n){
   
-  cat('\n',sp.n,'modeling...')  
-  ### definition of data for this run
-  ## i.e keep only the column of our species
-  myResp <- as.numeric(mySpeciesOcc[,sp.n])
-  # get NAs id
-  na.id <- which(is.na(myResp))
-  # remove NAs to enforce PA sampling to be done on explanatory rasters
-  myResp <- myResp[-na.id]
-  
-  myRespCoord = mySpeciesOcc[-na.id,c('x','y')]
-  
   myRespName = sp.n
+  
+  cat('\n',myRespName,'modeling...')  
+  ### definition of data 
+  ## i.e keep only the column of our species
+  myResp <- as.numeric(DataSpecies[,myRespName])
+  
+  myRespCoord = DataSpecies[c('X_WGS84','Y_WGS84')]  ## coordinates of the presence-only data 
+  
+  
   
   ### Initialisation
   myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
                                        expl.var = myExpl,
                                        resp.xy = myRespCoord,
-                                       resp.name = myRespName,
-                                       PA.nb.rep = 2,
-                                       PA.nb.absences = 10*sum(myResp==1,
-                                                               na.rm=TRUE),
-                                       PA.strategy = 'random')
-    
+                                       resp.name = myRespName)
+  
   
   ### Options definition
   myBiomodOption <- BIOMOD_ModelingOptions()
   
   ### Modelling 
   myBiomodModelOut <- BIOMOD_Modeling( 
-                             myBiomodData, 
-                             models = c('SRE','CTA','RF','MARS','FDA'), 
-                             models.options = myBiomodOption, 
-                             NbRunEval=1, 
-                             DataSplit=80, 
-                             Yweights=NULL, 
-                             VarImport=3, 
-                             models.eval.meth = c('TSS','ROC'),
-                             SaveObj = TRUE,
-                             rescal.all.models = TRUE)
+    myBiomodData, 
+    models = c('SRE','CTA','RF','MARS','FDA'), 
+    models.options = myBiomodOption, 
+    NbRunEval=3, 
+    DataSplit=80, 
+    Prevalence=0.5, 
+    VarImport=3,
+    models.eval.meth = c('TSS','ROC'),
+    SaveObj = TRUE,
+    rescal.all.models = TRUE,
+    do.full.models = FALSE,
+    modeling.id = paste(myRespName,"FirstModeling",sep=""))
+  
+  ### save models evaluation scores and variables importance on hard drive
+  capture.output(getModelsEvaluations(myBiomodModelOut),
+                 file=file.path(myRespName, paste(myRespName,"_formal_models_evaluation.txt", sep="")))
+  
+  capture.output(getModelsVarImport(myBiomodModelOut),
+                 file=file.path(myRespName, paste(myRespName,"_formal_models_variables_importance.txt", sep="")))               
+  
   
   ### Building ensemble-models
   myBiomodEM <- BIOMOD_EnsembleModeling( 
-                       modeling.output = myBiomodModelOut,
-                       chosen.models = 'all',
-                       eval.metric = c('TSS'),
-                       eval.metric.quality.threshold = c(0.85),
-                       prob.mean = T,
-                       prob.cv = T,
-                       prob.ci = T,
-                       prob.ci.alpha = 0.05,
-                       prob.median = T,
-                       committee.averaging = T,
-                       prob.mean.weight = T,
-                       prob.mean.weight.decay = 'proportional' )
+    modeling.output = myBiomodModelOut,
+    chosen.models = 'all',
+    em.by='all',
+    eval.metric = c('TSS'),
+    eval.metric.quality.threshold = c(0.7),
+    prob.mean = T,
+    prob.cv = T,
+    prob.ci = T,
+    prob.ci.alpha = 0.05,
+    prob.median = T,
+    committee.averaging = T,
+    prob.mean.weight = T,
+    prob.mean.weight.decay = 'proportional' )
   
-  ### Do projections on current varaiable
+  ### Make projections on current variable
   myBiomomodProj <- BIOMOD_Projection(
-                           modeling.output = myBiomodModelOut,
-                           new.env = myExpl,
-                           proj.name = 'current',
-                           selected.models = 'all',
-                           binary.meth= 'ROC',
-                           compress = 'xz',
-                           clamping.mask = F)
+    modeling.output = myBiomodModelOut,
+    new.env = myExpl,
+    proj.name = 'current',
+    selected.models = 'all',
+    binary.meth = 'TSS',
+    compress = 'xz',
+    clamping.mask = F,
+    output.format = '.grd')
   
-  ### Do ensemble-models projections on current varaiable
+  ### Make ensemble-models projections on current variable
   myBiomodEF <- BIOMOD_EnsembleForecasting( 
-                        projection.output = myBiomomodProj,
-                        EM.output = myBiomodEM,
-                        binary.meth = 'TSS',
-                        total.consensus = TRUE)
+    projection.output = myBiomomodProj,
+    EM.output = myBiomodEM,
+    binary.meth = 'TSS')
                         
 }
+
 
 
 ###################################################

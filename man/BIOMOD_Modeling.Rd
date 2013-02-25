@@ -18,7 +18,8 @@ BIOMOD_Modeling( data,
                  models.eval.meth = c('KAPPA','TSS','ROC'), 
                  SaveObj = TRUE,
                  rescal.all.models = TRUE,
-                 do.full.models = TRUE)
+                 do.full.models = TRUE,
+                 modeling.id = as.character(format(Sys.time(), '\%s')) )
 }
 
 \arguments{
@@ -32,8 +33,9 @@ BIOMOD_Modeling( data,
 \item{VarImport}{Number of permutation to estimate variable importance}
 \item{models.eval.meth}{vector of names of evaluation metric among 'KAPPA', 'TSS', 'ROC', 'FAR', 'SR', 'ACCURACY', 'BIAS', 'POD', 'CSI' and 'ETS'}
 \item{SaveObj}{keep all results and outputs on hard drive or not (NOTE: strongly recommended)}
-\item{rescal.all.models}{if true, all model prediction will be rescaled with a binomial GLM}
+\item{rescal.all.models}{if true, all model prediction will be scaled with a binomial GLM}
 \item{do.full.models}{if true, models calibrated and evaluated with the whole dataset are done }
+\item{modeling.id}{character, the ID (=name) of modeling procedure. A random number by default. }
 }
 
 \details{
@@ -73,8 +75,9 @@ BIOMOD_Modeling( data,
   
   \item{\bold{Yweights & Prevalence}}{
   
-    Allows to give more or less weight to some particular observations. If this argument is kept to NULL, each site (presence or absence) has the same weight. In the particular case that pseudo-absence data have been generated \code{\link{BIOMOD_FormatingData}}, weights are calculated in a way to obtain the given prevalence (0.5 if \code{NULL} meaning that the presences will have the same importance than the absences in the calibration process of the models). Automatically created \code{Yweights} will be composed by integers to prevent from some modelling issues.
-    Note that \code{Prevalence} argument will always be ignored if \code{Yweights} are defined.
+    Allows to give more or less weight to some particular observations. If these arguments is kept to NULL (\code{Yweights = NULL}, \code{Prevalence = NULL}), each observation (presence or absence) has the same weight (independent of the number of presences and absences). If \code{Prevalence = 0.5} absences will be weighted equally to the presences (i.e. the weighted sum of presence equals the weighted sum of absences). If prevalence is set below or above 0.5 absences or presences are given more weight, respectively.
+In the particular case that pseudo-absence data have been generated \code{BIOMOD_FormatingData} (\code{PA.nb.rep > 0}), weights are by default (\code{Prevalence = NULL}) calculated such that prevalence is 0.5, meaning that the presences will have the same importance as the absences in the calibration process of the models. Automatically created \code{Yweights} will be composed of integers to prevent different modelling issues. 
+Note that the \code{Prevalence} argument will always be ignored if \code{Yweights} are defined. 
     
     
   }
@@ -94,7 +97,7 @@ BIOMOD_Modeling( data,
       \item{\sQuote{CSI} : Critical success index (threat score)}
       \item{\sQuote{ETS} : Equitable threat score (Gilbert skill score)}
     }
-    Some of them are rescaled to have all an optimum at 1. You can choose one of more (vector) evaluation metric. By Default, only 'KAPPA', 'TSS' and 'ROC' evaluation are done. Please refer to the CAWRC website (\url{http://www.cawcr.gov.au/projects/verification/#Methods_for_dichotomous_forecasts}) to get detailled description of each metric.
+    Some of them are scaled to have all an optimum at 1. You can choose one of more (vector) evaluation metric. By Default, only 'KAPPA', 'TSS' and 'ROC' evaluation are done. Please refer to the CAWRC website (\url{http://www.cawcr.gov.au/projects/verification/#Methods_for_dichotomous_forecasts}) to get detailled description of each metric.
     
   }
   
@@ -105,7 +108,7 @@ BIOMOD_Modeling( data,
   
   \item{\bold{rescal.all.models}}{
   
-  Some categorical models have to be rescaled in every case (\sQuote{MARS}, \sQuote{FDA}, \sQuote{ANN}). But It may be interesting to rescale all model computed to ensure that they will produced comparable predictions (0-1000 ladder). That's particularly useful when you do some ensemble forecasting to remove the scale prediction effect (the more extended projections are, the more they influence ensemble forecasting results). 
+  Some categorical models have to be scaled in every case (\sQuote{MARS}, \sQuote{FDA}, \sQuote{ANN}). But It may be interesting to scale all model computed to ensure that they will produced comparable predictions (0-1000 ladder). That's particularly useful when you do some ensemble forecasting to remove the scale prediction effect (the more extended projections are, the more they influence ensemble forecasting results). 
   }
 
   \item{\bold{do.full.models}}{
@@ -139,31 +142,38 @@ Wilfried Thuiller, Damien Georges, Robin Engler
 
 \examples{
 
-# 0. Load data & Selecting Data
+# species occurrences
+DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
+                                    package="biomod2"))
+head(DataSpecies)
 
-# species occurances
-species_occ <- read.csv(system.file("external/species/species_occ.csv",package="biomod2"))
+# the name of studied species
+myRespName <- 'GuloGulo'
 
-# we consider only presences of MyocastorCoypus species
-myRespName <- 'MyocastorCoypus'
-myRespCoord <- species_occ[which(!is.na(species_occ[,myRespName])),c('x','y')]
-myResp <- as.numeric(na.omit(species_occ[,myRespName]))
+# the presence/absences data for our species 
+myResp <- as.numeric(DataSpecies[,myRespName])
 
-# Environemental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
-myExpl = raster::stack(system.file("external/climat/current/bio3.grd",package="biomod2"),
-                       system.file("external/climat/current/bio4.grd",package="biomod2"),
-                       system.file("external/climat/current/bio7.grd",package="biomod2"),
-                       system.file("external/climat/current/bio11.grd",package="biomod2"),
-                       system.file("external/climat/current/bio12.grd",package="biomod2"))
+# the XY coordinates of species data
+myRespXY <- DataSpecies[,c("X_WGS84","Y_WGS84")]
 
-# 1. Formating Data
+
+# Environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
+myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
+                             package="biomod2"),
+                system.file( "external/bioclim/current/bio4.grd", 
+                             package="biomod2"), 
+                system.file( "external/bioclim/current/bio7.grd", 
+                             package="biomod2"),  
+                system.file( "external/bioclim/current/bio11.grd", 
+                             package="biomod2"), 
+                system.file( "external/bioclim/current/bio12.grd", 
+                             package="biomod2"))
+
+# 1. Formatting Data
 myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
                                      expl.var = myExpl,
-                                     resp.xy = myRespCoord,
-                                     resp.name = myRespName,
-                                     PA.nb.rep = 2,
-                                     PA.nb.absences = 200,
-                                     PA.strategy = 'random')
+                                     resp.xy = myRespXY,
+                                     resp.name = myRespName)
                                                                      
 # 2. Defining Models Options using default options.
 myBiomodOption <- BIOMOD_ModelingOptions()
@@ -171,14 +181,15 @@ myBiomodOption <- BIOMOD_ModelingOptions()
 # 3. Doing Modelisation
 
 myBiomomodModelOut <- BIOMOD_Modeling( myBiomodData, 
-                                       models = c('SRE','CTA','RF'), 
+                                       models = c('SRE','RF'), 
                                        models.options = myBiomodOption, 
-                                       NbRunEval=1, 
+                                       NbRunEval=2, 
                                        DataSplit=80, 
-                                       Yweights=NULL, 
-                                       VarImport=3, 
+                                       Prevalence=0.5, 
+                                       VarImport=0, 
                                        models.eval.meth = c('TSS','ROC'),
-                                       SaveObj = TRUE )
+                                       do.full.models=FALSE,
+                                       modeling.id="test")
                                        
 ## print a summary of modeling stuff
 myBiomomodModelOut

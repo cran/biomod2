@@ -40,6 +40,7 @@
                                    PA.dist.min = 0,
                                    PA.dist.max = NULL,
                                    PA.sre.quant = 0.025,
+                                   PA.table = NULL,
                                    na.rm = TRUE){
   .bmCat(paste(resp.name, " Data Formating", sep=""))
   
@@ -56,7 +57,8 @@
                                            PA.strategy,
                                            PA.dist.min,
                                            PA.dist.max,
-                                           PA.sre.quant)
+                                           PA.sre.quant,
+                                           PA.table)
   
   resp.var <- args$resp.var
   expl.var <- args$expl.var 
@@ -71,11 +73,12 @@
   PA.dist.min <- args$PA.dist.min
   PA.dist.max <- args$PA.dist.max
   PA.sre.quant <- args$PA.sre.quant
+  PA.table <- args$PA.table
   
   rm('args')
   gc()
   
-  if(PA.nb.rep < 1){ # no Pseudo Absences
+  if(PA.strategy == 'none'){ # no Pseudo Absences
     return(BIOMOD.formated.data(sp=resp.var,
                                 xy=resp.xy,
                                 env=expl.var,
@@ -84,12 +87,12 @@
                                 eval.env=eval.expl.var,
                                 eval.xy=eval.resp.xy,
                                 na.rm=na.rm))
-  } else{ # Pseudo Absences
+  } else{ # Automatic Pseudo Absences Selection
     return(BIOMOD.formated.data.PA(sp=resp.var, xy=resp.xy, env=expl.var, sp.name=resp.name,
                                    eval.sp=eval.resp.var, eval.env=eval.expl.var, eval.xy=eval.resp.xy,
                                    PA.NbRep=PA.nb.rep, PA.strategy=PA.strategy, 
                                    PA.nb.absences = PA.nb.absences, PA.dist.min = PA.dist.min,
-                                   PA.dist.max = PA.dist.max, PA.sre.quant = PA.sre.quant,
+                                   PA.dist.max = PA.dist.max, PA.sre.quant = PA.sre.quant, PA.table=PA.table, 
                                    na.rm=na.rm))
   } 
 }
@@ -106,12 +109,18 @@
                                              PA.strategy,
                                              PA.dist.min,
                                              PA.dist.max,
-                                             PA.sre.quant){
+                                             PA.sre.quant,
+                                             PA.table){
   
   # 0. names checking
+
+  
+  
   ### check resp.name is available
-  if(length(unlist(strsplit(resp.name,'_'))) > 1){
+  if(grepl('_',resp.name) | grepl(' ',resp.name)){
     resp.name <- paste(unlist(strsplit(resp.name,'_')),collapse='.')
+    resp.name <- paste(unlist(strsplit(resp.name,' ')),collapse='.')
+    
     cat('\n Response variable name was converted into', resp.name)
   }
   
@@ -120,7 +129,7 @@
   
   # 1. Checking input params class
   available.types <- c( 'numeric', 'data.frame', 'matrix', 
-                        'RasterLayer', 'RasterStack', 'RasterBrick',
+                        'RasterLayer', 'RasterStack',
                         'SpatialPointsDataFrame', 'SpatialPoints')
   ###### resp.var
   if(!(class(resp.var) %in% available.types)){
@@ -204,7 +213,40 @@
       stop("If explanatory variable is not a raster then dimentions of response variable and explanatory variable must match!")
     }
   }
-
+  
+  ### PA strategy
+  
+  if(is.null(PA.table) & PA.nb.rep < 1){
+    cat("\n> No pseudo absences selection !")
+    PA.strategy <- "none"
+    PA.nb.rep <- 0
+  }
+  
+  if(is.null(PA.strategy) &  PA.nb.rep > 0){
+    cat("\n> Pseudo absences will be selected randomly !")
+    PA.strategy <- "random"
+  }
+  
+  
+  if( !is.null(PA.table)){
+    cat("\n> Pseudo absences used will be user defined ones !")
+    PA.strategy <- "user.defined"
+    PA.nb.rep <- 0
+  }
+  
+  if(PA.strategy == "user.defined"){
+    if(! (is.matrix(PA.table) | is.data.frame(PA.table)))
+      stop("\n PA.table must be a matrix or a data.frame")
+    
+    if(nrow(PA.table) != length(resp.var))
+      stop("\n PA.table must have as many row than the number 
+           of observation of your response variable")
+    
+    #PA.table <- as.data.frame(sapply(PA.table,simplify=FALSE,as.logical))
+    colnames(PA.table) <- paste("PA",1:ncol(PA.table),sep="")
+    
+  }
+  
   # 2. eval.resp.var.checking
      
   if(!is.null(eval.resp.var)){
@@ -323,6 +365,7 @@
                PA.strategy = PA.strategy,
                PA.dist.min = PA.dist.min,
                PA.dist.max = PA.dist.max,
-               PA.sre.quant = PA.sre.quant))
+               PA.sre.quant = PA.sre.quant,
+               PA.table = PA.table))
   
 }

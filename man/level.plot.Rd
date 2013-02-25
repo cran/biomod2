@@ -31,18 +31,21 @@ level.plot(data.in, XY, color.gradient = "red", cex = 1, level.range = c(min(dat
 \seealso{ \code{\link{multiple.plot}} }
 \examples{
 \dontrun{
-species_occ <- read.csv(system.file("external/species/species_occ.csv",package="biomod2"))
+# species occurrences
+DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
+                                    package="biomod2"))
 
-# we consider only presences of MyocastorCoypus species
-myRespName <- 'MyocastorCoypus'
-myRespCoord <- species_occ[,c('x','y')]
-myResp <- species_occ[,myRespName]
+# the name of studied species
+myRespName <- 'GuloGulo'
 
-# NOTE: NA not supported yet
-# replace NA by 0
-myResp[is.na(myResp)] <- 0
+# the presence/absences data for our species 
+myResp <- as.numeric(DataSpecies[,myRespName])
 
-level.plot(data.in=myResp, XY=myRespCoord)
+# the XY coordinates of species data
+myRespXY <- DataSpecies[,c("X_WGS84","Y_WGS84")]
+
+
+level.plot(data.in=myResp, XY=myRespXY)
 }
 }
 

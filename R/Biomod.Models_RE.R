@@ -1,22 +1,23 @@
 .Biomod.Models.loop <- function(X,
+                                modeling.id,
                                 Model,
                                 Options,
                                 VarImport, 
                                 mod.eval.method,
                                 SavePred,
                                 xy=NULL,
-                                rescal.models = TRUE){
+                                scal.models = TRUE){
   cat("\n\n-=-=-=- Run : ",X$name, '\n')
   res.sp.run <- list()
   
   for(i in 1:ncol(X$calibLines)){ # loop on RunEval
     cat('\n\n-=-=-=--=-=-=-',paste(X$name,colnames(X$calibLines)[i],sep=""),'\n')
     
-    res.sp.run[[colnames(X$calibLines)[i]]] <- lapply(Model, .Biomod.Models, 
+    res.sp.run[[colnames(X$calibLines)[i]]] <- lapply(Model, .Biomod.Models,
                                                       Data = X$dataBM,
                                                       Options = Options,
-                                                      calibLines = X$calibLines[,i],
-                                                      Yweights = X$weights,
+                                                      calibLines = na.omit(X$calibLines[,i]),
+                                                      Yweights = na.omit(X$Yweights),
                                                       nam = paste(X$name,colnames(X$calibLines)[i], sep=""),
                                                       VarImport = VarImport,
                                                       mod.eval.method = mod.eval.method,
@@ -24,7 +25,8 @@
                                                       SavePred = T,#SavePred,
                                                       xy = X$xy,
                                                       eval.xy = X$eval.xy,
-                                                      rescal.models = rescal.models)
+                                                      scal.models = scal.models,
+                                                      modeling.id = modeling.id)
     
     names(res.sp.run[[colnames(X$calibLines)[i]]]) <- Model
     
@@ -37,12 +39,12 @@
 .Biomod.Models <- function (Model, Data, Options, calibLines, Yweights, nam, VarImport = 0, 
                             mod.eval.method = c('ROC','TSS','KAPPA'), evalData = NULL,
                             SavePred = FALSE,
-                            xy = NULL, eval.xy = NULL, rescal.models = TRUE){
+                            xy = NULL, eval.xy = NULL, scal.models = TRUE, modeling.id = ''){
   
   ################################################################################################
-  # 1. Print model runing and getting model options =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #               
+  # 1. Print model running and getting model options =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #               
   # check and get modified args if nececary
-  args <- .Biomod.Models.check(Model, Data, Options, calibLines, Yweights, mod.eval.method, evalData, rescal.models)
+  args <- .Biomod.Models.check(Model, Data, Options, calibLines, Yweights, mod.eval.method, evalData, scal.models)
   
   if(is.null(args)){ # trouble in input data -> Not Run
     return(0)
@@ -55,10 +57,12 @@
     Prev <- args$Prev
     mod.eval.method <- args$mod.eval.method
     evalData <- args$evalData
-    rescal.models <- args$rescal.models
+    scal.models <- args$scal.models
     resp_name <- args$resp_name
     expl_var_names <- args$expl_var_names
   }
+  
+  categorial_var <- unlist(sapply(expl_var_names, function(x){if(is.factor(Data[,x])) return(x) else return(NULL)} ))
   
   model_name <- paste(nam,'_',Model,sep="")
   
@@ -69,7 +73,7 @@
                   pred = NULL,
                   pred.eval = NULL,
                   calib.failure = NULL)
-  
+
   
   # CTA models creation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if (Model == "CTA") {
@@ -278,12 +282,11 @@
     } else {
       ## keep the total model      
       model.sp <- try( glm(glm.formula, 
-                           data = cbind(Data[calibLines,],matrix(Yweights[calibLines], ncol=1, dimnames=list(NULL, "Yweights"))) ,
-                           family = eval(parse(text=call(Options@GLM$family))),
-                           #                       family = Options@GLM$family,
+                           data = cbind(Data[calibLines,],matrix(Yweights[calibLines], ncol=1, dimnames=list(NULL, "Yweights"))),
+                           family = Options@GLM$family,
                            control = eval(Options@GLM$control),
                            weights = Yweights,
-                           #                       mustart = rep(Options@GLM$mustart, sum(calibLines)),
+#                            mustart = rep(Options@GLM$mustart, sum(calibLines)),
                            model = TRUE) )
     }             
     
@@ -436,17 +439,21 @@
   
   # SRE models creation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if (Model == "SRE"){
-    model.bm <- new("SRE_biomod2_model",
-                    extremal_conditions = sre(Response = Data[calibLines,1],
-                                              Explanatory = Data[calibLines,expl_var_names],
-                                              NewData = NULL, 
-                                              Quant = Options@SRE$quant,
-                                              return_extremcond=TRUE),
-                    model_name = model_name,
-                    model_class = 'SRE',
-                    model_options = Options@SRE,
-                    resp_name = resp_name,
-                    expl_var_names = expl_var_names)   
+    model.sp <- try(sre(Response = Data[calibLines,1],
+                        Explanatory = Data[calibLines,expl_var_names],
+                        NewData = NULL, 
+                        Quant = Options@SRE$quant,
+                        return_extremcond=TRUE))
+    
+    if( !inherits(model.sp,"try-error") ){
+      model.bm <- new("SRE_biomod2_model",
+                      extremal_conditions = model.sp,
+                      model_name = model_name,
+                      model_class = 'SRE',
+                      model_options = Options@SRE,
+                      resp_name = resp_name,
+                      expl_var_names = expl_var_names)
+    }
   }
   # end SRE models creation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   
@@ -456,18 +463,21 @@
   
   # MAXENT models creation -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if (Model == "MAXENT"){
-    .Prepare.Maxent.WorkDir(Data, xy, calibLines, nam, VarImport, evalData, eval.xy, species.name=colnames(Data)[1])
+    .Prepare.Maxent.WorkDir(Data, xy, calibLines, nam, VarImport, evalData, eval.xy, species.name=resp_name, modeling.id=modeling.id)
     
     # run MaxEnt:
-    cat("\n Runing Maxent...")  
+    cat("\n Running Maxent...")  
     system(command=paste("java -mx512m -jar ", file.path(Options@MAXENT$path_to_maxent.jar, "maxent.jar"), " environmentallayers=\"",
                          file.path(getwd(), colnames(Data)[1], "MaxentTmpData", "Back_swd.csv"),"\" samplesfile=\"",
                          file.path(getwd(), colnames(Data)[1], "MaxentTmpData", "Sp_swd.csv"),"\" projectionlayers=\"",
                          gsub(", ",",",toString(list.files(paste(getwd(), .Platform$file.sep, colnames(Data)[1], .Platform$file.sep, "MaxentTmpData", .Platform$file.sep, "Pred",sep=""),
                                                            full.names= T))), "\" outputdirectory=\"",
-                         file.path(getwd(), colnames(Data)[1], "models", paste(nam, "_MAXENT_outputs", sep="")),"\"",
+                         file.path(getwd(), resp_name, "models", modeling.id, paste(model_name, "_outputs", sep="")),"\"",
                          " outputformat=logistic ",
-                         #                            "jackknife maximumiterations=",Options@MAXENT$maximumiterations, 
+                         #                            "jackknife maximumiterations=",Options@MAXENT$maximumiterations,
+                         ifelse(length(categorial_var), 
+                                paste(" togglelayertype=",categorial_var, collapse=" ",sep=""), 
+                                ""),
                          " redoifexists",
                          " visible=", Options@MAXENT$visible,
                          " linear=", Options@MAXENT$linear,
@@ -488,7 +498,7 @@
     
     
     model.bm <- new("MAXENT_biomod2_model",
-                    model_output_dir=file.path(resp_name, "models", paste(model_name, "_outputs", sep="")),
+                    model_output_dir=file.path(resp_name, "models", modeling.id, paste(model_name, "_outputs", sep="")),
                     model_name = model_name,
                     model_class = 'MAXENT',
                     model_options = Options@MAXENT,
@@ -518,8 +528,9 @@
     ListOut$ModelName <- model_name
   }
   
-  # rescale or not predictions =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
-  if(rescal.models){
+  # scale or not predictions =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
+  if(scal.models){
+    cat("\n\tModel scaling...")
     model.bm@scaling_model <- .scaling_model(g.pred/1000, Data[, 1], prevalence=0.5)
     g.pred <- predict(model.bm, Data[,expl_var_names], on_0_1000=TRUE)
   }
@@ -551,11 +562,13 @@
       g.pred.without.na <- g.pred
     }
     
+    #Precision = max( (max(g.pred.without.na[evalLines]) - min(g.pred.without.na[evalLines]) ) / 50 , 1) # max 50 steps
+    
     cross.validation <- sapply(mod.eval.method,
                                Find.Optim.Stat,
                                Fit = g.pred.without.na[evalLines],
-                               Obs = Data[evalLines,1],
-                               Precision = 5)
+                               Obs = Data[evalLines,1])#,Precision = Precision)
+    
     rownames(cross.validation) <- c("Testing.data","Cutoff","Sensitivity", "Specificity")
     
     if(exists('g.pred.eval')){
@@ -615,12 +628,12 @@
         TempDS[, vari] <- sample(TempDS[, vari])
         
         if(Model != "MAXENT"){
-          ## do projection on suffled dataset
+          ## make projection on suffled dataset
           shuffled.pred <- predict(model.bm, TempDS, on_0_1000=TRUE)
         } else{
           ## for MAXENT, we have created all the permutation at model building step
           shuffled.pred <- round(as.numeric(read.csv(file.path(model.bm@model_output_dir, paste(nam, vari, run, "swd.csv", sep="_")))[,3])*1000)
-          ## rescal suffled.pred if necessary
+          ## scal suffled.pred if necessary
           if(length(getScalingModel(model.bm))){
             shuffled.pred <- round(.testnull(object = getScalingModel(model.bm), Prev = 0.5 , dat = data.frame(pred = shuffled.pred/1000) ) *1000)
             #               shuffled.pred <- round(as.numeric(predict(getScalingModel(model.bm), shuffled.pred/1000))*1000)
@@ -651,13 +664,12 @@
   
   
   # Model saving step =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
-  eval( parse( text = paste( nam, "_", Model, " <- model.bm ", sep = "")))
-  
-  eval( parse( text = paste("save(",nam, "_", Model, ",file='", getwd(), .Platform$file.sep,
-                            unlist(strsplit(nam,'_'))[1] , .Platform$file.sep, "models", .Platform$file.sep,
-                            nam, "_", Model, "', compress='",
-                            ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'),
-                            "')", sep = "")))  
+  assign(x=paste( nam, Model, sep = "_"), 
+         value= model.bm)
+  save(list=paste( nam, Model, sep = "_"),
+       file=file.path(resp_name, "models", modeling.id, paste( nam, Model, sep = "_")),
+       compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+
   # End model saving step =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   
   
@@ -667,7 +679,7 @@
 }
 
 
-.Biomod.Models.check <- function(Model, Data, Options, calibLines, Yweights, mod.eval.method, evalData, rescal.models, criteria=NULL, Prev=NULL){
+.Biomod.Models.check <- function(Model, Data, Options, calibLines, Yweights, mod.eval.method, evalData, scal.models, criteria=NULL, Prev=NULL){
   # get species and expanatory variables names
   resp_name <- colnames(Data)[1]
   expl_var_names <- colnames(Data)[-1]
@@ -705,11 +717,11 @@
     Data <- cbind(Data,Yweights)
   }
   
-  # rescaling parameter checking
-  # never rescal SRE
-  if(Model == "SRE") rescal.models <- FALSE
-  # always rescal ANN, FDA, MARS
-  if(Model %in% c("ANN", "FDA", "MARS") ) rescal.models <- FALSE
+  # scaling parameter checking
+  # never scal SRE
+  if(Model == "SRE") scal.models <- FALSE
+  # always scal ANN, FDA, MARS
+  if(Model %in% c("ANN", "FDA", "MARS") ) scal.models <- TRUE
   
   
   # models options checking and printing
@@ -727,8 +739,10 @@
     } else if(Options@GLM$test == "BIC"){
       criteria <- log(ncol(Data))
       cat("\n\tStepwise procedure using BIC criteria")     
-    } else {#if(Options@GLM$test == "none"){
+    } else if(Options@GLM$test == "none"){
+      criteria <- 0
       cat("\n\tNo stepwise procedure")
+      cat("\n\t! You might be confronted to models convergence issues !")
     }
     
   }
@@ -786,7 +800,7 @@
   #         Prev <- sum(DataBIOMOD[, i + Biomod.material$NbVar])/nrow(DataBIOMOD)
   ## not exactly same as before
   if (Model == "GLM" | Model == "GAM"){ 
-    Prev <- sum(Data[,1])/length(Data[,1])
+    Prev <- sum(Data[,1], na.rm=T)/length(Data[,1])
   }
   
   # Evaluation Check
@@ -807,7 +821,7 @@
               Prev=Prev,
               mod.eval.method=mod.eval.method,
               evalData=evalData,
-              rescal.models=rescal.models,
+              scal.models=scal.models,
               resp_name=resp_name,
               expl_var_names=expl_var_names))
   

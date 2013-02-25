@@ -63,86 +63,94 @@ and stable for the time slice considered in species-climate modelling under futu
 \author{ Wilfried Thuiller, Damien Georges, Bruno Lafourcade }
 
 \examples{
-# 0. Load data & Selecting Data
+# species occurrences
+DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
+                                    package="biomod2"))
+head(DataSpecies)
 
-# species occurances
-species_occ <- read.csv(system.file("external/species/species_occ.csv",package="biomod2"))
+# the name of studied species
+myRespName <- 'GuloGulo'
 
-# we consider only presences of MyocastorCoypus species
-myRespName <- 'MyocastorCoypus'
-myRespCoord <- species_occ[which(!is.na(species_occ[,myRespName])),c('x','y')]
-myResp <- as.numeric(na.omit(species_occ[,myRespName]))
+# the presence/absences data for our species 
+myResp <- as.numeric(DataSpecies[,myRespName])
 
-# Environemental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
-myExpl = raster::stack(system.file("external/climat/current/bio3.grd",package="biomod2"),
-                       system.file("external/climat/current/bio4.grd",package="biomod2"),
-                       system.file("external/climat/current/bio7.grd",package="biomod2"),
-                       system.file("external/climat/current/bio11.grd",package="biomod2"),
-                       system.file("external/climat/current/bio12.grd",package="biomod2"))
+# the XY coordinates of species data
+myRespXY <- DataSpecies[,c("X_WGS84","Y_WGS84")]
 
-# 1. Formating Data
+
+# Environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
+myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
+                             package="biomod2"),
+                system.file( "external/bioclim/current/bio4.grd", 
+                             package="biomod2"), 
+                system.file( "external/bioclim/current/bio7.grd", 
+                             package="biomod2"),  
+                system.file( "external/bioclim/current/bio11.grd", 
+                             package="biomod2"), 
+                system.file( "external/bioclim/current/bio12.grd", 
+                             package="biomod2"))
+
+# 1. Formatting Data
 myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
                                      expl.var = myExpl,
-                                     resp.xy = myRespCoord,
-                                     resp.name = myRespName,
-                                     PA.nb.rep = 1,
-                                     PA.nb.absences = 200,
-                                     PA.strategy = 'random')
-                                                                     
+                                     resp.xy = myRespXY,
+                                     resp.name = myRespName)
+
+
 # 2. Defining Models Options using default options.
 myBiomodOption <- BIOMOD_ModelingOptions()
 
 # 3. Doing Modelisation
 
-myBiomomodModelOut <- BIOMOD_Modeling( myBiomodData, 
+myBiomodModelOut <- BIOMOD_Modeling( myBiomodData, 
                                        models = c('CTA','RF'), 
                                        models.options = myBiomodOption, 
-                                       models.eval.meth ='TSS')
-                                       
-                                       
+                                       models.eval.meth ='TSS',
+                                       rescal.all.models=FALSE)
+
+
 # 4.1 Projection on current environemental conditions
 
-myBiomomodProjection <- BIOMOD_Projection(modeling.output = myBiomomodModelOut,
+myBiomomodProjection <- BIOMOD_Projection(modeling.output = myBiomodModelOut,
                                           new.env = myExpl,
                                           proj.name = 'current',
                                           selected.models = 'all',
                                           binary.meth = 'TSS',
                                           compress = FALSE,
                                           build.clamping.mask = FALSE)
-                                          
+
 # 4.2 Projection on future environemental conditions
 
-myExpl2050 = raster::stack(system.file("external/climat/future/bio3.grd",package="biomod2"),
-                           system.file("external/climat/future/bio4.grd",package="biomod2"),
-                           system.file("external/climat/future/bio7.grd",package="biomod2"),
-                           system.file("external/climat/future/bio11.grd",package="biomod2"),
-                           system.file("external/climat/future/bio12.grd",package="biomod2"))
+myExplFuture = raster::stack(system.file("external/bioclim/future/bio3.grd",package="biomod2"),
+                             system.file("external/bioclim/future/bio4.grd",package="biomod2"),
+                             system.file("external/bioclim/future/bio7.grd",package="biomod2"),
+                             system.file("external/bioclim/future/bio11.grd",package="biomod2"),
+                             system.file("external/bioclim/future/bio12.grd",package="biomod2"))
 
-myBiomomodProjection2050 <- BIOMOD_Projection(modeling.output = myBiomomodModelOut,
-                                              new.env = myExpl2050,
-                                              proj.name = 't2050',
+myBiomodProjectionFuture <- BIOMOD_Projection(modeling.output = myBiomodModelOut,
+                                              new.env = myExplFuture,
+                                              proj.name = 'future',
                                               selected.models = 'all',
                                               binary.meth = 'TSS',
-                                              compress = FALSE,
-                                              build.clamping.mask = FALSE)
+                                              compress = 'xz',
+                                              build.clamping.mask = TRUE)
 
 # 5. Detect where our species occurances state is forecasted to change
 
 # load binary projections
 # here is rasters objects ('.grd')
-currentPred <- stack("MyocastorCoypus/proj_current/proj_current_MyocastorCoypus_TSSbin")
-futurePred <- stack("MyocastorCoypus/proj_t2050/proj_t2050_MyocastorCoypus_TSSbin")
+currentPred <- stack("GuloGulo/proj_current/proj_current_GuloGulo_TSSbin.grd")
+futurePred <- stack("GuloGulo/proj_future/proj_future_GuloGulo_TSSbin.grd")
 
 
 # call the Range size function
 myBiomodRangeSize <- BIOMOD_RangeSize(
-                          CurrentPred=currentPred,
-                          FutureProj=futurePred)
+  CurrentPred=currentPred,
+  FutureProj=futurePred)
 
 # see the results
 myBiomodRangeSize$Compt.By.Models
-
-#plot(myBiomodRangeSize$Diff.By.Pixel)
+plot(myBiomodRangeSize$Diff.By.Pixel)
 
 }
 

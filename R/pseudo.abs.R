@@ -1,5 +1,5 @@
 `.pseudo.absences.sampling` <-
-function(sp, env, nb.repet=1, strategy='random', distMin=0, distMax=NULL, nb.points=NULL, quant.SRE = 0){
+function(sp, env, nb.repet=1, strategy='random', distMin=0, distMax=NULL, nb.points=NULL, quant.SRE = 0, PA.table = NULL){
   
   # 1. Parameters checking
   args <- .check.params.pseudo.absences.sampling(sp, env, nb.repet, strategy, distMin, distMax, nb.points, quant.SRE)
@@ -15,10 +15,11 @@ function(sp, env, nb.repet=1, strategy='random', distMin=0, distMax=NULL, nb.poi
   
   rm("args")
   
-  if( nb.repet == 0 | nb.points <= 0){
+  if( (nb.repet == 0 | nb.points <= 0) & strategy != 'user.defined'){
     out <- NULL
   } else {
     out <- switch(strategy,
+                   user.defined = user.defined.pseudo.abs.selection(sp, env, PA.table),
                    random = random.pseudo.abs.selection( sp, env, nb.points, nb.repet ),
                    sre = sre.pseudo.abs.selection(sp, env, quant.SRE, nb.points, nb.repet),
                    disk = disk.pseudo.abs.selection(sp, env, distMin, distMax, nb.points, nb.repet))
@@ -51,7 +52,7 @@ function(sp, env, nb.repet=1, strategy='random', distMin=0, distMax=NULL, nb.poi
   cat("\n   > Pseudo Absences Selection checkings...")
   
   # define here the implemented strategies
-  availableStrategies <- c("random", "sre", "disk")
+  availableStrategies <- c("random", "sre", "disk", "user.defined")
   
   # 1. sp input checking
   if(is.vector(sp)){
@@ -59,7 +60,7 @@ function(sp, env, nb.repet=1, strategy='random', distMin=0, distMax=NULL, nb.poi
   }
   
   if(!(inherits(sp, 'SpatialPoints'))){
-    stop("specie input must be a SpatialPointsDataFrame object")
+    stop("species input must be a SpatialPointsDataFrame object")
   }
   
   # 2. env input checking
@@ -75,7 +76,7 @@ function(sp, env, nb.repet=1, strategy='random', distMin=0, distMax=NULL, nb.poi
   }
   
   # 3. Strategy checking
-  if( ! (strategy %in% c("random", "sre")) ){
+  if( ! (strategy %in% c("random", "sre", "user.defined")) ){
     if( ( sum(abs(coordinates(sp))) == 0 ) | !( strategy %in% availableStrategies ) ){ # no coordinates or unknow strategy
       strategy <- "random"
       cat("\n   ! Random strategy was automaticly selected (that can be due to points coordinates lack or unavailable strategy choosen)")
@@ -83,19 +84,22 @@ function(sp, env, nb.repet=1, strategy='random', distMin=0, distMax=NULL, nb.poi
   }
       
   # 4. Nb points checking
-  if(is.null(nb.points)){
-    stop("You must give the number of pseudo absences you want")
-  } else{
-    nbTrueAbs <- .get.nb.true.abs(sp)
-    if(nbTrueAbs >= nb.points){
-      cat("\n    ! There is more 'true absences' than desired pseudo absences. No pseudo absences selection done.")
-      nb.points = 0
-#       #### Return a flag that tell to function that no PA selected
-#       return(NULL)
-    } else { 
-      nb.points = nb.points - nbTrueAbs
+  if(strategy != "user.defined"){
+    if(is.null(nb.points)){
+      stop("You must give the number of pseudo absences you want")
+    } else{
+      nbTrueAbs <- .get.nb.true.abs(sp)
+      if(nbTrueAbs >= nb.points){
+        cat("\n    ! There is more 'true absences' than desired pseudo absences. No pseudo absences selection done.")
+        nb.points = 0
+        #       #### Return a flag that tell to function that no PA selected
+        #       return(NULL)
+      } else { 
+        nb.points = nb.points - nbTrueAbs
       }
+    }  
   }
+
       
   # 4. Nb repetition checking
   
@@ -284,7 +288,40 @@ setMethod('random.pseudo.abs.selection', signature(env="RasterStack"),
               
             }
           })
-  
+
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
+# if( !isGeneric( "random.pseudo.abs.selection" ) ) {
+setGeneric( "user.defined.pseudo.abs.selection", 
+            def = function(sp,env, ...){
+              standardGeneric( "user.defined.pseudo.abs.selection" )
+            } )
+# }
+
+setMethod('user.defined.pseudo.abs.selection', signature(env="SpatialPointsDataFrame"),
+          function( sp, env, pa.table ){
+            cat("\n   > User defined pseudo absences selection")
+            
+              return(list(xy = coordinates(sp),
+                          sp = as.vector(sp@data),
+                          env = as.data.frame(env@data),
+                          pa.tab = pa.table))
+
+          })
+
+setMethod('user.defined.pseudo.abs.selection', signature(env="RasterStack"),
+          function( sp, env, pa.table ){
+            require('raster',quietly=T)
+            cat("\n   > User defined pseudo absences selection")
+
+            env <- as.data.frame(extract(env, coordinates(sp), method='bilinear'))
+              
+            return(list(xy = coordinates(sp),
+                        sp = as.numeric(unlist(sp@data, use.names=FALSE)),
+                        env = as.data.frame(env),
+                        pa.tab = pa.table))
+            
+          })
+
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
 # if( !isGeneric( "random.pseudo.abs.selection" ) ) {
   setGeneric( "sre.pseudo.abs.selection", 
