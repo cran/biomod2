@@ -88,7 +88,7 @@ setClass('ANN_biomod2_model',
          prototype(model_class = 'ANN'),
          validity = function(object){
            # check model class
-           if(sum(! ( c("nnet.formula", "nnet") %in% class(object@model) ) ) > 0) return(FALSE)
+           if(sum(! ( c("nnet") %in% class(object@model) ) ) > 0) return(FALSE)
            return(TRUE)
            })
 
@@ -340,10 +340,12 @@ setMethod('predict', signature(object = 'GAM_biomod2_model'),
             
             args <- list(...)
             if(object@model_subclass %in% c("GAM_mgcv","BAM_mgcv")){
+              if( ("package:gam" %in% search()) ){ detach("package:gam")}
               if( ! ("package:mgcv" %in% search()) ){ require(mgcv,quietly=TRUE) }
             }
             
             if(object@model_subclass == "GAM_gam"){
+              if( ("package:mgcv" %in% search()) ){ detach("package:mgcv")}
               if( ! ("package:gam" %in% search()) ){ require(gam,quietly=TRUE) }
             }
             
@@ -542,7 +544,7 @@ setMethod('predict', signature(object = 'GLM_biomod2_model'),
   
   if (is.null(on_0_1000)) on_0_1000 <- FALSE
   
-  proj <- as.numeric(.testnull(object = getFormalModel(object), Prev = 0.5 , dat = as.data.frame(newdata)))
+  proj <- as.numeric(.testnull(object = getFormalModel(object), Prev = 0.5 , dat = newdata[,,drop=FALSE]))
   
   if(length(getScalingModel(object))){
     proj <- data.frame(pred = proj)
@@ -775,7 +777,7 @@ setClass('RF_biomod2_model',
          prototype(model_class = 'RF'),
          validity = function(object){
            # check model class
-           if(sum(! ( c("randomForest.formula", "randomForest") %in% class(object@model) ) ) > 0) return(FALSE)
+           if(sum(! ( c("randomForest") %in% class(object@model) ) ) > 0) return(FALSE)
            return(TRUE)
          })
 

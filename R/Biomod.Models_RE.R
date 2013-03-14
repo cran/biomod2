@@ -40,7 +40,7 @@
                             mod.eval.method = c('ROC','TSS','KAPPA'), evalData = NULL,
                             SavePred = FALSE,
                             xy = NULL, eval.xy = NULL, scal.models = TRUE, modeling.id = ''){
-  
+
   ################################################################################################
   # 1. Print model running and getting model options =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #               
   # check and get modified args if nececary
@@ -86,7 +86,7 @@
     } 
     if(Options@CTA$parms == 'default'){
       model.sp <- try( rpart(makeFormula(colnames(Data)[1],
-                                         head(Data[,-c(1,ncol(Data))]),
+                                         head(Data[,-c(1,ncol(Data)), drop=FALSE]),
                                          'simple', 0),
                              data = Data[calibLines,],
                              weights = Yweights,
@@ -95,7 +95,7 @@
                              control = eval(Options@CTA$control)) )    
     } else{
       model.sp <- try( rpart(makeFormula(colnames(Data)[1],
-                                         head(Data[,-c(1,ncol(Data))]),
+                                         head(Data[,-c(1,ncol(Data)), drop=FALSE]),
                                          'simple', 0),
                              data = Data[calibLines,],
                              weights = Yweights,
@@ -173,7 +173,7 @@
     } else { ## mgcv package
       if(is.null(Options@GAM$myFormula)){
         cat("\n\tAutomatic formula generation...")
-        gam.formula <- makeFormula(resp_name,head(Data[,expl_var_names]),Options@GAM$type, Options@GAM$interaction.level, k=Options@GAM$k)
+        gam.formula <- makeFormula(resp_name,head(Data[,expl_var_names,drop=FALSE]),Options@GAM$type, Options@GAM$interaction.level, k=Options@GAM$k)
       } else{
         gam.formula <- Options@GAM$myFormula
       }
@@ -213,7 +213,7 @@
   
   # GBM models creation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if (Model == "GBM") {
-    model.sp <- try(gbm(formula = makeFormula(colnames(Data)[1],head(Data)[,expl_var_names], 'simple',0),
+    model.sp <- try(gbm(formula = makeFormula(colnames(Data)[1],head(Data)[,expl_var_names,drop=FALSE], 'simple',0),
                         data = Data[calibLines,], 
                         distribution = Options@GBM$distribution,
                         var.monotone = rep(0, length = ncol(Data)-2), # -2 because of removing of sp and weights
@@ -311,7 +311,7 @@
   # MARS models creation -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if (Model == "MARS"){
     
-    model.sp <- try( mars(x = Data[calibLines,expl_var_names],
+    model.sp <- try( mars(x = Data[calibLines,expl_var_names,drop=FALSE],
                           y = Data[calibLines,1],
                           degree = Options@MARS$degree,
                           penalty = Options@MARS$penalty,
@@ -336,7 +336,7 @@
   
   # FDA models creation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if (Model == "FDA") {
-    model.sp <- try( fda(formula = makeFormula(colnames(Data)[1],head(Data)[,expl_var_names], 'simple',0),
+    model.sp <- try( fda(formula = makeFormula(colnames(Data)[1],head(Data)[,expl_var_names,drop=FALSE], 'simple',0),
                          data = Data[calibLines,],
                          method = eval(parse(text=call(Options@FDA$method))),
                          weights = Yweights) )
@@ -358,12 +358,12 @@
   
   # ANN models creation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if (Model == "ANN") {
-    CV_nnet = .CV.nnet(Input = Data[,expl_var_names], 
+    CV_nnet = .CV.nnet(Input = Data[,expl_var_names,drop=FALSE], 
                        Target = Data[calibLines,1], 
                        nbCV = Options@ANN$NbCV, 
                        W = Yweights[calibLines])
     
-    model.sp <- try(nnet(formula = makeFormula(resp_name,head(Data[,expl_var_names]), 'simple',0),
+    model.sp <- try(nnet(formula = makeFormula(resp_name,head(Data[,expl_var_names,drop=FALSE]), 'simple',0),
                          data = Data[calibLines,],
                          size = CV_nnet[1,1],
                          rang = Options@ANN$rang,
@@ -440,7 +440,7 @@
   # SRE models creation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if (Model == "SRE"){
     model.sp <- try(sre(Response = Data[calibLines,1],
-                        Explanatory = Data[calibLines,expl_var_names],
+                        Explanatory = Data[calibLines,expl_var_names,drop=FALSE],
                         NewData = NULL, 
                         Quant = Options@SRE$quant,
                         return_extremcond=TRUE))
@@ -515,7 +515,7 @@
   
   # make prediction =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if((Model != "MAXENT"))
-    g.pred <- try(predict(model.bm, Data[,expl_var_names], on_0_1000=TRUE))
+    g.pred <- try(predict(model.bm, Data[,expl_var_names,drop=FALSE], on_0_1000=TRUE))
   
   # check predictions existance and stop execution if not ok -=-=- #
   if (inherits(g.pred,"try-error")) { 
@@ -532,12 +532,12 @@
   if(scal.models){
     cat("\n\tModel scaling...")
     model.bm@scaling_model <- .scaling_model(g.pred/1000, Data[, 1], prevalence=0.5)
-    g.pred <- predict(model.bm, Data[,expl_var_names], on_0_1000=TRUE)
+    g.pred <- predict(model.bm, Data[,expl_var_names,drop=FALSE], on_0_1000=TRUE)
   }
   
   # make prediction on evaluation data =-=-=-=-=-=-=-=-=-=-=-=-=-= #
   if(!is.null(evalData)){                                              
-    g.pred.eval <- predict(model.bm, evalData[,expl_var_names], on_0_1000=TRUE)     
+    g.pred.eval <- predict(model.bm, evalData[,expl_var_names,drop=FALSE], on_0_1000=TRUE)     
   }
   
   # save predictions -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
@@ -624,7 +624,7 @@
     for(vari in expl_var_names){
       for (run in 1:VarImport) {
         ## create a new dataset with interest variable suffled
-        TempDS <- Data[, expl_var_names]
+        TempDS <- Data[, expl_var_names,drop=FALSE]
         TempDS[, vari] <- sample(TempDS[, vari])
         
         if(Model != "MAXENT"){

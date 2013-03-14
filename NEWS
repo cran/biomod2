@@ -1,3 +1,20 @@
+2.1.13 (2013-03-06)
+	* Add ProbDensFunc() function to package to produce nice plots that show inter-models variability
+
+2.1.12 (2013-03-04)
+	* add rasterVis dependency for nicer biomod2 plots
+	* PA.dist.min and PA.dist.max are now defined in meters  when you work with unprojected rasters in disk pseudo absences selection
+
+2.1.9 (2013-02-28)
+	* possibility to indicate manualy which data should be used for calibration (resp. for validation) of models within BIOMOD_Modeling
+
+2.1.9 (2013-02-27)
+	* one var modeling supported (thanks Anne O.)
+	* new options for response curves ploting (col, lty, data_species...)
+
+2.1.8 (2013-02-25)
+  * response plot supports now formal models
+
 2.1.0 (2013-02-21)
   * MAJOR RELEASE
 	* CRAN SUBMISION

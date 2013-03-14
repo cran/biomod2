@@ -21,8 +21,19 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
   # 1. args checking -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
   add.args <- list(...)
   on_0_1000 <- add.args$on_0_1000
+  col <- add.args$col
+  lty <- add.args$lty
+  legend <- add.args$legend
+  restrict_to_pres_range <- add.args$restrict_to_pres_range
+  data_species <- add.args$data_species
   
   if(is.null(on_0_1000)) on_0_1000 <- FALSE
+  if(is.null(col)) if(!do.bivariate) col <- "black" else col <- c("red","orange","green")
+  if(is.null(lty)) lty <- 1
+  if(is.null(legend)) legend <- FALSE
+  if(is.null(restrict_to_pres_range)) restrict_to_pres_range <- FALSE
+  
+  formal_names <- models
   
   args <- .response.plot2.check.arg(models, Data, show.variables, save.file, name, ImageSize, plot, fixed.var.metric, do.bivariate, add.args)
   
@@ -36,6 +47,8 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
   fixed.var.metric <- args$fixed.var.metric
   do.bivariate <- args$do.bivariate
   nb.pts <- args$nb.pts
+  
+  if(is.null(data_species)) data_species <- rep(1,nrow(Data)) else data_species[data_species!=1 | is.na(data_species)] <- 0
 
   
   # 2. build function outputs
@@ -64,16 +77,16 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
   for(i in 1:ncol(Data)){
     if(is.numeric(Data[,i])){
       Data.r[,i] <- switch(fixed.var.metric,
-                           mean = rep(mean(Data[,i]), nb.pts),
-                           median = rep(median(Data[,i]), nb.pts),
-                           min = rep(min(Data[,i]), nb.pts),
-                           max = rep(max(Data[,i]), nb.pts))
+                           mean = rep(mean(Data[data_species==1,i]), nb.pts),
+                           median = rep(median(Data[data_species==1,i]), nb.pts),
+                           min = rep(min(Data[data_species==1,i]), nb.pts),
+                           max = rep(max(Data[data_species==1,i]), nb.pts))
     } else{
       Data.r[,i] <- switch(fixed.var.metric,
-                           mean = rep(levels(as.factor(Data[,i]))[round(length(levels(as.factor(Data[,i]))) / 2 )], nb.pts),
-                           median = rep(levels(as.factor(Data[,i]))[round(length(levels(as.factor(Data[,i]))) / 2 )], nb.pts),
-                           min = rep(levels(as.factor(Data[,i]))[1], nb.pts),
-                           max = rep(levels(as.factor(Data[,i]))[length(levels(as.factor(Data[,i])))], nb.pts))
+                           mean = rep(levels(as.factor(Data[data_species==1,i]))[round(length(levels(as.factor(Data[data_species==1,i]))) / 2 )], nb.pts),
+                           median = rep(levels(as.factor(Data[data_species==1,i]))[round(length(levels(as.factor(Data[data_species==1,i]))) / 2 )], nb.pts),
+                           min = rep(levels(as.factor(Data[data_species==1,i]))[1], nb.pts),
+                           max = rep(levels(as.factor(Data[data_species==1,i]))[length(levels(as.factor(Data[data_species==1,i])))], nb.pts))
       Data.r[,i] <- as.factor(Data.r[,i])
     }
   }
@@ -93,6 +106,8 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
       nb.graphs <- length(models) *  ( (length(show.variables)-1) * length(show.variables) / 2 )
     }
     
+    if(legend) nb.graphs <- nb.graphs + 1
+    
     W.width <- ceiling(sqrt(nb.graphs))
     W.height <- ceiling(nb.graphs/W.width)    
     
@@ -102,11 +117,10 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
     par(mar = c(0.1, 0.1, 0.1, 0.1))
     plot(x=c(-1,1),y=c(0,1),xlim=c(0,1),ylim=c(0,1),type="n",axes=FALSE)
     polygon(x=c(-2,-2,2,2),y=c(-2,2,2,-2),col="#f5fcba",border=NA)
-    text(x=0.5, y=0.8, pos=1, cex=1.6, labels=paste("Response curves for ", .extractModelNamesInfo(models[1],"species"), "'s ", .extractModelNamesInfo(models[1],"models"),sep=""),  ,col="#4c57eb")
+    text(x=0.5, y=0.8, pos=1, cex=1.6, labels=paste("Response curves for ", get(models[1])@resp_name, "'s ",  get(models[1])@model_class,sep=""),  ,col="#4c57eb")
     par(mar = c(2,2,3.5,1))      
   } 
 
-  
   
   if(!do.bivariate){  
     for(vari in show.variables){
@@ -115,6 +129,10 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
 
         plot(0,0,col="white",xlim=c(min(Data[,vari]), max(Data[,vari])), ylim=ylim, main=vari, ann=TRUE, bty="o",xaxs="r", xaxt="s")
   			rug(Data[ ,vari])
+        
+        # define color vector
+        col <- rep(col,length.out=length(models))
+        lty <- rep(lty,length.out=length(models))
   		}
       
       for(model in models){
@@ -132,7 +150,7 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
 
         # 4. Ploting results
     		if(plot) {
-  				lines(pts.tmp, proj.tmp)
+  				lines(pts.tmp, proj.tmp, col=col[which(models==model)], lty = lty[which(models==model)])
   			}
         
         # 5. Storing results
@@ -141,6 +159,15 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
       }    
       
     }
+    if(legend){
+      plot.new()
+      legend(x="center",
+             legend = formal_names,
+             col = col,
+             lty = lty,
+             bty = 'n')
+    }
+    
   } else{ ## bivariate case
     for(vari1 in show.variables[-length(show.variables)]){
       for(vari2 in show.variables[-(1:which(show.variables == vari1))]){
@@ -176,7 +203,7 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
             ncz <- length(pts.tmp2)
             nrz <- length(pts.tmp1)
             # Create a function interpolating colors in the range of specified colors
-            jet.colors <- colorRampPalette(c("red", "orange", "green"))
+            jet.colors <- colorRampPalette(col)
             # Generate the desired number of colors from this palette
             nbcol <- 50
             color <- jet.colors(nbcol)
@@ -185,8 +212,8 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
             # Recode facet z-values into color indices
             facetcol <- cut(zfacet, nbcol)
             
-    				persp(x=pts.tmp1,y=pts.tmp2,z=proj.tmp, xlab = vari1, ylab=vari2, zlab="pred", theta = 30, phi = 30,
-              expand = 0.5, col = color[facetcol], ltheta = 120, shade = 0.25, ticktype = "simple", main = paste(.extractModelNamesInfo(model,"data.set"), " ", .extractModelNamesInfo(model,"run.eval") ,sep=""), cex.main = 0.9, cex.axis=0.7)
+    				persp(x=pts.tmp1,y=pts.tmp2,z=proj.tmp, xlab = vari1, ylab=vari2, zlab="pred", zlim=c(0,1), theta = 30, phi = 30,
+              expand = 0.5, col = color[facetcol], ltheta = 120, shade = 0.25, ticktype = "simple", main = formal_names[which(models==model)], cex.main = 0.9, cex.axis=0.7)
     			}
           
         }        
@@ -198,8 +225,8 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
   if(save.file=="pdf" | save.file=="jpeg" | save.file=="tiff" | save.file=="postscript") dev.off()
   
   # delete temp files if somes has been created
-  if(file.exists(file.path(.extractModelNamesInfo(models[[1]],"species"),'RespPlotTmp'))){
-     unlink(path.expand(file.path(.extractModelNamesInfo(models[[1]],"species"),'RespPlotTmp')), recursive=TRUE, force=TRUE)
+  if(file.exists(file.path(get(models[1])@resp_name,'RespPlotTmp'))){
+     unlink(path.expand(file.path(get(models[1])@resp_name,'RespPlotTmp')), recursive=TRUE, force=TRUE)
   }
   
   if(!do.bivariate){
@@ -214,20 +241,35 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
 .response.plot2.check.arg <- function(models, Data, show.variables, save.file, name, ImageSize, plot, fixed.var.metric, do.bivariate, add.args){
   
   # 1. check add.args
-  if(sum(! (names(add.args) %in% c("nb.pts","xy"))) > 0){
-    warning(paste(toString(names(add.args)[which(! (names(add.args) %in% c("nb.pts")))]), " are unknown arguments", sep="" ))
-  }
+#   if(sum(! (names(add.args) %in% c("nb.pts","xy"))) > 0){
+#     warning(paste(toString(names(add.args)[which(! (names(add.args) %in% c("nb.pts")))]), " are unknown arguments", sep="" ))
+#   }
   
   
   ### check of models args =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
   if(!is.character(models)){
     stop("models must be a character vector of models names")
   }
+  
+  mod_names <- NULL
   for(mod in models){
     if(!exists(mod)){
       stop("you need to load the models selected!")
     }
+    
+    if(!inherits(get(mod), 'biomod2_model')){
+      
+      # create a biomod2 modeling object
+      mod_tmp <- .Construct.default.biomod2.modeling.obj(get(mod))
+      assign(mod_tmp@model_name, mod_tmp, envir = parent.frame(n = 1))
+      mod_names <- c(mod_names, mod_tmp@model_name)
+    } else{
+      mod_names <- c(mod_names, mod)
+    }
   }
+  
+  models <- mod_names
+  
   
   ### defining the number split in each variables range =-=-=-=-=- #
   if(!is.null(add.args$nb.pts)){
@@ -282,6 +324,92 @@ function(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="re
 }
 
 ###
-# list of supported additional arguments  
-# - nb.pts  
 
+.Construct.default.biomod2.modeling.obj <- function(mod){
+  
+  ## ANN ##
+  if(sum(!(c("nnet") %in% class(mod))) == 0){
+    return(new("ANN_biomod2_model",
+      model = mod,
+      model_name = paste(as.character(mod$terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_ANN", sep=""),      
+      model_class = 'ANN', 
+      resp_name = ifelse(is.null(mod$terms[[2]]), "",as.character(mod$terms[[2]])), 
+      expl_var_names = as.character(mod$terms[[3]])))
+  }
+  
+  
+  ## CTA ##
+  if(sum(!(c("rpart") %in% class(mod)) == 0 )){
+    
+    return(new("CTA_biomod2_model",
+               model = mod,
+               model_name = paste(as.character(mod$terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_CTA", sep=""),
+               model_class = 'CTA',
+               resp_name = as.character(mod$terms[[2]]),
+               expl_var_names = attr(mod$terms,"term.labels")))
+  }  
+  
+  ## FDA ##
+  if(sum(!(c("fda") %in% class(mod)) == 0 )){
+    return(new("FDA_biomod2_model",
+               model = mod,
+               model_name = paste(as.character(mod$terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_FDA", sep=""),
+               model_class = 'FDA',
+               resp_name = as.character(mod$terms[[2]]),
+               expl_var_names = as.character(mod$terms[[3]])))
+  }
+  
+  ## GAM ##
+  if(sum(!(c("gam") %in% class(mod)) == 0 )){
+    return(new("GAM_biomod2_model",
+               model = mod,
+               model_subclass = ifelse(mod$method=="glm.fit","GAM_gam","GAM_mgcv"),
+               model_name = paste(as.character(mod$terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_GAM", sep=""),
+               model_class = 'GAM',
+               resp_name = as.character(mod$terms[[2]]),
+               expl_var_names = as.character(mod$terms[[3]])))
+  }
+  
+  ## GBM ##
+  if(sum(!(c("gbm") %in% class(mod)) == 0 )){
+    return(new("GBM_biomod2_model",
+               model = mod,
+               model_name = paste(as.character(mod$Terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_GBM", sep=""),
+               model_class = 'GBM',
+               resp_name = as.character(mod$Terms[[2]]),
+               expl_var_names = as.character(mod$Terms[[3]])))
+  }
+  
+  ## GLM ##
+  if(sum(!(c("glm", "lm") %in% class(mod)) == 0 )){
+    return(new("GLM_biomod2_model",
+               model = mod,
+               model_name = paste(as.character(mod$terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_GLM", sep=""),
+               model_class = 'GLM',
+               resp_name = as.character(mod$terms[[2]]),
+               expl_var_names = as.character(mod$terms[[3]])))
+  }
+  
+  ## MARS ##
+  if(sum(!(c("mars") %in% class(mod)) == 0 )){
+    return(new("MARS_biomod2_model",
+               model = mod,
+               model_name =paste("species_AllData_",as.character(format(Sys.time(), "%OS6")),"_MARS",sep=""),
+               model_class = 'MARS',
+               resp_name = "species",
+               expl_var_names = as.character(colnames(mod$factor))))
+  }
+  
+  ## RF ##
+  if(sum(!(c("randomForest") %in% class(mod)) == 0 )){
+    return(new("RF_biomod2_model",
+               model = mod,
+               model_name =paste(as.character(mod$terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_RF", sep=""),
+               model_class = 'RF',
+               resp_name = as.character(mod$terms[[2]]),
+               expl_var_names = as.character(mod$terms[[3]])))
+  }
+  
+  stop("Unknown model class")
+  
+}

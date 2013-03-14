@@ -42,14 +42,16 @@
                                SaveObj = TRUE,
                                rescal.all.models = TRUE,
                                do.full.models = TRUE,
-                               modeling.id=as.character(format(Sys.time(), "%s"))){
-  
+                               modeling.id=as.character(format(Sys.time(), "%s")),
+                               ...){
+
   # 0. loading required libraries =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   .Models.dependencies(silent=TRUE, models.options=models.options )
   
   # 1. args checking =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
   args <- .Models.check.args(data, models, models.options, NbRunEval, DataSplit,
-                             Yweights, VarImport, models.eval.meth, Prevalence)
+                             Yweights, VarImport, models.eval.meth, Prevalence, 
+                             do.full.models, ...)
   # updating Models arguments
   models <- args$models
   models.options <- args$models.options
@@ -59,6 +61,8 @@
   VarImport <- args$VarImport
   models.eval.meth <- args$models.eval.meth
   Prevalence <- args$Prevalence
+  do.full.models <- args$do.full.models
+  DataSplitTable <- args$DataSplitTable
 
   rm(args)
   models.out <- new('BIOMOD.models.out',
@@ -94,7 +98,7 @@
 
   # 3. rearanging data and determining calib and eval data -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
 
-  mod.prep.dat <- .Models.prepare.data(data, NbRunEval, DataSplit, Yweights, Prevalence, do.full.models)
+  mod.prep.dat <- .Models.prepare.data(data, NbRunEval, DataSplit, Yweights, Prevalence, do.full.models, DataSplitTable)
   rm(data)
   
   # keeping calibLines
@@ -230,8 +234,10 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
 
 .Models.check.args <- function(data, models, models.options, NbRunEval, DataSplit,
-                               Yweights, VarImport, models.eval.meth, Prevalence){
+                               Yweights, VarImport, models.eval.meth, Prevalence, do.full.models,...){
   cat('\n\nChecking Models arguments...\n')
+  add.args <- list(...)
+  
   # data checking
   if( !(class( data ) %in% c("BIOMOD.formated.data",
                              "BIOMOD.formated.data.PA",
@@ -292,6 +298,17 @@
       }
     } 
   }
+  
+  ## Data split checks
+  if(!is.null(add.args$DataSplitTable)){
+    cat("\n! User defined data-split table was given -> NbRunEval, DataSplit and do.full.models argument will be ignored")
+    if(!(length(dim(add.args$DataSplitTable)) %in% c(2,3) )) stop("DataSplitTable must be a matrix or a 3D array")
+    if(dim(add.args$DataSplitTable)[1] != length(data@data.species) ) stop("DataSplitTable must have as many rows (dim1) than your species as data")
+    NbRunEval <- dim(add.args$DataSplitTable)[2]
+    DataSplit <- 50
+    do.full.models <- FALSE
+  }
+  
   
   # NbRunEval checking (permetre un nb different par espece?)
   if( !is.numeric(NbRunEval) || NbRunEval <= 0 ){
@@ -376,7 +393,9 @@
               Yweights = Yweights,
               VarImport = VarImport,
               models.eval.meth = models.eval.meth,
-              Prevalence = Prevalence))
+              Prevalence = Prevalence,
+              do.full.models = do.full.models,
+              DataSplitTable=add.args$DataSplitTable))
 }
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #

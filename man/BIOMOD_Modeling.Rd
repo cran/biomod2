@@ -19,23 +19,28 @@ BIOMOD_Modeling( data,
                  SaveObj = TRUE,
                  rescal.all.models = TRUE,
                  do.full.models = TRUE,
-                 modeling.id = as.character(format(Sys.time(), '\%s')) )
+                 modeling.id = as.character(format(Sys.time(), '\%s')),
+                 ...)
 }
 
 \arguments{
-\item{data}{\code{BIOMOD.formated.data} object returned by \code{\link[biomod2]{BIOMOD_FormatingData}}}
-\item{models}{vector of models names choosen among 'GLM', 'GBM', 'GAM', 'CTA', 'ANN', 'SRE', 'FDA', 'MARS', 'RF' and 'MAXENT' } 
-\item{models.options}{\code{BIOMOD.models.options} object returned by \code{\link[biomod2]{BIOMOD_ModelingOptions}}}
-\item{NbRunEval}{Number of Evaluation run} 
-\item{DataSplit}{\% of data used to calibrate the models, the remaining part will be used for testing }
-\item{Yweights}{response points weights}
-\item{Prevalence}{either \code{NULL} (default) or a 0-1 numeric used to build 'weighted response weights'}
-\item{VarImport}{Number of permutation to estimate variable importance}
-\item{models.eval.meth}{vector of names of evaluation metric among 'KAPPA', 'TSS', 'ROC', 'FAR', 'SR', 'ACCURACY', 'BIAS', 'POD', 'CSI' and 'ETS'}
-\item{SaveObj}{keep all results and outputs on hard drive or not (NOTE: strongly recommended)}
-\item{rescal.all.models}{if true, all model prediction will be scaled with a binomial GLM}
-\item{do.full.models}{if true, models calibrated and evaluated with the whole dataset are done }
-\item{modeling.id}{character, the ID (=name) of modeling procedure. A random number by default. }
+  \item{data}{\code{BIOMOD.formated.data} object returned by \code{\link[biomod2]{BIOMOD_FormatingData}}}
+  \item{models}{vector of models names choosen among 'GLM', 'GBM', 'GAM', 'CTA', 'ANN', 'SRE', 'FDA', 'MARS', 'RF' and 'MAXENT' } 
+  \item{models.options}{\code{BIOMOD.models.options} object returned by \code{\link[biomod2]{BIOMOD_ModelingOptions}}}
+  \item{NbRunEval}{Number of Evaluation run} 
+  \item{DataSplit}{\% of data used to calibrate the models, the remaining part will be used for testing }
+  \item{Yweights}{response points weights}
+  \item{Prevalence}{either \code{NULL} (default) or a 0-1 numeric used to build 'weighted response weights'}
+  \item{VarImport}{Number of permutation to estimate variable importance}
+  \item{models.eval.meth}{vector of names of evaluation metric among 'KAPPA', 'TSS', 'ROC', 'FAR', 'SR', 'ACCURACY', 'BIAS', 'POD', 'CSI' and 'ETS'}
+  \item{SaveObj}{keep all results and outputs on hard drive or not (NOTE: strongly recommended)}
+  \item{rescal.all.models}{if true, all model prediction will be scaled with a binomial GLM}
+  \item{do.full.models}{if true, models calibrated and evaluated with the whole dataset are done }
+  \item{modeling.id}{character, the ID (=name) of modeling procedure. A random number by default. }
+  \item{\ldots}{ further arguments :
+    \itemize{
+      \item{\code{DataSplitTable} : a \code{matrix}, \code{data.frame} or a 3D \code{array} filled with \code{TRUE/FALSE} to specify which part of data must be used for models calibration (\code{TRUE}) and for models validation (\code{FALSE}). Each column correspund to a 'RUN'. If filled, args \code{NbRunEval}, \code{DataSplit} and \code{do.full.models} will be ignored.}
+    }}
 }
 
 \details{

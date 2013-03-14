@@ -143,7 +143,7 @@
                  showWarnings = FALSE, recursive = TRUE, mode = "0777")
       filename=file.path(modeling.output@sp.name, paste("proj_", proj.name, sep=""), "individual_projections", paste("proj_", proj.name, "_", mod.name,ifelse(output.format==".RData",".grd",output.format), sep="") )
     } else { filename=NULL }
-
+    
     return(predict(mod, new.env, on_0_1000=TRUE, filename=filename))
   })
   
@@ -429,13 +429,14 @@
     
     # create an empty mask
 #     clamp.mask <- reclassify( raster:::subset(env,1, drop=TRUE), c(-Inf,Inf,0) )
-    clamp.mask <- raster:::subset(env,1, drop=TRUE)
+    clamp.mask <- ref.mask <- raster:::subset(env,1, drop=TRUE)
     clamp.mask[!is.na(clamp.mask[])] <- 0
+    ref.mask[!is.na(clamp.mask[])] <- 1
     
     for(e.v in names(MinMax)){
+
       if(!is.null(MinMax[[e.v]]$min)){ # numeric variable
-        clamp.mask <- clamp.mask + ( BinaryTransformation(raster:::subset(env, e.v, drop=TRUE), MinMax[[e.v]]$max ) + 
-          (1 - BinaryTransformation(raster:::subset(env, e.v, drop=TRUE), MinMax[[e.v]]$min )) )
+        clamp.mask <- clamp.mask + ( BinaryTransformation(raster:::subset(env, e.v, drop=TRUE), MinMax[[e.v]]$max ) +  (ref.mask - BinaryTransformation(raster:::subset(env, e.v, drop=TRUE), MinMax[[e.v]]$min )) )
         
       } else if(!is.null(MinMax[[e.v]]$levels)){ # factorial variable
         clamp.mask <- clamp.mask + (raster:::subset(env, e.v, drop=TRUE) %in% MinMax[[e.v]]$levels)

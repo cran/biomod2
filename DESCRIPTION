@@ -1,7 +1,7 @@
 Package: biomod2
 Type: Package
 Title: Ensemble platform for species distribution modeling
-Version: 2.1.7
+Version: 2.1.15
 Date: 2012-09-14
 Author: Wilfried Thuiller, Damien Georges and Robin Engler
 Maintainer: Damien Georges <damien.georges2@gmail.com>
@@ -10,14 +10,14 @@ Contact: Wilfried Thuiller <wilfried.thuiller@ujf-grenoble.fr>, Damien
 BugReports: <https://r-forge.r-project.org/R/?group_id=302>
 Description: Functions for species distribution modeling, calibration
         and evaluation, ensemble of models.
-Depends: methods, utils, abind, sp, raster, nnet, gbm, mda,
+Depends: methods, utils, abind, sp, raster, rasterVis, nnet, gbm, mda,
         randomForest, rpart, pROC
 Suggests: ade4, MASS, foreign, Hmisc, mgcv, gam
 License: GPL-2
 Repository: CRAN
 Repository/R-Forge/Project: biomod
-Repository/R-Forge/Revision: 560
-Repository/R-Forge/DateTimeStamp: 2013-02-22 16:27:35
-Date/Publication: 2013-02-25 11:44:11
-Packaged: 2013-02-22 19:15:11 UTC; rforge
+Repository/R-Forge/Revision: 570
+Repository/R-Forge/DateTimeStamp: 2013-03-12 12:18:29
+Date/Publication: 2013-03-14 13:16:06
+Packaged: 2013-03-12 23:15:24 UTC; rforge
 NeedsCompilation: no

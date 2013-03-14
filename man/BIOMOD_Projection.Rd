@@ -76,7 +76,7 @@ Wilfried Thuiller, Damien Georges
 
 # species occurrences
 DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
-                                    package="biomod2"))
+                                    package="biomod2"), row.names = 1)
 head(DataSpecies)
 
 # the name of studied species

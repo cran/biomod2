@@ -73,12 +73,12 @@ setMethod('BIOMOD_RangeSize', signature(CurrentPred='RasterStack', FutureProj='R
       c("Loss","Stable0", "Stable1", "Gain", "PercLoss", "PercGain", "SpeciesRangeChange", "CurrentRangeSize", "FutureRangeSize.NoDisp", "FutureRangeSize.FullDisp")))
 
     
-    sp.stack <- stack()  
+    sp.stack <- stack() 
     for(i in 1:length(CurrentPred@layers)){
         #DiffByPixel
         Cur <- CurrentPred@layers[[i]]
         Fut <- FutureProj@layers[[i]]
-        Ras <- Fut - 2 * Cur
+        Ras <- Fut - (Cur + Cur)
         sp.stack <- addLayer(sp.stack, Ras)
         
         #ComptBySpecies

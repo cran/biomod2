@@ -47,13 +47,13 @@ BIOMOD_FormatingData(resp.var,
   
   \item{PA.nb.absences}{ number of pseudo-absence selected for each repetition (when PA.nb.rep > 0) of the selection (true absences included)}
   
-  \item{PA.strategy}{ strategy for selecting the Pseudo Absences (must be \sQuote{random}, \sQuote{SRE}, \sQuote{disk} or \sQuote{user.defined})}
+  \item{PA.strategy}{ strategy for selecting the Pseudo Absences (must be \sQuote{random}, \sQuote{sre}, \sQuote{disk} or \sQuote{user.defined})}
   
-  \item{PA.dist.min}{minimal distance to presences for \sQuote{disk} Pseudo Absences selection}
+  \item{PA.dist.min}{minimal distance to presences for \sQuote{disk} Pseudo Absences selection (in meters if the explanatory is a not projected raster (+proj=longlat) and in map units (typically also meters) when it is projected or when explanatory variables are stored within table )}
   
-  \item{PA.dist.max}{maximal distance to presences for \sQuote{disk} Pseudo Absences selection}
+  \item{PA.dist.max}{maximal distance to presences for \sQuote{disk} Pseudo Absences selection(in meters if the explanatory is a not projected raster (+proj=longlat) and in map units (typically also meters) when it is projected or when explanatory variables are stored within table ) }
   
-  \item{PA.sre.quant}{quantile used for \sQuote{SRE} Pseudo Absences selection}
+  \item{PA.sre.quant}{quantile used for \sQuote{sre} Pseudo Absences selection}
   
   \item{PA.table}{a \code{matrix} (or a \code{data.frame}) having as many rows than \code{resp.var} values. Each column  correspund to a Pseudo-absences selection. It contains \code{TRUE} or \code{FALSE} indicating which values of \code{resp.var} will be considered to build models. It must be used with \sQuote{user.defined} \code{PA.strategy}.}
   
@@ -121,7 +121,9 @@ BIOMOD_FormatingData(resp.var,
             
             \item{\sQuote{disk}: you may define a minimal (\code{PA.dist.min}), respectively a maximal (\code{PA.dist.max}) distance to presences points for selecting your pseudo absences candidates. That may be usefull if you don't want to select pseudo-absences too close to your presences (same niche and to avoid pseudo-replication), respectively too far from your presences (localised sampling startegy). }
             
-            \item{\sQuote{SRE}: Pseudo absences candidates have to be selected in condition that differs from a defined proportion (\code{PA.sre.quant}) of presences data. It forces pseudo absences to be selected outside of the broadly defined environemental conditions for the species. It means that a surface range envelop model (SRE, similar the BIOCLIM) is first carried out (using the specified quantile) on the species of interest, and then the pseudo-absence data are extracted outside of this envelop. This particular case may lead to over optimistic models evaluations.}
+            \item{\sQuote{sre}: Pseudo absences candidates have to be selected in condition that differs from a defined proportion (\code{PA.sre.quant}) of presences data. It forces pseudo absences to be selected outside of the broadly defined environemental conditions for the species. It means that a surface range envelop model (sre, similar the BIOCLIM) is first carried out (using the specified quantile) on the species of interest, and then the pseudo-absence data are extracted outside of this envelop. This particular case may lead to over optimistic models evaluations.}
+            
+            \item{\sQuote{user.defined}: In this case, pseudo absences selection should have been done in a previous step. This pseudo absences have to be reference into a well formated \code{data.frame} (e.g. \code{PA.table} argument)}
           }          
             
         }
@@ -147,7 +149,7 @@ BIOMOD_FormatingData(resp.var,
 
 # species occurrences
 DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
-                                    package="biomod2"))
+                                    package="biomod2"), row.names = 1)
 head(DataSpecies)
 
 # the name of studied species

@@ -33,7 +33,7 @@ level.plot(data.in, XY, color.gradient = "red", cex = 1, level.range = c(min(dat
 \dontrun{
 # species occurrences
 DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
-                                    package="biomod2"))
+                                    package="biomod2"), row.names = 1)
 
 # the name of studied species
 myRespName <- 'GuloGulo'

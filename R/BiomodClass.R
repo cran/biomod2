@@ -10,6 +10,7 @@
 # We choose here to create monospecific objects to make all procedures and parallelising easier
 require(sp, quietly=TRUE)
 require(raster, quietly=TRUE)
+require(rasterVis, quietly=TRUE)
 
 # if('mgcv' %in% rownames(installed.packages())){
 #   require(mgcv, quietly=TRUE)
@@ -30,6 +31,7 @@ setClass("BIOMOD.formated.data",
                         data.species = "numeric",
 #                         data.counting = "matrix",
                         data.env.var = "data.frame",
+                        data.mask = "RasterStack",
                         has.data.eval = "logical",
                         eval.coord = "data.frame",
                         eval.data.species = "numeric",
@@ -45,7 +47,9 @@ setClass("BIOMOD.formated.data",
 # }
 
 setMethod('BIOMOD.formated.data', signature(sp='numeric', env='data.frame' ), 
-  function(sp,env,xy=NULL,sp.name=NULL, eval.sp=NULL, eval.env=NULL, eval.xy=NULL, na.rm=TRUE ){
+  function(sp,env,xy=NULL,sp.name=NULL, eval.sp=NULL, eval.env=NULL, eval.xy=NULL, na.rm=TRUE, data.mask=NULL ){
+    if(is.null(data.mask)) data.mask <- stack()
+    
     
     if(is.null(eval.sp)){
       BFD <- new('BIOMOD.formated.data', 
@@ -53,6 +57,7 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='data.frame' ),
                  data.species=sp, 
                  data.env.var=env, 
                  sp.name=sp.name,
+                 data.mask=data.mask,
                  has.data.eval=FALSE)
     } else{
       BFDeval <- BIOMOD.formated.data(sp=eval.sp,
@@ -60,15 +65,25 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='data.frame' ),
                                       xy=eval.xy,
                                       sp.name=sp.name)
       
+      if(nlayers(BFDeval@data.mask)>0){
+        data.mask.tmp <- try(addLayer(data.mask,BFDeval@data.mask))
+        if( !inherits(data.mask.tmp,"try-error")){
+          data.mask <- data.mask.tmp
+          names(data.mask) <- c("calibration","validation")
+        }
+      }
+      
       BFD <- new('BIOMOD.formated.data', 
                  coord=xy, 
                  data.species=sp, 
                  data.env.var=env, 
                  sp.name=sp.name,
+                 data.mask=data.mask,
                  has.data.eval=TRUE,
                  eval.coord = BFDeval@coord,
                  eval.data.species = BFDeval@data.species,
                  eval.data.env.var = BFDeval@data.env.var )
+      
                  
       rm('BFDeval')
     }
@@ -78,7 +93,7 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='data.frame' ),
         cat("\n\t\t\t! Some NAs have been automaticly removed from your data")
         BFD@coord <- BFD@coord[-rowToRm,]
         BFD@data.species <- BFD@data.species[-rowToRm]
-        BFD@data.env.var <- BFD@data.env.var[-rowToRm,]
+        BFD@data.env.var <- BFD@data.env.var[-rowToRm,,drop=FALSE]
       }
       if(BFD@has.data.eval){
         rowToRm <- unique(unlist(lapply(BFD@eval.data.env.var,function(x){return(which(is.na(x)))})))
@@ -86,12 +101,12 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='data.frame' ),
           cat("\n\t\t\t! Some NAs have been automaticly removed from your evaluation data")
           BFD@eval.coord <- BFD@eval.coord[-rowToRm,]
           BFD@eval.data.species <- BFD@eval.data.species[-rowToRm]
-          BFD@eval.data.env.var <- BFD@eval.data.env.var[-rowToRm,]
+          BFD@eval.data.env.var <- BFD@eval.data.env.var[-rowToRm,,drop=FALSE]
         }      
       }
-      
-      
     }
+    
+    
     
     # count data occutances
 #     BFD@data.counting <- matrix(c(sum(BFD@data.species, na.rm=TRUE),sum(BFD@data.species==0, na.rm=TRUE)),
@@ -141,12 +156,15 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='RasterStack' ),
       }
     }
     
-    if(!is.null(xy)){
-      env <- as.data.frame(extract(env,xy))
-    } else{
-      xy <- as.data.frame(coordinates(env))
-      env <- as.data.frame(extract(env,xy))
-    }
+    if(is.null(xy)) xy <- as.data.frame(coordinates(env))
+      
+    data.mask = reclassify(raster:::subset(env,1,drop=T), c(-Inf,Inf,-1))
+    data.mask[cellFromXY(data.mask,xy[which(sp==1),])] <- 1
+    data.mask[cellFromXY(data.mask,xy[which(sp==0),])] <- 0
+    data.mask <- stack(data.mask)
+    names(data.mask) <- sp.name
+    
+    env <- as.data.frame(extract(env,xy))
     
     if(length(categorial_var)){
       for(cat_var in categorial_var){
@@ -154,7 +172,7 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='RasterStack' ),
       }
     }
     
-    BFD <- BIOMOD.formated.data(sp,env,xy,sp.name,eval.sp, eval.env, eval.xy, na.rm=na.rm)
+    BFD <- BIOMOD.formated.data(sp,env,xy,sp.name,eval.sp, eval.env, eval.xy, na.rm=na.rm, data.mask=data.mask)
     .bmCat('Done')
     return(BFD)
   }
@@ -170,33 +188,53 @@ if( !isGeneric( "plot" ) ) {
 
 setMethod('plot', signature(x='BIOMOD.formated.data'),
           function(x,coord=NULL,col=NULL){
-            # coordinates checking
-            if(is.null(coord)){
-              if( sum(is.na(x@coord)) == dim(x@coord)[1] * dim(x@coord)[2] ){
-                stop("coordinates are required to plot your data")
-              } else {
-                coord <- x@coord
+            if(nlayers(x@data.mask)>0){
+              
+              ## define the breaks of the color key
+              my.at <- seq(-1.5,1.5,by=1)
+              ## the labels will be placed vertically centered
+              my.labs.at <- seq(-1,1,by=1)
+              ## define the labels
+              my.lab = c("undifined","absences","presences")
+              
+              levelplot(x@data.mask, at=my.at, margin=T, col.regions=c("lightgrey","red4","green4"),
+                        main=paste(x@sp.name,"datasets"),
+                        colorkey=list(labels=list(
+                          labels=my.lab,
+                          at=my.labs.at)))
+              
+            } else{
+              # coordinates checking
+              if(is.null(coord)){
+                if( sum(is.na(x@coord)) == dim(x@coord)[1] * dim(x@coord)[2] ){
+                  stop("coordinates are required to plot your data")
+                } else {
+                  coord <- x@coord
+                }
               }
+              
+              # colors checking
+              if(is.null(col) | length(col) < 3){
+                col = c('green', 'red', 'grey')
+              }
+              
+              # plot data
+              # all points (~mask) 
+              
+              plot(x=x@coord[,1], y=x@coord[,2], col=col[3], xlab = 'X', ylab = 'Y',
+                   main = paste(x@sp.name, sep=""), pch=20 )
+              # presences 
+              points(x=x@coord[which(x@data.species == 1),1],
+                     y=x@coord[which(x@data.species == 1),2],
+                     col=col[1],pch=18)
+              # true absences
+              points(x=x@coord[which(x@data.species == 0),1],
+                     y=x@coord[which(x@data.species == 0),2],
+                     col=col[2],pch=18)
+              
             }
             
-            # colors checking
-            if(is.null(col) | length(col) < 3){
-              col = c('green', 'red', 'grey')
-            }
-            
-            # plot data
-            # all points (~mask) 
 
-            plot(x=x@coord[,1], y=x@coord[,2], col=col[3], xlab = 'X', ylab = 'Y',
-                 main = paste(x@sp.name, sep=""), pch=20 )
-            # presences 
-            points(x=x@coord[which(x@data.species == 1),1],
-                   y=x@coord[which(x@data.species == 1),2],
-                   col=col[1],pch=18)
-            # true absences
-            points(x=x@coord[which(x@data.species == 0),1],
-                   y=x@coord[which(x@data.species == 0),2],
-                   col=col[2],pch=18)
         
           })
 
@@ -316,6 +354,8 @@ BIOMOD.formated.data.PA <-  function(sp, env, xy, sp.name,
     # data counting
 #     pa.data.tmp$data.counting <- apply(pa.data.tmp$pa.tab,2,function(x){nbPres <- sum(pa.data.tmp$sp[x],na.rm=T) ; return(c(nbPres,sum(x)-nbPres))})
 #     colnames(pa.data.tmp$data.counting) <- colnames(pa.data.tmp$pa.tab)
+    
+    
       
     BFD <- BIOMOD.formated.data(sp=pa.data.tmp$sp,
                                 env=pa.data.tmp$env,
@@ -326,6 +366,52 @@ BIOMOD.formated.data.PA <-  function(sp, env, xy, sp.name,
                                 eval.xy=eval.xy,
                                 na.rm=na.rm) # because check is already done
     
+    if(inherits(env,'Raster')){
+      
+      ## create data.mask for ploting
+      data.mask.tmp <- reclassify(raster:::subset(env,1), c(-Inf,Inf,-1))
+      data.mask <- stack(data.mask.tmp)
+      xy_pres <- pa.data.tmp$xy[which(pa.data.tmp$sp==1),]
+      xy_abs <- pa.data.tmp$xy[which(pa.data.tmp$sp==0),]
+      if(nrow(xy_pres)){
+        data.mask[cellFromXY(data.mask.tmp, xy_pres)] <- 1
+      }
+      if(nrow(xy_abs)){
+        data.mask[cellFromXY(data.mask.tmp, xy_abs)] <- 0
+      }
+      names(data.mask) <- "input_data"
+      
+      ## add eval data
+      if(BFD@has.data.eval){
+        ### TO DO
+        
+      }
+      
+      for(pa in 1:ncol(as.data.frame(pa.data.tmp$pa.tab))){
+        data.mask.tmp2 <- data.mask.tmp
+        
+        xy_pres <- pa.data.tmp$xy[which(pa.data.tmp$sp==1 & as.data.frame(pa.data.tmp$pa.tab)[,pa]) ,]
+        xy_abs <- pa.data.tmp$xy[which( (pa.data.tmp$sp!=1 | is.na(pa.data.tmp$sp)) & as.data.frame(pa.data.tmp$pa.tab)[,pa]) ,]
+        
+        if(nrow(xy_pres)){
+          id_pres <- cellFromXY(data.mask.tmp, xy_pres)
+          data.mask.tmp2[id_pres] <- 1
+        }
+        
+        if(nrow(xy_abs)){
+          id_abs <- cellFromXY(data.mask.tmp, xy_abs)
+          data.mask.tmp2[id_abs] <- 0
+        }
+        
+        data.mask <- addLayer(data.mask, data.mask.tmp2)
+      }
+      
+      names(data.mask) <- c("input_data", colnames(as.data.frame(pa.data.tmp$pa.tab)))
+      
+    } else{
+      data.mask <- stack()
+    }
+    
       
     BFDP <- new('BIOMOD.formated.data.PA',
                 sp.name = BFD@sp.name,
@@ -333,6 +419,7 @@ BIOMOD.formated.data.PA <-  function(sp, env, xy, sp.name,
 #                 data.counting = cbind(BFD@data.counting,pa.data.tmp$data.counting) ,
                 data.env.var = BFD@data.env.var,
                 data.species = BFD@data.species,
+                data.mask = data.mask,
                 has.data.eval = BFD@has.data.eval,
                 eval.coord = BFD@eval.coord,
                 eval.data.species = BFD@eval.data.species,
@@ -365,53 +452,69 @@ BIOMOD.formated.data.PA <-  function(sp, env, xy, sp.name,
 # 2.3 other functions
 setMethod('plot', signature(x='BIOMOD.formated.data.PA'),
           function(x,coord=NULL,col=NULL){
-            # coordinates checking
-            if(is.null(coord)){
-              if( sum(is.na(x@coord)) == dim(x@coord)[1] * dim(x@coord)[2] ){
-                stop("coordinates are required to plot your data")
-              } else {
-                coord <- x@coord
+            if(nlayers(x@data.mask)>0){
+              
+              ## define the breaks of the color key
+              my.at <- seq(-1.5,1.5,by=1)
+              ## the labels will be placed vertically centered
+              my.labs.at <- seq(-1,1,by=1)
+              ## define the labels
+              my.lab = c("undifined","absences","presences")
+              
+              levelplot(x@data.mask, at=my.at, margin=T, col.regions=c("lightgrey","red4","green4"),
+                        main=paste(x@sp.name,"datasets"),
+                        colorkey=list(labels=list(
+                          labels=my.lab,
+                          at=my.labs.at)))
+              
+            } else{
+              # coordinates checking
+              if(is.null(coord)){
+                if( sum(is.na(x@coord)) == dim(x@coord)[1] * dim(x@coord)[2] ){
+                  stop("coordinates are required to plot your data")
+                } else {
+                  coord <- x@coord
+                }
               }
-            }
-            
-            # colors checking
-            if(is.null(col) | length(col) < 3){
-              col = c('green', 'red', 'orange', 'grey')
-            }
-            
-            # plot data
-            par(mfrow=c(.CleverCut(ncol(x@PA)+1)))
-            # all points (~mask)
-            plot(x=x@coord[,1], y=x@coord[,2], col=col[4], xlab = 'X', ylab = 'Y',
-                 main = paste(x@sp.name," original data", sep=""), pch=20 )
-            # presences 
-            points(x=x@coord[which(x@data.species == 1),1],
-                   y=x@coord[which(x@data.species == 1),2],
-                   col=col[1],pch=18)
-            # true absences
-            points(x=x@coord[which(x@data.species == 0),1],
-                   y=x@coord[which(x@data.species == 0),2],
-                   col=col[2],pch=18)
-            
-            # PA data
-            for(i in 1:ncol(x@PA)){
+              
+              # colors checking
+              if(is.null(col) | length(col) < 3){
+                col = c('green', 'red', 'orange', 'grey')
+              }
+              
+              # plot data
+              par(mfrow=c(.CleverCut(ncol(x@PA)+1)))
               # all points (~mask)
               plot(x=x@coord[,1], y=x@coord[,2], col=col[4], xlab = 'X', ylab = 'Y',
-                   main = paste(x@sp.name," Pseudo Absences ", i, sep=""), pch=20 )
+                   main = paste(x@sp.name," original data", sep=""), pch=20 )
               # presences 
-              points(x=x@coord[(x@data.species == 1) & x@PA[,i],1],
-                     y=x@coord[(x@data.species == 1) & x@PA[,i],2],
+              points(x=x@coord[which(x@data.species == 1),1],
+                     y=x@coord[which(x@data.species == 1),2],
                      col=col[1],pch=18)
               # true absences
-              points(x=x@coord[(x@data.species == 0) & x@PA[,i],1],
-                     y=x@coord[(x@data.species == 0) & x@PA[,i],2],
+              points(x=x@coord[which(x@data.species == 0),1],
+                     y=x@coord[which(x@data.species == 0),2],
                      col=col[2],pch=18)
-              # PA
-              points(x=x@coord[is.na(x@data.species) & x@PA[,i],1],
-                     y=x@coord[is.na(x@data.species) & x@PA[,i],2],
-                     col=col[3],pch=18)
-            }
-          })
+              
+              # PA data
+              for(i in 1:ncol(x@PA)){
+                # all points (~mask)
+                plot(x=x@coord[,1], y=x@coord[,2], col=col[4], xlab = 'X', ylab = 'Y',
+                     main = paste(x@sp.name," Pseudo Absences ", i, sep=""), pch=20 )
+                # presences 
+                points(x=x@coord[(x@data.species == 1) & x@PA[,i],1],
+                       y=x@coord[(x@data.species == 1) & x@PA[,i],2],
+                       col=col[1],pch=18)
+                # true absences
+                points(x=x@coord[(x@data.species == 0) & x@PA[,i],1],
+                       y=x@coord[(x@data.species == 0) & x@PA[,i],2],
+                       col=col[2],pch=18)
+                # PA
+                points(x=x@coord[is.na(x@data.species) & x@PA[,i],1],
+                       y=x@coord[is.na(x@data.species) & x@PA[,i],2],
+                       col=col[3],pch=18)
+              }
+            } })
 
 setMethod('show', signature('BIOMOD.formated.data.PA'),
           function(object){
@@ -911,6 +1014,8 @@ setMethod("getModelsInputData", "BIOMOD.models.out",
               return(getModelsInputData(obj)@data.env.var)
             } else if(subinfo == 'expl.var.names'){
               return(obj@expl.var.names)
+            } else if(subinfo == 'resp.var'){
+              return(getModelsInputData(obj)@data.species)
             } else{
               stop("Unknow subinfo tag")
             }
@@ -1048,10 +1153,32 @@ setMethod("getProjection", "BIOMOD.projection.out",
 setMethod('plot', signature(x='BIOMOD.projection.out'),
           function(x,col=NULL, str.grep=NULL){
             if(class(x@proj) == "BIOMOD.stored.raster.stack"){
+              ## define the breaks of the color key
+              my.at <- seq(0,1000,by=100)
+              ## the labels will be placed vertically centered
+              my.labs.at <- seq(0,1000,by=250)
+              ## define the labels
+              my.lab <- seq(0,1000,by=250)
+              ## define colors
+              my.col <- colorRampPalette(c("red4","orange4","yellow4","green4"))(100)
+              
+              
               if(is.null(str.grep)){
-                plot(getProjection(x))
+                levelplot(getProjection(x),
+                          at=my.at, margin=T, col.regions=my.col,
+                          main=paste(x@sp.name,x@proj.names,"projections"),
+                          colorkey=list(labels=list(
+                            labels=my.lab,
+                            at=my.labs.at)))
+                
               } else if(length(grep(str.grep, x@models.projected,value=T))>0){
-                plot(raster:::subset(getProjection(x), grep(str.grep, x@models.projected,value=T)))
+                levelplot(raster:::subset(getProjection(x), grep(str.grep, x@models.projected,value=T)),
+                          at=my.at, margin=T, col.regions=my.col,
+                          main=paste(x@sp.name,x@proj.names,"projections"),
+                          colorkey=list(labels=list(
+                            labels=my.lab,
+                            at=my.labs.at)))
+                
               } else{ stop("invalid str.grep arg")}
               
             } else if(class(x@proj) == "BIOMOD.stored.array"){
@@ -1198,9 +1325,9 @@ setMethod("getEMeval", "BIOMOD.EnsembleModeling.out",
               lout <- list()
               for(mod in model){
                 if(is.null(met)){
-                  lout[[mod]] <- obj@em.res[[mod]]$em.cross.validation
+                  lout[[mod]] <- obj@em.res[[mod]]$em.cross.validation[,,,drop=F]
                 } else if(!is.null(meth)){
-                  lout[[mod]] <- (obj@em.res[[mod]]$em.cross.validation[met,,])
+                  lout[[mod]] <- (obj@em.res[[mod]]$em.cross.validation[met,,,drop=F])
                 } 
               }
               return(lout)
@@ -1235,7 +1362,7 @@ setMethod("getEMbuiltModels", "BIOMOD.EnsembleModeling.out",
 # }
 
 setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data'),
-          function(data, NbRunEval, DataSplit, Yweights=NULL, Prevalence=NULL, do.full.models=TRUE){
+          function(data, NbRunEval, DataSplit, Yweights=NULL, Prevalence=NULL, do.full.models=TRUE, DataSplitTable=NULL){
             list.out <- list()
             name <- paste(data@sp.name,'_AllData',sep="")
             xy <- data@coord
@@ -1244,38 +1371,33 @@ setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data'),
             
             # dealing with evaluation data
             if(data@has.data.eval){
-              evalDataBM <- data.frame(cbind(data@eval.data.species,data@eval.data.env.var))
+              evalDataBM <- data.frame(cbind(data@eval.data.species,data@eval.data.env.var[,,drop=FALSE]))
               colnames(evalDataBM)[1] <- data@sp.name
               eval.xy <- data@eval.coord
             } else{ evalDataBM <- eval.xy <- NULL }
-              
-            if(NbRunEval == 0){ # take all available data
-              calibLines <- matrix(rep(TRUE,length(data@data.species)),ncol=1)
-              colnames(calibLines) <- '_Full'
-            } else {
-              calibLines <- .SampleMat(data@data.species, DataSplit, NbRunEval)                    
-              if(do.full.models){
-                calibLines <- cbind(calibLines, rep(TRUE,length(data@data.species)))
-                colnames(calibLines)[NbRunEval+1] <- '_Full'
-              }
-              
-            }
             
+            ### Calib/Valid lines
+            if(!is.null(DataSplitTable)){
+              cat("\n*** DataSplitTable is not NULL")
+              calibLines <- DataSplitTable
+              colnames(calibLines) <- paste('_RUN',1:ncol(calibLines), sep='')
+            } else {
+              if(NbRunEval == 0){ # take all available data
+                calibLines <- matrix(rep(TRUE,length(data@data.species)),ncol=1)
+                colnames(calibLines) <- '_Full'
+              } else {
+                calibLines <- .SampleMat(data@data.species, DataSplit, NbRunEval)                    
+                if(do.full.models){
+                  calibLines <- cbind(calibLines, rep(TRUE,length(data@data.species)))
+                  colnames(calibLines)[NbRunEval+1] <- '_Full'
+                }
+              }
+            }
+              
             if(is.null(Yweights)){ # 1 for all points
               if(!is.null(Prevalence)){
                 cat("\n\t> Automatic weights creation to rise a", Prevalence,"prevalence")
                 Yweights <- .automatic_weights_creation(data@data.species ,prev=Prevalence)
-#                 nbPres <- sum(data@data.species, na.rm=TRUE)
-#                 nbAbs <- length(data@data.species) - nbPres
-#                 Yweights <- rep(1,length(data@data.species))
-#                 
-#                 if(nbAbs > nbPres){ # code absences as 1
-#                   Yweights[which(data@data.species>0)] <- (Prevalence * nbAbs) / (nbPres * (1-Prevalence))
-#                 } else{ # code presences as 1
-#                   Yweights[which(data@data.species==0 | is.na(data@data.species))] <- (nbPres * (1-Prevalence)) / (Prevalence * nbAbs)
-#                 }
-#                 
-#                 Yweights = round(Yweights[]) # test to remove glm & gam warnings
               } else{
                 cat("\n\t> No weights : all observations will have the same weight")
                 Yweights <- rep(1,length(data@data.species))
@@ -1293,7 +1415,7 @@ setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data'),
           })
 
 setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data.PA'),
-          function(data, NbRunEval, DataSplit, Yweights=NULL, Prevalence=NULL, do.full.models=TRUE){
+          function(data, NbRunEval, DataSplit, Yweights=NULL, Prevalence=NULL, do.full.models=TRUE, DataSplitTable=NULL){
             list.out <- list()
             formal_weights <- Yweights
             for(pa in 1:ncol(data@PA)){
@@ -1303,24 +1425,39 @@ setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data.PA'),
               resp <- data@data.species[data@PA[,pa]] # response variable (with pseudo absences selected)
               resp[is.na(resp)] <- 0
               dataBM <- data.frame(cbind(resp,
-                                         data@data.env.var[data@PA[,pa],]))
+                                         data@data.env.var[data@PA[,pa],,drop=FALSE]))
               colnames(dataBM)[1] <- data@sp.name
-                
-              if(NbRunEval == 0){ # take all available data
-                calibLines <- matrix(NA,nrow=length(data@data.species),ncol=1)
-                calibLines[data@PA[,pa],1] <- TRUE
-                colnames(calibLines) <- '_Full'
-              } else {
-                calibLines <- matrix(NA,nrow=length(data@data.species),ncol=NbRunEval)
-                sampled.mat <- .SampleMat(data@data.species[data@PA[,pa]], DataSplit, NbRunEval)
-                calibLines[data@PA[,pa],] <- sampled.mat
-                colnames(calibLines) <- colnames(sampled.mat)
-                if(do.full.models){
-                  calibLines <- cbind(calibLines, rep(NA,length(data@data.species)))
-                  calibLines[data@PA[,pa],NbRunEval+1] <- TRUE
-                  colnames(calibLines)[NbRunEval+1] <- '_Full'
-                }                
+              
+              ### Calib/Valid lines
+              if(!is.null(DataSplitTable)){
+                cat("\n*** DataSplitTable is not NULL")
+                if(length(dim(DataSplitTable))==2){
+                  calibLines <- DataSplitTable
+                } else {
+                  calibLines <- asub(DataSplitTable,pa,3,drop=TRUE)
+                }
+                cat("\n***", dim(calibLines))
+                colnames(calibLines) <- paste('_RUN',1:ncol(calibLines), sep='')
+                calibLines[which(!data@PA[,pa]),] <- NA
+              } else{
+                if(NbRunEval == 0){ # take all available data
+                  calibLines <- matrix(NA,nrow=length(data@data.species),ncol=1)
+                  calibLines[data@PA[,pa],1] <- TRUE
+                  colnames(calibLines) <- '_Full'
+                } else {
+                  calibLines <- matrix(NA,nrow=length(data@data.species),ncol=NbRunEval)
+                  sampled.mat <- .SampleMat(data@data.species[data@PA[,pa]], DataSplit, NbRunEval)
+                  calibLines[data@PA[,pa],] <- sampled.mat
+                  colnames(calibLines) <- colnames(sampled.mat)
+                  if(do.full.models){
+                    calibLines <- cbind(calibLines, rep(NA,length(data@data.species)))
+                    calibLines[data@PA[,pa],NbRunEval+1] <- TRUE
+                    colnames(calibLines)[NbRunEval+1] <- '_Full'
+                  }                
+                }
               }
+              
+
               
               # dealing with evaluation data
               if(data@has.data.eval){
