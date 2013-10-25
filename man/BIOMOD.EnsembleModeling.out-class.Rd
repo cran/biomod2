@@ -21,7 +21,6 @@ EnsembleModeling objects are created, used and returned by BIOMOD functions. It'
 
 }
 
-
 \section{Slots}{
 
   \describe{
@@ -32,11 +31,9 @@ EnsembleModeling objects are created, used and returned by BIOMOD functions. It'
     \item{\code{eval.metric.quality.threshold}:}{ "numeric", thresholds defined for models selection }
     \item{\code{em.computed}:}{ "character", ensemble models built names}
     \item{\code{em.by}:}{ "character", way models are combined}
-    \item{\code{em.res}:}{ "list", list that contains ensemble models results}
-    \item{\code{em.ci.alpha}:}{ "numeric", alpha value selected for confidence intervals ensemble models built}
-    \item{\code{em.weight}:}{ "list", list that contains weights calculated for weighted mean ensemble models built}
-    \item{\code{em.bin.tresh}:}{ "list", list that contains thresholds kept for transform prediction into binary values for commitee averaging ensemble models built}
-    
+    \item{\code{em.models}:}{ "ANY", list of built biomod2.ensemble.models objects }
+    \item{\code{modeling.id}:}{ "character", the id of the whole modelling process}
+    \item{\code{link}:}{ "character", the path to correspunding hard drive saved object}
   }
 
 }

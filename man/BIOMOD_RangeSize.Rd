@@ -111,7 +111,7 @@ myBiomodModelOut <- BIOMOD_Modeling( myBiomodData,
 
 # 4.1 Projection on current environemental conditions
 
-myBiomomodProjection <- BIOMOD_Projection(modeling.output = myBiomodModelOut,
+myBiomodProjection <- BIOMOD_Projection(modeling.output = myBiomodModelOut,
                                           new.env = myExpl,
                                           proj.name = 'current',
                                           selected.models = 'all',
@@ -121,18 +121,18 @@ myBiomomodProjection <- BIOMOD_Projection(modeling.output = myBiomodModelOut,
 
 # 4.2 Projection on future environemental conditions
 
-myExplFuture = raster::stack(system.file("external/bioclim/future/bio3.grd",package="biomod2"),
-                             system.file("external/bioclim/future/bio4.grd",package="biomod2"),
-                             system.file("external/bioclim/future/bio7.grd",package="biomod2"),
-                             system.file("external/bioclim/future/bio11.grd",package="biomod2"),
-                             system.file("external/bioclim/future/bio12.grd",package="biomod2"))
+myExplFuture = stack(system.file("external/bioclim/future/bio3.grd",package="biomod2"),
+                     system.file("external/bioclim/future/bio4.grd",package="biomod2"),
+                     system.file("external/bioclim/future/bio7.grd",package="biomod2"),
+                     system.file("external/bioclim/future/bio11.grd",package="biomod2"),
+                     system.file("external/bioclim/future/bio12.grd",package="biomod2"))
 
 myBiomodProjectionFuture <- BIOMOD_Projection(modeling.output = myBiomodModelOut,
                                               new.env = myExplFuture,
                                               proj.name = 'future',
                                               selected.models = 'all',
                                               binary.meth = 'TSS',
-                                              compress = 'xz',
+                                              compress = FALSE,
                                               build.clamping.mask = TRUE)
 
 # 5. Detect where our species occurances state is forecasted to change

@@ -60,6 +60,7 @@
     scal.models <- args$scal.models
     resp_name <- args$resp_name
     expl_var_names <- args$expl_var_names
+    compress.arg <- TRUE # ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz')
   }
   
   categorial_var <- unlist(sapply(expl_var_names, function(x){if(is.factor(Data[,x])) return(x) else return(NULL)} ))
@@ -123,7 +124,9 @@
                       model_class = 'CTA',
                       model_options = Options@CTA,
                       resp_name = resp_name,
-                      expl_var_names = expl_var_names)
+                      expl_var_names = expl_var_names,
+                      expl_var_type = get_var_type(Data[calibLines,expl_var_names,drop=F]),
+                      expl_var_range = get_var_range(Data[calibLines,expl_var_names,drop=F]))
     }
   }
   # end CTA models creation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
@@ -137,40 +140,50 @@
     # NOTE : To be able to take into account GAM options and weights we have to do a eval(parse(...))
     # it's due to GAM implementation ( using of match.call() troubles)
     
-    cat("\n\tUser defined control args building..")
-    user.control.list <- Options@GAM$control
-    
-    if(Options@GAM$algo == 'GAM_gam'){
-      default.control.list <- gam:::gam.control()
-    } else{
-      default.control.list <- mgcv:::gam.control()
-    }
-    
-    control.list <- lapply(names(default.control.list), function(x){
-      if(x %in% names(user.control.list)){
-        return(user.control.list[[x]])
-      } else {
-        return(default.control.list[[x]])
-      }
-    })
-    names(control.list) <- names(default.control.list)
+#     cat("\n\tUser defined control args building..")
+#     user.control.list <- Options@GAM$control
+#     
+#     if(Options@GAM$algo == 'GAM_gam'){
+#       default.control.list <- gam::gam.control()
+#     } else{
+#       default.control.list <- mgcv::gam.control()
+#     }
+#     
+#     control.list <- lapply(names(default.control.list), function(x){
+#       if(x %in% names(user.control.list)){
+#         return(user.control.list[[x]])
+#       } else {
+#         return(default.control.list[[x]])
+#       }
+#     })
+#     names(control.list) <- names(default.control.list)
     
     ### Old version
     if(Options@GAM$algo == 'GAM_gam'){ ## gam package
+      # package loading
+      if( ("package:mgcv" %in% search()) ){ detach("package:mgcv", unload=TRUE)}
+      if( ! ("package:gam" %in% search()) ){ require("gam",quietly=TRUE) }
+#       loadNamespace("gam")
+      
       cat('\n\t> GAM (gam) modelling...')
       
-      gamStart <- eval(parse(text=paste("gam(",colnames(Data)[1] ,"~1 ," ,
-                                        " data = Data[calibLines,], family = ", eval(Options@GAM$family),
+      gamStart <- eval(parse(text=paste("gam::gam(",colnames(Data)[1] ,"~1 ," ,
+                                        " data = Data[calibLines,], family = ", Options@GAM$family$family,"(link = '",Options@GAM$family$link,"')",#eval(Options@GAM$family),
                                         ", weights = Yweights[calibLines])" ,sep="")))
       
-      model.sp <- try( step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s", Options@GAM$k),
+      model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s", Options@GAM$k),
                                 data = Data[calibLines,],
                                 keep = .functionkeep, 
                                 direction = "both",
-                                trace=control.list$trace,
-                                control = eval(control.list)) )
+                                trace= Options@GAM$control$trace,
+                                control = Options@GAM$control))#eval(control.list)) )
       
     } else { ## mgcv package
+      # package loading
+      if( ("package:gam" %in% search()) ){ detach("package:gam", unload=TRUE)}
+      if( ! ("package:mgcv" %in% search()) ){ require(mgcv,quietly=TRUE) }
+#       loadNamespace("mgcv")
+      
       if(is.null(Options@GAM$myFormula)){
         cat("\n\tAutomatic formula generation...")
         gam.formula <- makeFormula(resp_name,head(Data[,expl_var_names,drop=FALSE]),Options@GAM$type, Options@GAM$interaction.level, k=Options@GAM$k)
@@ -180,18 +193,19 @@
       
       if (Options@GAM$algo == 'GAM_mgcv'){
         cat('\n\t> GAM (mgcv) modelling...')
-        model.sp <- try(mgcv:::gam(gam.formula, 
-                                   data=Data, 
-                                   family=Options@GAM$family, 
+        model.sp <- try(mgcv::gam(gam.formula, 
+                                   data= Data, 
+                                   family= Options@GAM$family, 
                                    weights = Yweights,
-                                   control = control.list))
+                                   control = Options@GAM$control))
+
       } else if (Options@GAM$algo == 'BAM_mgcv'){ ## big data.frame gam version
         cat('\n\t> BAM (mgcv) modelling...')
-        model.sp <- try(mgcv:::bam(gam.formula, 
+        model.sp <- try(mgcv::bam(gam.formula, 
                                    data=Data, 
                                    family=Options@GAM$family,
                                    weights = Yweights,
-                                   control = control.list))
+                                   control = Options@GAM$control))
       }
     }
     
@@ -204,7 +218,9 @@
                       model_subclass = Options@GAM$algo,
                       model_options = Options@GAM,
                       resp_name = resp_name,
-                      expl_var_names = expl_var_names)
+                      expl_var_names = expl_var_names,
+                      expl_var_type = get_var_type(Data[calibLines,expl_var_names,drop=F]),
+                      expl_var_range = get_var_range(Data[calibLines,expl_var_names,drop=F]))
     }
   }
   # end GAM models creation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
@@ -219,15 +235,18 @@
                         var.monotone = rep(0, length = ncol(Data)-2), # -2 because of removing of sp and weights
                         weights = Yweights,
                         interaction.depth = Options@GBM$interaction.depth,
+                        n.minobsinnode = Options@GBM$n.minobsinnode,
                         shrinkage = Options@GBM$shrinkage,
                         bag.fraction = Options@GBM$bag.fraction,
                         train.fraction = Options@GBM$train.fraction,
                         n.trees = Options@GBM$n.trees,
-                        verbose = FALSE,
-                        cv.folds = Options@GBM$cv.folds))
+                        verbose = Options@GBM$verbose,
+#                         class.stratify.cv = Options@GBM$class.stratify.cv,
+                        cv.folds = Options@GBM$cv.folds))#,
+                        #n.cores=1)) ## to prevent from parallel issues
     
     if( !inherits(model.sp,"try-error") ){
-      best.iter <- try(gbm.perf(model.sp, method = "cv", plot.it = FALSE)) 
+      best.iter <- try(gbm.perf(model.sp, method = Options@GBM$perf.method , plot.it = FALSE)) 
       
       model.bm <- new("GBM_biomod2_model",
                       model = model.sp,
@@ -236,7 +255,9 @@
                       n.trees_optim = best.iter,
                       model_options = Options@GBM,
                       resp_name = resp_name,
-                      expl_var_names = expl_var_names)
+                      expl_var_names = expl_var_names,
+                      expl_var_type = get_var_type(Data[calibLines,expl_var_names,drop=F]),
+                      expl_var_range = get_var_range(Data[calibLines,expl_var_names,drop=F]))
       
     }
   }
@@ -295,13 +316,17 @@
       cat("\n\tselected formula : ")
       print(model.sp$formula, useSource=FALSE)
       
+      
+      
       model.bm <- new("GLM_biomod2_model",
                       model = model.sp,
                       model_name = model_name,
                       model_class = 'GLM',
                       model_options = Options@GLM,
                       resp_name = resp_name,
-                      expl_var_names = expl_var_names)
+                      expl_var_names = expl_var_names,
+                      expl_var_type = get_var_type(Data[calibLines,expl_var_names,drop=F]),
+                      expl_var_range = get_var_range(Data[calibLines,expl_var_names,drop=F]))
     }
   } 
   # end GLM models creation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- # 
@@ -327,7 +352,9 @@
                       model_class = 'MARS',
                       model_options = Options@MARS,
                       resp_name = resp_name,
-                      expl_var_names = expl_var_names)
+                      expl_var_names = expl_var_names,
+                      expl_var_type = get_var_type(Data[calibLines,expl_var_names,drop=F]),
+                      expl_var_range = get_var_range(Data[calibLines,expl_var_names,drop=F]))
     }
   }
   # end MARS models creation -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
@@ -349,7 +376,9 @@
                       model_class = 'FDA',
                       model_options = Options@FDA,
                       resp_name = resp_name,
-                      expl_var_names = expl_var_names)
+                      expl_var_names = expl_var_names,
+                      expl_var_type = get_var_type(Data[calibLines,expl_var_names,drop=F]),
+                      expl_var_range = get_var_range(Data[calibLines,expl_var_names,drop=F]))
     }
   }
   # end FDA models creation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
@@ -379,7 +408,9 @@
                       model_class = 'ANN',
                       model_options = Options@ANN,
                       resp_name = resp_name,
-                      expl_var_names = expl_var_names)
+                      expl_var_names = expl_var_names,
+                      expl_var_type = get_var_type(Data[calibLines,expl_var_names,drop=F]),
+                      expl_var_range = get_var_range(Data[calibLines,expl_var_names,drop=F]))
     }
   }
   # ANN models creation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
@@ -402,7 +433,9 @@
                                    #mtry = ifelse(Options@RF$ntree == 'default', round((ncol(Data)-1)/2), Options@RF$ntree ),
                                    importance = FALSE,
                                    norm.votes = TRUE,
-                                   strata = factor(c(0,1))) )      
+                                   strata = factor(c(0,1)),
+                                   nodesize = Options@RF$nodesize,
+                                   maxnodes = Options@RF$maxnodes) )      
     } else {
       model.sp <- try(randomForest(formula = makeFormula(resp_name,head(Data), 'simple',0),
                                    data = Data[calibLines,],
@@ -410,7 +443,9 @@
                                    mtry = Options@RF$mtry,
                                    importance = FALSE,
                                    norm.votes = TRUE,
-                                   strata = factor(c(0,1))) )
+                                   strata = factor(c(0,1)),
+                                   nodesize = Options@RF$nodesize,
+                                   maxnodes = Options@RF$maxnodes) )
     }
     
     
@@ -428,7 +463,9 @@
                       model_class = 'RF',
                       model_options = Options@RF,
                       resp_name = resp_name,
-                      expl_var_names = expl_var_names)
+                      expl_var_names = expl_var_names,
+                      expl_var_type = get_var_type(Data[calibLines,expl_var_names,drop=F]),
+                      expl_var_range = get_var_range(Data[calibLines,expl_var_names,drop=F]))
     }
   }
   # end RF models creation -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
@@ -452,7 +489,9 @@
                       model_class = 'SRE',
                       model_options = Options@SRE,
                       resp_name = resp_name,
-                      expl_var_names = expl_var_names)
+                      expl_var_names = expl_var_names,
+                      expl_var_type = get_var_type(Data[calibLines,expl_var_names,drop=F]),
+                      expl_var_range = get_var_range(Data[calibLines,expl_var_names,drop=F]))
     }
   }
   # end SRE models creation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
@@ -463,16 +502,17 @@
   
   # MAXENT models creation -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if (Model == "MAXENT"){
-    .Prepare.Maxent.WorkDir(Data, xy, calibLines, nam, VarImport, evalData, eval.xy, species.name=resp_name, modeling.id=modeling.id)
+    MWD <- .Prepare.Maxent.WorkDir(Data, xy, calibLines, nam, VarImport = 0, evalData, eval.xy, species.name=resp_name, modeling.id=modeling.id)
     
     # run MaxEnt:
     cat("\n Running Maxent...")  
-    system(command=paste("java -mx512m -jar ", file.path(Options@MAXENT$path_to_maxent.jar, "maxent.jar"), " environmentallayers=\"",
-                         file.path(getwd(), colnames(Data)[1], "MaxentTmpData", "Back_swd.csv"),"\" samplesfile=\"",
-                         file.path(getwd(), colnames(Data)[1], "MaxentTmpData", "Sp_swd.csv"),"\" projectionlayers=\"",
-                         gsub(", ",",",toString(list.files(paste(getwd(), .Platform$file.sep, colnames(Data)[1], .Platform$file.sep, "MaxentTmpData", .Platform$file.sep, "Pred",sep=""),
-                                                           full.names= T))), "\" outputdirectory=\"",
-                         file.path(getwd(), resp_name, "models", modeling.id, paste(model_name, "_outputs", sep="")),"\"",
+    system(command=paste("java ",
+                         ifelse(is.null(Options@MAXENT$memory_allocated),"",paste("-mx",Options@MAXENT$memory_allocated,"m",sep="")),
+                         " -jar ", file.path(Options@MAXENT$path_to_maxent.jar, "maxent.jar"), 
+                         " environmentallayers=\"", MWD$m_backgroundFile,
+                         "\" samplesfile=\"", MWD$m_speciesFile,
+                         "\" projectionlayers=\"", gsub(", ",",",toString(MWD$m_predictFile)), 
+                         "\" outputdirectory=\"", MWD$m_outdir, "\"",
                          " outputformat=logistic ",
                          #                            "jackknife maximumiterations=",Options@MAXENT$maximumiterations,
                          ifelse(length(categorial_var), 
@@ -493,51 +533,66 @@
                          " beta_lqp=", Options@MAXENT$beta_lqp,
                          " beta_hinge=", Options@MAXENT$beta_hinge,
                          " defaultprevalence=", Options@MAXENT$defaultprevalence,
-                         " autorun nowarnings notooltips", sep=""), wait = TRUE, intern = FALSE,
+                         " autorun nowarnings notooltips", sep=""), wait = TRUE, intern = TRUE,
            ignore.stdout = FALSE, ignore.stderr = FALSE)
     
     
     model.bm <- new("MAXENT_biomod2_model",
-                    model_output_dir=file.path(resp_name, "models", modeling.id, paste(model_name, "_outputs", sep="")),
+                    model_output_dir = MWD$m_outdir,
                     model_name = model_name,
                     model_class = 'MAXENT',
                     model_options = Options@MAXENT,
                     resp_name = resp_name,
-                    expl_var_names = expl_var_names)
+                    expl_var_names = expl_var_names,
+                    expl_var_type = get_var_type(Data[calibLines,expl_var_names,drop=F]),
+                    expl_var_range = get_var_range(Data[calibLines,expl_var_names,drop=F]))
     
     # for MAXENT predicitons are calculated in the same time than models building to save time.
     cat("\n Getting predictions...")
-    g.pred <- try(round(as.numeric(read.csv(file.path(model.bm@model_output_dir, paste(nam,"_Pred_swd.csv", sep="") ) )[,3]) * 1000))
+    g.pred <- try(round(as.numeric(read.csv(MWD$m_predictFile)[,3]) * 1000))
+    
+    # remove tmp dir
+    .Delete.Maxent.WorkDir(MWD)
   }
   # end MAXENT models creation -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
-  
-  
   
   # make prediction =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if((Model != "MAXENT"))
     g.pred <- try(predict(model.bm, Data[,expl_var_names,drop=FALSE], on_0_1000=TRUE))
   
+  # scale or not predictions =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
+  if(scal.models & !inherits(g.pred,'try-error')){
+    cat("\n\tModel scaling...")
+    model.bm@scaling_model <- try(.scaling_model(g.pred/1000, Data[, 1]))
+    g.pred <- try(predict(model.bm, Data[,expl_var_names,drop=FALSE], on_0_1000=TRUE))
+  }
+  
   # check predictions existance and stop execution if not ok -=-=- #
-  if (inherits(g.pred,"try-error")) { 
+  test_pred_ok <- TRUE
+  if (inherits(g.pred,"try-error")) { # model calibration or prdiction failed
+    test_pred_ok <- FALSE
+    cat("\n*** inherits(g.pred,'try-error')")
+  } else if (sum(!is.na(g.pred))<=1){ # only NA predicted
+    test_pred_ok <- FALSE
+    cat("\n*** only NA predicted")
+  } else if(length(unique(na.omit(g.pred))) <=1){ # single value predicted
+    test_pred_ok <- FALSE
+    cat("\n*** single value predicted")
+  }
+  
+  if(test_pred_ok){
+    # keep the model name
+    ListOut$ModelName <- model_name
+  } else{
     # keep the name of uncompleted modelisations
     cat("\n   ! Note : ", model_name, "failed!\n")
     ListOut$calib.failure = model_name
     return(ListOut)
-  } else {
-    # keep the model name
-    ListOut$ModelName <- model_name
-  }
-  
-  # scale or not predictions =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
-  if(scal.models){
-    cat("\n\tModel scaling...")
-    model.bm@scaling_model <- .scaling_model(g.pred/1000, Data[, 1], prevalence=0.5)
-    g.pred <- predict(model.bm, Data[,expl_var_names,drop=FALSE], on_0_1000=TRUE)
   }
   
   # make prediction on evaluation data =-=-=-=-=-=-=-=-=-=-=-=-=-= #
   if(!is.null(evalData)){                                              
-    g.pred.eval <- predict(model.bm, evalData[,expl_var_names,drop=FALSE], on_0_1000=TRUE)     
+    g.pred.eval <- try(predict(model.bm, evalData[,expl_var_names,drop=FALSE], on_0_1000=TRUE)) 
   }
   
   # save predictions -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
@@ -555,18 +610,18 @@
     ## Check no NA in g.pred to avoid evaluation failures
     na_cell_id <- which(is.na(g.pred))
     if(length(na_cell_id)){
-      g.pred.without.na <- g.pred[-na_cell_id]
+#       g.pred.without.na <- g.pred[-na_cell_id]
       evalLines <- evalLines[!(evalLines %in% na_cell_id)]
       cat('\n\tNote : some NA occurs in predictions')
-    } else {
-      g.pred.without.na <- g.pred
-    }
+    } #else {
+#       g.pred.without.na <- g.pred
+#     }
     
     #Precision = max( (max(g.pred.without.na[evalLines]) - min(g.pred.without.na[evalLines]) ) / 50 , 1) # max 50 steps
     
     cross.validation <- sapply(mod.eval.method,
                                Find.Optim.Stat,
-                               Fit = g.pred.without.na[evalLines],
+                               Fit = g.pred[evalLines],
                                Obs = Data[evalLines,1])#,Precision = Precision)
     
     rownames(cross.validation) <- c("Testing.data","Cutoff","Sensitivity", "Specificity")
@@ -605,7 +660,7 @@
     model.bm@model_evaluation <- cross.validation
     
     ## remove useless objects
-    rm(list=c('cross.validation', 'g.pred.without.na') )
+    rm(list=c('cross.validation') )
   }                           
   # End evaluation stuff =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= # 
   
@@ -614,51 +669,78 @@
   
   # Variables Importance -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if (VarImport > 0){ # do Varimp stuff
-    # Create data.frame vhere corelation between predictions with and without permutation will be 
-    # stored
-    
     cat("\n\tEvaluating Predictor Contributions...", "\n")
-    VarImpTable <- matrix(data = 0, nrow = VarImport, ncol = length(expl_var_names))
-    dimnames(VarImpTable) <- list(paste('rand', 1:VarImport, sep=""), expl_var_names)
-    
-    for(vari in expl_var_names){
-      for (run in 1:VarImport) {
-        ## create a new dataset with interest variable suffled
-        TempDS <- Data[, expl_var_names,drop=FALSE]
-        TempDS[, vari] <- sample(TempDS[, vari])
-        
-        if(Model != "MAXENT"){
-          ## make projection on suffled dataset
-          shuffled.pred <- predict(model.bm, TempDS, on_0_1000=TRUE)
-        } else{
-          ## for MAXENT, we have created all the permutation at model building step
-          shuffled.pred <- round(as.numeric(read.csv(file.path(model.bm@model_output_dir, paste(nam, vari, run, "swd.csv", sep="_")))[,3])*1000)
-          ## scal suffled.pred if necessary
-          if(length(getScalingModel(model.bm))){
-            shuffled.pred <- round(.testnull(object = getScalingModel(model.bm), Prev = 0.5 , dat = data.frame(pred = shuffled.pred/1000) ) *1000)
-            #               shuffled.pred <- round(as.numeric(predict(getScalingModel(model.bm), shuffled.pred/1000))*1000)
-          }
-          ## remove useless files on hard drive
-          file.remove(list.files(path=model.bm@model_output_dir,
-                                 pattern=paste(nam, vari, run, "swd", sep="_"),
-                                 full.names=TRUE))
-        }
-        
-        ## test if differences exist between the 2 vectors
-        if(sum( g.pred != shuffled.pred ) == 0){
-          VarImpTable[run,vari] <- 0
-        } else {
-          ## calculate correlation between vectors as proxy for variables importance
-          VarImpTable[run,vari] <- 1 - max(round(cor(x=g.pred, y=shuffled.pred, use="pairwise.complete.obs", method="pearson"),digits=3),0)
-        }      
-      }
-    }
-    
-    ## store results
-    model.bm@model_variables_importance <- VarImpTable
+    variables.importance <- variables_importance(model.bm, Data[, expl_var_names,drop=FALSE], nb_rand=VarImport)
+    model.bm@model_variables_importance <- variables.importance$mat
     ## we stored only the mean of variables importance run
-    ListOut$var.import <- round(apply(VarImpTable, 2, mean),digits=3)
+    ListOut$var.import <- round(rowMeans(variables.importance$mat, na.rm=T),digits=3)
+    ## remove useless objects
+    rm(list=c('variables.importance') )
   }
+#   if (VarImport > 0){ # do Varimp stuff
+#     # Create data.frame vhere corelation between predictions with and without permutation will be 
+#     # stored
+#     
+#     cat("\n\tEvaluating Predictor Contributions...", "\n")
+#     VarImpTable <- matrix(data = 0, nrow = VarImport, ncol = length(expl_var_names))
+#     dimnames(VarImpTable) <- list(paste('rand', 1:VarImport, sep=""), expl_var_names)
+#     
+#     for(vari in expl_var_names){
+#       for (run in 1:VarImport) {
+#         ## create a new dataset with interest variable suffled
+#         TempDS <- Data[, expl_var_names,drop=FALSE]
+#         TempDS[, vari] <- sample(TempDS[, vari])
+#         
+#         if(Model != "MAXENT"){
+#           ## make projection on suffled dataset
+#           shuffled.pred <- try(predict(model.bm, TempDS, on_0_1000=TRUE))
+#         } else{
+#           ## for MAXENT, we have created all the permutation at model building step
+#           shuffled.pred <- try(round(as.numeric(read.csv(file.path(model.bm@model_output_dir, paste(nam, vari, run, "swd.csv", sep="_")))[,3])*1000) )
+#           ## scal suffled.pred if necessary
+#           if(length(getScalingModel(model.bm))){
+#             shuffled.pred <- try( round(.testnull(object = getScalingModel(model.bm), Prev = 0.5 , dat = data.frame(pred = shuffled.pred/1000) ) *1000) )
+#             #               shuffled.pred <- round(as.numeric(predict(getScalingModel(model.bm), shuffled.pred/1000))*1000)
+#           }
+#           ## remove useless files on hard drive
+#           file.remove(list.files(path=model.bm@model_output_dir,
+#                                  pattern=paste(nam, vari, run, "swd", sep="_"),
+#                                  full.names=TRUE))
+#         }
+#         
+#         ## test if differences exist between the 2 vectors
+#         # check predictions existance and stop execution if not ok -=-=- #
+#         test_shuffled.pred_ok <- TRUE
+#         if (inherits(shuffled.pred,"try-error")) { # model calibration or prdiction failed
+#           test_shuffled.pred_ok <- FALSE
+#         } else if (sum(!is.na(shuffled.pred))<=1){ # only NA predicted
+#           test_shuffled.pred_ok <- FALSE
+#         } else if(length(unique(na.omit(shuffled.pred))) <=1){ # single value predicted
+#           test_shuffled.pred_ok <- FALSE
+#         } else if(length(shuffled.pred)!= length(g.pred)){
+#           test_shuffled.pred_ok <- FALSE
+#         }
+#         
+#         if(!test_shuffled.pred_ok){
+#           cat("\n   ! Note : ", model_name, "variable importance for",vari,run,"failed!\n")
+#           VarImpTable[run,vari] <- 0
+#         } else{
+#           if(sum( g.pred != shuffled.pred, na.rm=T) == 0){
+#             VarImpTable[run,vari] <- 0
+#           } else {
+#             ## calculate correlation between vectors as proxy for variables importance
+#             VarImpTable[run,vari] <- 1 - max(round(cor(x=g.pred, y=shuffled.pred, use="pairwise.complete.obs", method="pearson"),digits=3),0,na.rm=T)
+#           } 
+#         }
+#      
+#       }
+#     }
+#     
+#     ## store results
+#     model.bm@model_variables_importance <- VarImpTable
+#     ## we stored only the mean of variables importance run
+#     ListOut$var.import <- round(apply(VarImpTable, 2, mean, na.rm=T),digits=3)
+#   }
   # End Variables Importance -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   
   
@@ -668,12 +750,10 @@
          value= model.bm)
   save(list=paste( nam, Model, sep = "_"),
        file=file.path(resp_name, "models", modeling.id, paste( nam, Model, sep = "_")),
-       compress=ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz'))
+       compress=compress.arg)
+  
 
   # End model saving step =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
-  
-  
-  
   
   return(ListOut)
 }

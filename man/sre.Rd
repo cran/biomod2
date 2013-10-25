@@ -7,7 +7,11 @@
   The SRE performs a simple analysis of within which range of each variable the data is recorded and renders predictions.
 }
 \usage{
-sre(Response = NULL, Explanatory = NULL, NewData = NULL, Quant=0.025, return_extremcond = FALSE)
+sre(Response = NULL, 
+    Explanatory = NULL, 
+    NewData = NULL, 
+    Quant=0.025, 
+    return_extremcond = FALSE)
 }
 
 \arguments{
@@ -58,7 +62,7 @@ myRespXY <- DataSpecies[which(myResp==1),c("X_WGS84","Y_WGS84")]
 
 # Environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
 myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
-                             package="biomod2"),
+                     package="biomod2"),
                 system.file( "external/bioclim/current/bio4.grd", 
                              package="biomod2"), 
                 system.file( "external/bioclim/current/bio7.grd", 

@@ -31,6 +31,7 @@
 .Rescaler5 <-
 function(dataToRescale, ref=NULL, name, original=FALSE, weights=NULL)
 {
+  compress.arg = ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz')
 #     #preparing data
 #     #homogenize the format accross original predictions and new projections 
 #     if(!class(dataToRescale)[1]=='RasterLayer'){
@@ -70,8 +71,7 @@ function(dataToRescale, ref=NULL, name, original=FALSE, weights=NULL)
 #       Rescaling_GLM = glm(ref~DataF, data=DataF, family=binomial, weights=wgts)
       eval(parse(text=paste("save(Rescaling_GLM, file='", getwd(),"/",
                             unlist(strsplit(name,'_'))[1], "/models/scaling_models/",
-                            name, "_scaled' , compress='",ifelse(.Platform$OS.type == 'windows', 'gzip', 'xz')
-                            ,"')", sep=""))) 
+                            name, "_scaled' ,  compress=", compress.arg, ")", sep=""))) 
     } else{
       eval(parse(text=paste("load('", getwd(),"/",unlist(strsplit(name,'_'))[1],
                             "/models/scaling_models/",name,"_scaled')", sep="")))
@@ -101,11 +101,11 @@ function(dataToRescale, ref=NULL, name, original=FALSE, weights=NULL)
     prevalence <- args$prevalence
     weights <- args$weights
     
-    # if no prevalence define a 0.5 is set.
-    if(is.null(prevalence)) prevalence <- 0.5
+#     # if no prevalence define a 0.5 is set.
+#     if(is.null(prevalence)) prevalence <- 0.5
     
     # if no weights given, some are created to rise the define prevalence
-    if(is.null(weights)){
+    if(is.null(weights) & ! is.null(prevalence)){
       nbPres <- sum(ref, na.rm=TRUE)
       nbAbs <- length(ref) - nbPres
       weights <- rep(1,length(ref))
@@ -117,6 +117,9 @@ function(dataToRescale, ref=NULL, name, original=FALSE, weights=NULL)
       }
       
       weights = round(weights[]) # to remove glm & gam warnings
+    } else if(is.null(weights)){
+      # only 1 weights vector
+      weights <- rep(1,length(ref))
     }
      
     # define a glm to scal prediction from 0 to1 

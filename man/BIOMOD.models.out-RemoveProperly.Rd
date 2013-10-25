@@ -10,7 +10,7 @@ Functions to free properly a \code{\link[biomod2]{BIOMOD_Modeling}} outputs
 }
 
 \usage{
-  RemoveProperly(obj, obj.name=deparse(substitute(obj)))
+  RemoveProperly(obj, obj.name=deparse(substitute(obj)), ...)
 }
 
 
@@ -18,6 +18,7 @@ Functions to free properly a \code{\link[biomod2]{BIOMOD_Modeling}} outputs
 \arguments{
   \item{obj}{ \code{"\link[=BIOMOD.models.out-class]{BIOMOD.models.out}"} object }
   \item{obj.name}{ the name of object in current environment, automatically filled }
+  \item{...}{ extra arguments (not implemented yet) }
 }
 
 \details{
@@ -46,7 +47,7 @@ Functions to free properly a \code{\link[biomod2]{BIOMOD_Modeling}} outputs
   
   # Environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
   myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
-                               package="biomod2"),
+                       package="biomod2"),
                   system.file( "external/bioclim/current/bio4.grd", 
                                package="biomod2"), 
                   system.file( "external/bioclim/current/bio7.grd", 

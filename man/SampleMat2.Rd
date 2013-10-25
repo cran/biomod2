@@ -7,12 +7,13 @@
 }
 
 \usage{
-  SampleMat2(ref, ratio)
+  SampleMat2(ref, ratio, as.logi=FALSE)
 }
 
 \arguments{
   \item{ref}{ a binary vector }
   \item{ratio}{ the proportion of \code{ref} to sample }
+  \item{as.logi}{ logical, if FALSE (default) id of cell will be return; if TRUE, logical vector of same length than ref will be return }
 }
 
 \details{

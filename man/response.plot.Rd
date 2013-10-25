@@ -6,7 +6,13 @@
 }
 
 \usage{
-response.plot(model, Data, show.variables=seq(1:ncol(Data)), save.file="no", name="response_curve", ImageSize=480, plot=TRUE)
+response.plot(model, 
+              Data, 
+              show.variables=seq(1:ncol(Data)), 
+              save.file="no", 
+              name="response_curve", 
+              ImageSize=480, 
+              plot=TRUE)
 }
 
 \arguments{

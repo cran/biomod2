@@ -17,7 +17,7 @@ BIOMOD_Modeling( data,
                  VarImport=0, 
                  models.eval.meth = c('KAPPA','TSS','ROC'), 
                  SaveObj = TRUE,
-                 rescal.all.models = TRUE,
+                 rescal.all.models = FALSE,
                  do.full.models = TRUE,
                  modeling.id = as.character(format(Sys.time(), '\%s')),
                  ...)
@@ -146,7 +146,6 @@ Wilfried Thuiller, Damien Georges, Robin Engler
 }
 
 \examples{
-
 # species occurrences
 DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
                                     package="biomod2"))
@@ -185,19 +184,18 @@ myBiomodOption <- BIOMOD_ModelingOptions()
 
 # 3. Doing Modelisation
 
-myBiomomodModelOut <- BIOMOD_Modeling( myBiomodData, 
+myBiomodModelOut <- BIOMOD_Modeling( myBiomodData, 
                                        models = c('SRE','RF'), 
                                        models.options = myBiomodOption, 
                                        NbRunEval=2, 
                                        DataSplit=80, 
-                                       Prevalence=0.5, 
                                        VarImport=0, 
-                                       models.eval.meth = c('TSS','ROC'),
+                                       models.eval.meth = c('ROC'),
                                        do.full.models=FALSE,
                                        modeling.id="test")
                                        
 ## print a summary of modeling stuff
-myBiomomodModelOut
+myBiomodModelOut
                                        
                                     
 }

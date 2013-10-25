@@ -85,7 +85,7 @@ myRespXY <- DataSpecies[,c("X_WGS84","Y_WGS84")]
 
 # Environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
 myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
-                             package="biomod2"),
+                     package="biomod2"),
                 system.file( "external/bioclim/current/bio4.grd", 
                              package="biomod2"), 
                 system.file( "external/bioclim/current/bio7.grd", 
@@ -106,7 +106,7 @@ myBiomodOption <- BIOMOD_ModelingOptions()
 
 # 3. Doing Modelisation
 
-myBiomomodModelOut <- BIOMOD_Modeling( myBiomodData, 
+myBiomodModelOut <- BIOMOD_Modeling( myBiomodData, 
                                        models = c('RF','GLM'), 
                                        models.options = myBiomodOption, 
                                        NbRunEval=2, 
@@ -121,26 +121,26 @@ myBiomomodModelOut <- BIOMOD_Modeling( myBiomodData,
 # 4. Plot response curves
 
 # 4.1 Load the models for which we want to extract the predicted response curves
-myGLMs <- BIOMOD_LoadModels(myBiomomodModelOut, models='GLM')
+myGLMs <- BIOMOD_LoadModels(myBiomodModelOut, models='GLM')
 
 # 4.2 plot 2D response plots
 myRespPlot2D <- response.plot2(models  = myGLMs,
-                               Data = getModelsInputData(myBiomomodModelOut,'expl.var'), 
-                               show.variables= getModelsInputData(myBiomomodModelOut,'expl.var.names'),
+                               Data = get_formal_data(myBiomodModelOut,'expl.var'), 
+                               show.variables= get_formal_data(myBiomodModelOut,'expl.var.names'),
                                do.bivariate = FALSE,
                                fixed.var.metric = 'median',
                                col = c("blue", "red"),
                                legend = TRUE,
-                               data_species = getModelsInputData(myBiomomodModelOut,'resp.var'))
+                               data_species = get_formal_data(myBiomodModelOut,'resp.var'))
 
 # 4.2 plot 3D response plots
 ## here only for a lone model (i.e "VulpesVulpes_PA1_AllData_GLM")
 myRespPlot3D <- response.plot2(models  = myGLMs[1],
-                               Data = getModelsInputData(myBiomomodModelOut,'expl.var'), 
-                               show.variables= getModelsInputData(myBiomomodModelOut,'expl.var.names'),
+                               Data = get_formal_data(myBiomodModelOut,'expl.var'), 
+                               show.variables= get_formal_data(myBiomodModelOut,'expl.var.names'),
                                do.bivariate = TRUE,
                                fixed.var.metric = 'median',
-                               data_species = getModelsInputData(myBiomomodModelOut,'resp.var'))
+                               data_species = get_formal_data(myBiomodModelOut,'resp.var'))
 
 ### all the values used to produce this plot are stored into the returned object
 ### you can redo plots by yourself and customised them

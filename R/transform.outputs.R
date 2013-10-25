@@ -332,7 +332,7 @@ setMethod('.transform.outputs', signature(modOut='list'),
                                 length(kept.mod),
                                 length(run.eval.names),
                                 length(dataset.names)),
-                        dimnames = list(paste('Var',1:nb.var,sep=''), # to change
+                        dimnames = list(names(modOut[[1]][[1]][[1]][['var.import']]), # to change
                                          kept.mod,
                                          run.eval.names,
                                          dataset.names))
@@ -469,6 +469,29 @@ DF_to_ARRAY <- function(df){
   for(x in colnames(df)){
     dimTmp <- rev(tail(unlist(strsplit(x, '_')), n=3))
     array.out[,dimTmp[1],dimTmp[2],dimTmp[3]] <- df[,x]
+  }
+  return(array.out)
+}
+
+LIST_to_ARRAY <- function(ll){
+  test <- sapply(ll, is.array)
+  if(!all(test)) stop("list elements should be arrays")
+  test <- sapply(ll,dim)
+  test <- apply(test,1,function(x){length(unique(x))==1})
+  if(!all(test)) stop("list elements differ in dimension")
+  
+  formal.dim.names <- dimnames(ll[[1]])
+  new.dim.names <- rev(apply(sapply(strsplit(names(ll), '_'), tail, n=3),1,unique))
+  array.dim.names <- c(formal.dim.names,new.dim.names)
+  array.dim <- sapply(array.dim.names,length)
+  
+  array.out <- array(data=NA, dim=array.dim, dimnames=array.dim.names)
+  
+  for(x in names(ll)){
+    dimTmp <- rev(tail(unlist(strsplit(x, '_')), n=3))
+    dimTmp <- paste( paste(rep(",",length(formal.dim.names)),collapse="") , paste("'",dimTmp,"'",sep="",collapse=","),collapse="")
+    
+    eval(parse(text=paste("array.out[",dimTmp,"] <-  ll[[x]]",sep="")))
   }
   return(array.out)
 }
