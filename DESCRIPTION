@@ -1,7 +1,7 @@
 Package: biomod2
 Type: Package
 Title: Ensemble platform for species distribution modeling
-Version: 3.1-18
+Version: 3.1-24
 Date: 2012-09-14
 Author: Wilfried Thuiller, Damien Georges and Robin Engler
 Maintainer: Damien Georges <damien.georges2@gmail.com>
@@ -16,8 +16,8 @@ Suggests: ade4, foreign, Hmisc, mgcv, gam
 License: GPL-2
 Repository: CRAN
 Repository/R-Forge/Project: biomod
-Repository/R-Forge/Revision: 629
-Repository/R-Forge/DateTimeStamp: 2013-10-24 09:25:22
-Date/Publication: 2013-10-25 10:14:06
-Packaged: 2013-10-24 10:15:28 UTC; rforge
+Repository/R-Forge/Revision: 636
+Repository/R-Forge/DateTimeStamp: 2013-11-20 08:21:35
+Date/Publication: 2013-11-25 11:54:39
+Packaged: 2013-11-20 11:15:26 UTC; rforge
 NeedsCompilation: no

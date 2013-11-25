@@ -20,6 +20,7 @@
   
   m_outdir <- file.path(species.name,'models',modeling.id, paste(RunName,'_MAXENT_outputs',sep=''))
   MWD$m_outdir <- m_outdir
+  MWD$m_outputFile <- file.path(m_outdir,paste(RunName,'_Pred_swd.csv',sep=''))
   
   ## directories creation
   dir.create(m_workdir, showWarnings=FALSE, recursive=TRUE, mode='777')
@@ -53,6 +54,7 @@
   Pred_swd <- cbind(rep("predict",nrow(xy)),xy,Data[,2:ncol(Data),drop=FALSE])
   colnames(Pred_swd)  <- c("predict",colnames(Back_swd)[-1])
   write.table(Pred_swd, file=m_predictFile, quote=FALSE, row.names=FALSE, col.names=TRUE, sep=",")
+  
   
   ### USELESS ###
   # dealing with variable importances stuff
@@ -165,6 +167,11 @@ setMethod('.Prepare.Maxent.Proj.WorkDir', signature(Data='RasterStack'),
             MWD$m_predictFile <- m_predictFile
             
             return(MWD)
+          })
+
+setMethod('.Prepare.Maxent.Proj.WorkDir', signature(Data='RasterLayer'),
+          def = function(Data, species.name =".",proj.name=".", silent=FALSE){
+            .Prepare.Maxent.Proj.WorkDir(Data=stack(Data), species.name =species.name ,proj.name=proj.name , silent=silent)
           })
 
 # .Prepare.Maxent.Proj.WorkDir <- function(Data, xy, proj_name=NULL){
