@@ -937,20 +937,21 @@ setMethod('predict', signature(object = 'MAXENT_biomod2_model'),
   }
   
   if(!silent) cat("\n\t\tRunning Maxent...")
+  
   system(command=paste("java -cp ", path_to_maxent.jar,
                        " density.Project \"", 
                        file.path(object@model_output_dir, sub("_MAXENT",".lambdas",object@model_name, fixed=T)),"\" ", 
                        MWD$m_workdir, " ", 
-                       file.path(MWD$m_workdir, "projMaxent.grd") , 
+                       file.path(MWD$m_workdir, "projMaxent.asc") , 
                        " doclamp=false visible=false autorun nowarnings notooltips", sep=""), wait = TRUE, intern=TRUE)
   
   if(!silent) cat("\n\t\tReading Maxent outputs...")
-  proj <- raster(file.path(MWD$m_workdir,"projMaxent.grd"))
+  proj <- raster(file.path(MWD$m_workdir,"projMaxent.asc"))
   
-#   if(length(get_scaling_model(object))){
-#     names(proj) <- "pred"
-#     proj <- .testnull(object = get_scaling_model(object), Prev = 0.5 , dat = proj)
-#   }
+  #   if(length(get_scaling_model(object))){
+  #     names(proj) <- "pred"
+  #     proj <- .testnull(object = get_scaling_model(object), Prev = 0.5 , dat = proj)
+  #   }
 
   if(on_0_1000) proj <- round(proj*1000)
   
