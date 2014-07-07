@@ -4,6 +4,9 @@
 \alias{BIOMOD_RangeSize,data.frame,data.frame-method}
 \alias{BIOMOD_RangeSize,array,array-method}
 \alias{BIOMOD_RangeSize,RasterStack,RasterStack-method}
+\alias{BIOMOD_RangeSize,RasterLayer,RasterLayer-method}
+\alias{BIOMOD_RangeSize,RasterLayer,RasterStack-method}
+
 
 
 \title{ Analysis of the range size changes }
@@ -18,6 +21,10 @@ and stable for the time slice considered in species-climate modelling under futu
 \S4method{BIOMOD_RangeSize}{array,array}(CurrentPred, FutureProj,  SpChange.Save=NULL)
 
 \S4method{BIOMOD_RangeSize}{RasterStack,RasterStack}(CurrentPred, FutureProj,  SpChange.Save=NULL)
+
+\S4method{BIOMOD_RangeSize}{RasterStack,RasterStack}(CurrentPred, FutureProj,  SpChange.Save=NULL)
+
+\S4method{BIOMOD_RangeSize}{RasterLayer,RasterLayer}(CurrentPred, FutureProj,  SpChange.Save=NULL)
 
 }
 

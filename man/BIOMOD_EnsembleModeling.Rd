@@ -12,6 +12,7 @@ BIOMOD_EnsembleModeling( modeling.output,
                          em.by = 'all',
                          eval.metric = 'all',
                          eval.metric.quality.threshold = NULL,
+                         models.eval.meth = c('KAPPA','TSS','ROC'),
                          prob.mean = TRUE,
                          prob.cv = FALSE,
                          prob.ci = FALSE,
@@ -27,8 +28,9 @@ BIOMOD_EnsembleModeling( modeling.output,
   \item{modeling.output}{a \code{"\link[=BIOMOD.models.out-class]{BIOMOD.models.out}"} returned by \code{\link[biomod2]{BIOMOD_Modeling}}}
   \item{chosen.models}{a character vector (either 'all' or a sub-selection of model names) that defines the models kept for building the ensemble models (might be useful for removing some non-preferred models)}
   \item{em.by}{Character. Flag defining the way the models will be combined to build the ensemble models. Available values are \code{'PA_dataset+repet'} (default), \code{'PA_dataset+algo'}, \code{'PA_dataset'}, \code{'algo'} and  \code{'all'}}
-  \item{eval.metric}{vector of names of evaluation metric. If 'all', the same evaluation metrics than those of \code{modeling.output} will be automatically selected}
+  \item{eval.metric}{vector of names of evaluation metric used to build ensemble models. It is involved for formal models exclusion if \code{eval.metric.quality.threshold} is defined and/or for building ensemble models that are dependent of formal models evaluation scores (e.g. weighted mean and comitee averaging). If 'all', the same evaluation metrics than those of \code{modeling.output} will be automatically selected}
   \item{eval.metric.quality.threshold}{If not \code{NULL}, the minimum scores below which models will be excluded of the ensemble-models building.}
+  \item{models.eval.meth}{ the evaluation methods used to evaluate ensemble models ( see \code{"\link[=BIOMOD_Modeling]{BIOMOD_Modeling}"}  \bold{models.eval.meth} section for more detailed informations )}
   \item{prob.mean}{Logical. Estimate the mean probabilities across predictions }
   \item{prob.cv}{Logical. Estimate the coefficient of variation across predictions}
   \item{prob.ci}{Logical . Estimate the confidence interval around the \code{prob.mean}}
@@ -127,9 +129,10 @@ BIOMOD_EnsembleModeling( modeling.output,
         
           This algorithm return the mean weighted (or more precisely this is the weighted sum) by the selected evaluation method scores (better a model is, more importance it has in the ensemble). The scores come from \code{\link[biomod2]{BIOMOD_Modeling}} step. 
           
-          The \code{prob.mean.weight.decay} is the ratio between a weight and the following or prior one. The formula is : W = W(-1) * \code{prob.mean.weight.decay}. For example, with the default value of 1.6 and 4 weights wanted, the relative importance of the weights will be 1 /1.6/2.56(=1.6*1.6)/4.096(=2.56*1.6) from the weakest to the strongest, and gives 0.11/0.17/0.275/0.445 considering that the sum of the weights is equal to one. The lower the \code{prob.mean.weight.decay}, the smoother the differences between the weights enhancing a weak discrimination between models (please read the BIOMOD manual for some examples).
+          The \code{prob.mean.weight.decay} is the ratio between a weight and the following or prior one. The formula is : W = W(-1) * \code{prob.mean.weight.decay}. For example, with the value of 1.6 and 4 weights wanted, the relative importance of the weights will be 1 /1.6/2.56(=1.6*1.6)/4.096(=2.56*1.6) from the weakest to the strongest, and gives 0.11/0.17/0.275/0.445 considering that the sum of the weights is equal to one. The lower the \code{prob.mean.weight.decay}, the smoother the differences between the weights enhancing a weak discrimination between models.
           
           The value 'proportional' (default) is also possible for the \code{prob.mean.weight.decay}: the weights are awarded for each method proportionally to their evaluation scores. The advantage is that the discrimination is more fair than with the \code{prob.mean.weight.decay}. In the latter case, close scores can strongly diverge in the weights they are awarded, when the proportional method will consider them as being fairly similar in prediction quality and award them a similar weight.
+          It is also possible to define a function as \code{prob.mean.weight.decay} argument. In this case the given function will be applied to models scores to transforme them into weights that will be used for wheigted mean ensemble model building. For instance if you specified \code{ function(x){x^2} } as \code{prob.mean.weight.decay}, the squared of evaluation score of each model will be used to weight formal models predictions. 
         }
         
       }
@@ -215,6 +218,7 @@ myBiomodEM <- BIOMOD_EnsembleModeling( modeling.output = myBiomodModelOut,
                            em.by = 'all',
                            eval.metric = c('TSS'),
                            eval.metric.quality.threshold = c(0.7),
+                           models.eval.meth = c('TSS','ROC'),
                            prob.mean = TRUE,
                            prob.cv = FALSE,
                            prob.ci = FALSE,

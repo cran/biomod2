@@ -190,7 +190,7 @@
   }
       
   if(inherits(expl.var, 'Raster')){
-    expl.var <- raster::stack(expl.var)
+    expl.var <- raster::stack(expl.var, RAT=FALSE)
   }
     
   if(inherits(expl.var, 'SpatialPoints')){
@@ -226,6 +226,9 @@
   }
   
   ### PA strategy
+#   if(!is.null(PA.strategy)){ # force PA.nb.rep to be positive if PA.strategy is defined
+#     PA.nb.rep = max(c(PA.nb.rep,1))
+#   }
   
   if(is.null(PA.table) & PA.nb.rep < 1){
     cat("\n> No pseudo absences selection !")

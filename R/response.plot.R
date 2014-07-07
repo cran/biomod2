@@ -24,6 +24,9 @@
   col <- add.args$col
   lty <- add.args$lty
   legend <- add.args$legend
+  main <- add.args$main
+  display_title <- add.args$display_title
+  # par <- add.args$par
   restrict_to_pres_range <- add.args$restrict_to_pres_range
   data_species <- add.args$data_species
   
@@ -31,6 +34,7 @@
   if(is.null(col)) if(!do.bivariate) col <- "black" else col <- c("red","orange","green")
   if(is.null(lty)) lty <- 1
   if(is.null(legend)) legend <- FALSE
+  if(is.null(display_title)) display_title <- TRUE
   if(is.null(restrict_to_pres_range)) restrict_to_pres_range <- FALSE
   
   formal_names <- models
@@ -48,6 +52,7 @@
   do.bivariate <- args$do.bivariate
   nb.pts <- args$nb.pts
   
+  if(is.null(main)) main <- try(paste("Response curves for ", get(models[1])@resp_name, "'s ",  get(models[1])@model_class,sep=""))
   if(is.null(data_species)) data_species <- rep(1,nrow(Data)) else data_species[data_species!=1 | is.na(data_species)] <- 0
   
   
@@ -93,17 +98,23 @@
     
     if(legend) nb.graphs <- nb.graphs + 1
     
-    W.width <- ceiling(sqrt(nb.graphs))
-    W.height <- ceiling(nb.graphs/W.width)    
+    if(display_title){
+      W.width <- ceiling(sqrt(nb.graphs))
+      W.height <- ceiling(nb.graphs/W.width)  
+      
+      mat <- matrix(c(rep(1,W.width), 1:(W.height*W.width)+1), ncol=W.width, byrow=TRUE) 
+      layout(mat, widths=rep(1,W.width), heights=c(0.3,rep(1,W.height)))
+      
+      par(mar = c(0.1, 0.1, 0.1, 0.1))
+      plot(x=c(-1,1),y=c(0,1),xlim=c(0,1),ylim=c(0,1),type="n",axes=FALSE)
+      polygon(x=c(-2,-2,2,2),y=c(-2,2,2,-2),col="#f5fcba",border=NA)
+      text(x=0.5, y=0.8, pos=1, cex=1.6, labels= main ,col="#4c57eb")
+      par(mar = c(2,2,3.5,1))
+    } else {
+      par(mfrow=.CleverCut(nb.graphs))
     
-    mat <- matrix(c(rep(1,W.width), 1:(W.height*W.width)+1), ncol=W.width, byrow=TRUE) 
-    layout(mat, widths=rep(1,W.width), heights=c(0.3,rep(1,W.height)))
-    
-    par(mar = c(0.1, 0.1, 0.1, 0.1))
-    plot(x=c(-1,1),y=c(0,1),xlim=c(0,1),ylim=c(0,1),type="n",axes=FALSE)
-    polygon(x=c(-2,-2,2,2),y=c(-2,2,2,-2),col="#f5fcba",border=NA)
-    text(x=0.5, y=0.8, pos=1, cex=1.6, labels=paste("Response curves for ", get(models[1])@resp_name, "'s ",  get(models[1])@model_class,sep=""),  ,col="#4c57eb")
-    par(mar = c(2,2,3.5,1))      
+    }
+
   } 
   
   
@@ -143,7 +154,7 @@
         mod <- get(model)
         
         # 2. make projections 
-        proj.tmp <- predict(mod, Data.r.tmp, on_0_1000=on_0_1000)
+        proj.tmp <- predict(mod, Data.r.tmp, on_0_1000=on_0_1000, do_check=FALSE)
         
         # 4. Ploting results
         if(plot ) {
@@ -197,7 +208,7 @@
           mod <- get(model)
           
           # 2. make projections
-          proj.tmp <- predict(mod, Data.r.tmp, on_0_1000=on_0_1000)
+          proj.tmp <- predict(mod, Data.r.tmp, on_0_1000=on_0_1000, do_check=FALSE)
           
           # 4. Storing results
           vari <- paste(vari1,vari2,sep="_")
@@ -351,10 +362,10 @@
   if(sum(!(c("nnet") %in% class(mod))) == 0){
     return(new("ANN_biomod2_model",
                model = mod,
-               model_name = paste(as.character(mod$terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_ANN", sep=""),      
+               model_name = paste(ifelse(is.null(mod$terms[[2]]), "species",as.character(mod$terms[[2]])),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_ANN", sep=""),      
                model_class = 'ANN', 
                resp_name = ifelse(is.null(mod$terms[[2]]), "species",as.character(mod$terms[[2]])), 
-               expl_var_names = attr(mod$terms,"term.labels")))
+               expl_var_names = ifelse( is.character(attr( mod$terms,"term.labels")), attr( mod$terms,"term.labels"), "") ))
   }
   
   
@@ -397,7 +408,7 @@
                model_name = paste(as.character(mod$Terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_GBM", sep=""),
                model_class = 'GBM',
                resp_name = as.character(mod$Terms[[2]]),
-               expl_var_names = attr(mod$terms,"term.labels")))
+               expl_var_names = attr(mod$Terms,"term.labels")))
   }
   
   ## GLM ##
@@ -424,10 +435,10 @@
   if(sum(!(c("randomForest") %in% class(mod)) == 0 )){
     return(new("RF_biomod2_model",
                model = mod,
-               model_name =paste(as.character(mod$terms[[2]]),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_RF", sep=""),
+               model_name =paste(ifelse(is.null(mod$terms[[2]]), "species",as.character(mod$terms[[2]])),"_AllData_",as.character(format(Sys.time(), "%OS6")),"_RF", sep=""),
                model_class = 'RF',
                resp_name = ifelse(is.null(mod$terms[[2]]), "species",as.character(mod$terms[[2]])),
-               expl_var_names = attr(mod$terms,"term.labels")))
+               expl_var_names = ifelse( is.character(attr( mod$terms,"term.labels")), attr( mod$terms,"term.labels"), "") ))
   }
   
   stop("Unknown model class")

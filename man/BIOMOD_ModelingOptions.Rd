@@ -134,6 +134,8 @@ NOTE: for method and parms, you can give a 'real' value as described in the rpar
 
   \itemize{
     \item{\code{NbCV} (default \code{5}) : nb of cross validation to find best size and decay parameters}
+    \item{\code{size}} (default \code{NULL}) : number of units in the hidden layer. If \code{NULL} then size parameter will be optimised by cross validation based on model AUC (\code{NbCv} cross validation; tested size will be the following c(2,4,6, 8) ). You can also specified a vector of size you want to test. The one giving the best model AUC will be then selected.
+    \item{\code{decay}} (default \code{NULL}) : parameter for weight decay. If \code{NULL} then decay parameter will be optimised by cross validation on model AUC (\code{NbCv} cross validation; tested decay will be the following c(0.001, 0.01, 0.05, 0.1) ). You can also specified a vector of decay you want to test. The one giving the best model AUC will be then selected.
     \item{\code{rang} (default \code{0.1}) : Initial random weights on [-rang, rang]}
     \item{\code{maxit} (default \code{200}): maximum number of iterations.}
   }
@@ -160,6 +162,7 @@ NOTE: for method and parms, you can give a 'real' value as described in the rpar
   Please refer to \code{\link[mda]{mars}} help file to get the meaning of these options.
   \itemize{
     \item{\code{degree} (default \code{2})}
+    \item{\code{nk}} (default \code{NULL}) : an optional integer specifying the maximum number of model terms. If NULL is given then default mars function value is used ( i.e max(21, 2 * nb_expl_var + 1) )
     \item{\code{penalty} (default \code{2})}
     \item{\code{thresh} (default \code{0.001})}
     \item{\code{prune} (default \code{TRUE})}

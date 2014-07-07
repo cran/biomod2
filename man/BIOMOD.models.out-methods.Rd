@@ -45,6 +45,12 @@ Functions to get attributs of \code{\link[biomod2]{BIOMOD_Modeling}} outputs
   \ldots{ } available values : 
   
   \itemize{
+
+    \item{\bold{get_evaluations}}{
+      \itemize{
+        \item{\code{as.data.frame}:}{"logical", ( FALSE by default ) if TRUE, a standardized \code{data.frame} will be produced else an 4 dimentions \code{array} is returned }
+      }
+    }
   
     \item{\bold{get_predictions}}{
       \itemize{
@@ -78,7 +84,7 @@ Functions to get attributs of \code{\link[biomod2]{BIOMOD_Modeling}} outputs
     \item{\bold{get_predictions: }}{ an \code{array} (or a \code{data.frame}) containing models predictions over calibrating and testing data (those used for evaluate models)}
 
     
-    \item{\bold{get_evaluations: }}{ an \code{array} containing models variables importances}
+    \item{\bold{get_evaluations: }}{ an \code{array}, a \code{data.frame} or a \code{list} containing models evaluation scores}
     
     \item{\bold{get_variables_importance: }}{ an \code{array} containing models variables importances}
     

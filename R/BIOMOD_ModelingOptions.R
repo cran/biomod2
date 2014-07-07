@@ -168,6 +168,8 @@
 #     if(!is.null(ANN$type )) { opt@ANN$type <- ANN$type }
 #     if(!is.null(ANN$interaction.level )) { opt@ANN$interaction.level <- ANN$interaction.level }
     if(!is.null(ANN$NbCV )) { opt@ANN$NbCV <- ANN$NbCV }
+    if(!is.null(ANN$size )) { opt@ANN$size <- ANN$size }
+    if(!is.null(ANN$decay )) { opt@ANN$decay <- ANN$decay }    
     if(!is.null(ANN$rang )) { opt@ANN$rang <- ANN$rang }
     if(!is.null(ANN$maxit )) { opt@ANN$maxit <- ANN$maxit }
   }
@@ -184,6 +186,7 @@
 
   if(!is.null(MARS)){
     if(!is.null(MARS$degree )) { opt@MARS$degree <- MARS$degree }
+    if(!is.null(MARS$nk )) { opt@MARS$nk <- MARS$nk }
     if(!is.null(MARS$penalty )) { opt@MARS$penalty <- MARS$penalty }
     if(!is.null(MARS$thresh )) { opt@MARS$thresh <- MARS$thresh }
     if(!is.null(MARS$prune )) { opt@MARS$prune <- MARS$prune }
@@ -203,6 +206,7 @@
     if(!is.null(MAXENT$path_to_maxent.jar )) {
       opt@MAXENT$path_to_maxent.jar <- normalizePath(sub("maxent.jar", "", MAXENT$path_to_maxent.jar)) # ensure path format validity
       } else {opt@MAXENT$path_to_maxent.jar <- getwd()}
+    if(!is.null(MAXENT$memory_allocated )) { opt@MAXENT$memory_allocated <- MAXENT$memory_allocated }
     if(!is.null(MAXENT$maximumiterations )) { opt@MAXENT$maximumiterations <- MAXENT$maximumiterations }
     if(!is.null(MAXENT$visible )) { opt@MAXENT$visible <- MAXENT$visible }
     if(!is.null(MAXENT$linear )) { opt@MAXENT$linear <- MAXENT$linear }

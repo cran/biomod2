@@ -42,8 +42,7 @@ Functions to get attributs of \code{\link[biomod2]{BIOMOD_EnsembleModeling}} out
   
     \item{\bold{get_evaluations}}{
       \itemize{
-        \item{\code{model}:}{"character", model name }
-        \item{\code{met}:}{"character", evaluation metric name}
+        \item{\code{as.data.frame}:}{"logical", ( FALSE by default ) if TRUE, a standardized \code{data.frame} will be produced else a list is returned }
       }
     }
     
@@ -65,7 +64,7 @@ Functions to get attributs of \code{\link[biomod2]{BIOMOD_EnsembleModeling}} out
     
     \item{\bold{get_built_models: }}{ a \code{character} vector indicating the names of ensemble models computed }
     
-    \item{\bold{get_evaluations: }}{ an \code{array} or a \code{data.frame} containing ensemble models evaluation scores}
+    \item{\bold{get_evaluations: }}{ an \code{array}, a \code{data.frame} or a \code{list} containing ensemble models evaluation scores}
     
     \item{\bold{get_kept_models: }}{ an \code{character} vector indicating names of selected models for ensemble-models building}
     

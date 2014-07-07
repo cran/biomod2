@@ -66,9 +66,9 @@ evaluate <- function(model, data, stat, as.array=FALSE){
 Find.Optim.Stat <- function(Stat='TSS',Fit,Obs,Precision = 5, Fixed.thresh = NULL){
   if(length(unique(Obs)) == 1 | length(unique(Fit)) == 1){
 #     warning("\nObserved or fited data contains only a value.. Evaluation Methods switched off\n",immediate.=T)
-#     best.stat <- cutoff <- true.pos <- sensibility <- true.neg <- specificity <- NA  
+#     best.stat <- cutoff <- true.pos <- sensitivity <- true.neg <- specificity <- NA  
       warning("\nObserved or fited data contains a unique value.. Be carefull with this models predictions\n",immediate.=T)
-      #best.stat <- cutoff <- true.pos <- sensibility <- true.neg <- specificity <- NA    
+      #best.stat <- cutoff <- true.pos <- sensitivity <- true.neg <- specificity <- NA    
   } #else {
     if(Stat != 'ROC'){
       StatOptimum <- getStatOptimValue(Stat)
@@ -106,19 +106,27 @@ Find.Optim.Stat <- function(Stat='TSS',Fit,Obs,Precision = 5, Fixed.thresh = NUL
       true.pos <- misc['TRUE','1']
       true.neg <- misc['FALSE','0']
       specificity <- (true.neg * 100)/sum(misc[,'0'])
-      sensibility <- (true.pos * 100)/sum(misc[,'1'])
+      sensitivity <- (true.pos * 100)/sum(misc[,'1'])
     } else{
 #       require(pROC,quietly=T)
       roc1 <- pROC::roc(Obs, Fit, percent=T, direction="<")
       roc1.out <- pROC::coords(roc1, "best", ret=c("threshold", "sens", "spec"))
       best.stat <- as.numeric(pROC::auc(roc1))/100
       cutoff <- as.numeric(roc1.out["threshold"])
-      sensibility <- as.numeric(roc1.out["sensitivity"])
+      sensitivity <- as.numeric(roc1.out["sensitivity"])
       specificity <- as.numeric(roc1.out["specificity"])
     }
   #}
-  eval.out <- cbind(best.stat,cutoff,sensibility,specificity)
+  eval.out <- cbind(best.stat,cutoff,sensitivity,specificity)
   rownames(eval.out) <- Stat
+  
+  ## deal with NAs
+#   if(!all(is.finite(eval.out))) warnings("\nsome NAs occurs in models evalutions that can lead to strange results afterwards !!")
+#   if(!is.finite(eval.out[1,"best.stat"])) eval.out[1,"best.stat"]<- NA
+#   if(!is.finite(eval.out[1,"sensitivity"])) eval.out[1,"sensitivity"] <- NA
+#   if(!is.finite(eval.out[1,"specificity"])) eval.out[1,"specificity"] <- NA
+#   if(!is.finite(eval.out[1,"cutoff"])) eval.out[1,"cutoff"] <- NA
+    
   return(eval.out)
 }
 

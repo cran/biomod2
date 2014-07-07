@@ -3,6 +3,7 @@
                                        em.by = 'all',
                                        eval.metric = 'all',
                                        eval.metric.quality.threshold = NULL,
+                                       models.eval.meth = c('KAPPA','TSS','ROC'),
                                        prob.mean = TRUE,
                                        prob.cv = FALSE,
                                        prob.ci = FALSE,
@@ -18,6 +19,7 @@
                                                chosen.models,
                                                eval.metric,
                                                eval.metric.quality.threshold,
+                                               models.eval.meth,
                                                prob.mean,
                                                prob.cv,
                                                prob.ci,
@@ -32,6 +34,7 @@
   chosen.models <- args$chosen.models
   eval.metric <- args$eval.metric
   eval.metric.quality.threshold <- args$eval.metric.quality.threshold
+  models.eval.meth <- args$models.eval.meth
   prob.mean <- args$prob.mean
   prob.cv <- args$prob.cv
   prob.ci <- args$prob.ci
@@ -229,8 +232,11 @@
           }))
           names(models.kept.tresh) <- models.kept
           
+          ## remove models if some thresholds are undefined
+          to_keep <- is.finite(models.kept.tresh)
+          
           model.bm <- new("EMca_biomod2_model",
-                           model = models.kept,
+                           model = models.kept[to_keep],
                            model_name = model_name,
                            model_class = 'EMca',
                            model_options = Options,
@@ -239,7 +245,7 @@
                            expl_var_type = expl_var_type,
                            expl_var_range = expl_var_range,
                            modeling.id = modeling.output@modeling.id,
-                           tresholds = models.kept.tresh) 
+                           tresholds = models.kept.tresh[to_keep]) 
 
         }
         
@@ -263,25 +269,37 @@
             }
           }
           
+          ## remove models if score is not defined
+          models.kept.tmp <- models.kept.tmp[is.finite(models.kept.scores.tmp)]
+          models.kept.scores.tmp <- models.kept.scores.tmp[is.finite(models.kept.scores.tmp)]
+          
           # weights are "decay" times decreased for each subsequent model in model quality order.
           models.kept.scores.tmp <- round(models.kept.scores.tmp, 3) # sometimes there can be a rounding issue in R, so here I make sure all values are rounded equally.
           
           # dealing with numerical decay
+          cat("\n\t\t", " original models scores = ", models.kept.scores.tmp)
           if(is.numeric(prob.mean.weight.decay)){
             DecayCount <- sum(models.kept.scores.tmp>0)
             WOrder <- order(models.kept.scores.tmp, decreasing=T)
             Dweights <- models.kept.scores.tmp
-            for(J in 1:DecayCount) Dweights[WOrder[J]] <- (DecayCount - J + 1) * prob.mean.weight.decay
+            ## old version
+            # for(J in 1:DecayCount) Dweights[WOrder[J]] <- (DecayCount - J + 1) * prob.mean.weight.decay
+            ## end old version
+            for(J in 1:DecayCount) Dweights[WOrder[J]] <- I(prob.mean.weight.decay^(DecayCount - J + 1))
             #If 2 or more score are identical -> make a mean weight between the ones concerned
             for(J in 1:length(models.kept.scores.tmp)){
               if(sum(models.kept.scores.tmp[J]==models.kept.scores.tmp)>1) Dweights[which(models.kept.scores.tmp[J]==models.kept.scores.tmp)] <- mean(Dweights[which(models.kept.scores.tmp[J]==models.kept.scores.tmp)])
             }      
-            models.kept.scores.tmp <- Dweights
+            models.kept.scores.tmp <- round(Dweights, digits=3)
             rm(list=c('Dweights','DecayCount','WOrder'))          
+          } else if ( is.function(prob.mean.weight.decay) ){ # dealing with function decay
+            models.kept.scores.tmp <- sapply(models.kept.scores.tmp, prob.mean.weight.decay)
           }
           
           ### Standardise model weights
-          models.kept.scores.tmp <- models.kept.scores.tmp/sum(models.kept.scores.tmp, na.rm=T)
+          models.kept.scores.tmp <- round(models.kept.scores.tmp/sum(models.kept.scores.tmp, na.rm=T), digits=3)
+          
+          cat("\n\t\t", " final models weights = ", models.kept.scores.tmp)
           
           model.bm <- new("EMwmean_biomod2_model",
                            model = models.kept.tmp,
@@ -305,10 +323,10 @@
  
         
         # Model evaluation stuff =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
-        if(length(eval.metric) > 0){
+        if( length(models.eval.meth) ){
           cat("\n\t\t\tEvaluating Model stuff...")
  
-          cross.validation <- sapply(eval.metric,
+          cross.validation <- sapply(models.eval.meth,
                                      Find.Optim.Stat,
                                      Fit = pred.bm,
                                      Obs = obs)
@@ -317,7 +335,7 @@
           
           if(exists('eval_pred.bm')){
             
-            true.evaluation <- sapply(eval.metric,
+            true.evaluation <- sapply(models.eval.meth,
                                       function(x){
                                         return( Find.Optim.Stat(Stat = x,
                                                                 Fit = eval_pred.bm,
@@ -384,6 +402,7 @@
                                                    chosen.models,
                                                    eval.metric,
                                                    eval.metric.quality.threshold,
+                                                   models.eval.meth,
                                                    prob.mean,
                                                    prob.cv,
                                                    prob.ci,
@@ -444,6 +463,17 @@
     }
   }
   
+  # 4b. model.eval.meth checking
+  models.eval.meth <- unique(models.eval.meth)
+  
+  if(sum(models.eval.meth %in% c('FAR','SR','HSS','ORSS','TSS','KAPPA','ACCURACY','BIAS',
+                                 'POD','PODFD','CSI','ETS','HK','ROC')) != length(models.eval.meth)){
+    stop(paste(models.eval.meth[which( (models.eval.meth %in% c('FAR','SR','HSS','ORSS','TSS',
+                                                                'KAPPA','ACCURACY','BIAS', 'POD',
+                                                                'PODFD','CSI', 'ETS','HK','ROC')) 
+                                       == FALSE) ]," is not a availabe models evaluation metric !",sep=""))
+  }
+  
   # 5. check selected EM algo
   if( !is.logical(prob.mean) | !is.logical(prob.cv) | !is.logical(prob.ci) | !is.logical(prob.median) |
       !is.logical(committee.averaging) | !is.logical(prob.mean.weight) ){
@@ -467,16 +497,23 @@
   
   # 7. decay checking
   if(prob.mean.weight){
-    if(is.numeric(prob.mean.weight.decay)){
+    test.prob.mean.weight.decay <- TRUE
+    ## check compatibility of prob.mean.weight.decay class
+    if(!is.numeric(prob.mean.weight.decay) & !is.character(prob.mean.weight.decay) & !is.function(prob.mean.weight.decay)){
+      test.prob.mean.weight.decay <- FALSE
+    } else if(is.numeric(prob.mean.weight.decay)){ ## check numeric prob.mean.weight.decay
       if(prob.mean.weight.decay < 0){
-        stop("'prob.mean.weight.decay' should be either 'proportional' or a numeric value > 0")
+        test.prob.mean.weight.decay <- FALSE
       }
-    } else{
+    } else if(is.character(prob.mean.weight.decay)){ ## check character prob.mean.weight.decay
       if(prob.mean.weight.decay != 'proportional'){
-        stop("'prob.mean.weight.decay' should be either 'proportional' or a numeric value > 0")
+        test.prob.mean.weight.decay <- FALSE
       }
-#       prob.mean.weight.decay <- 1
-    }   
+    }
+    
+    if(!test.prob.mean.weight.decay){
+      stop("'prob.mean.weight.decay' should be either 'proportional', a numeric value > 0 or a function")
+    }
   }
 
   if(is.null(eval.metric)){
@@ -494,6 +531,7 @@
                 chosen.models = chosen.models,
                 eval.metric = eval.metric,
                 eval.metric.quality.threshold = eval.metric.quality.threshold,
+                models.eval.meth = models.eval.meth,
                 prob.mean = prob.mean,
                 prob.cv = prob.cv,
                 prob.ci = prob.ci,

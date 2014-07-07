@@ -88,6 +88,6 @@ setMethod('FilteringTransformation', signature(data='RasterStack'),
 setMethod('FilteringTransformation', signature(data='RasterBrick'), 
   function(data, threshold)
   {
-    data <- raster::stack(data)
+    data <- raster::stack(data, RAT=FALSE)
     return(FilteringTransformation(data, threshold))
   })

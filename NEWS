@@ -1,3 +1,12 @@
+3.1-44 (2014-05-20)
+	* possibility to use user defined function to influence the way models are weighted in weighted mean ensemble models (Thanks to Frank B.)
+
+3.1-43 (2014-05-20)
+	* add of as.data.frame argument for get_evaluations() function to enable formal and ensemble models' evaluation scores merging
+
+3.1-42 (2014-05-19)
+	* enable ensemble forecasting models selection (Thanks to Robin E.) 
+
 3.1-17 (2013-10-23)
 	* add parameter to control amount of memory reserved for MAXENT calculations (via java) (Thanks to Burke G.)
 	* optimisation of memory consumsion in models projections when do.stack argument is set to FALSE

@@ -34,6 +34,8 @@ response.plot2( models,
       \item{\code{data_species} : vector containing data species occurances. Have to match with \code{Data}. If given, the statistic used to fix variables value will be calculated only over presences points. (Considered only if \code{Data} is under table format)}
       \item{\code{col} : vector of colors to be used (only for univariate case)}
       \item{\code{lty} : vector of lines types to be used}
+      \item{\code{main} : character, the title of the graph (default one based on first model class is automatically produced if not refered)}
+      \item{\code{display_title} : logical, display or not graph title}
       \item{\code{legend} : logical, add legend to plot (only for univariate case)}
     }}
 }
@@ -140,7 +142,8 @@ myRespPlot3D <- response.plot2(models  = myGLMs[1],
                                show.variables= get_formal_data(myBiomodModelOut,'expl.var.names'),
                                do.bivariate = TRUE,
                                fixed.var.metric = 'median',
-                               data_species = get_formal_data(myBiomodModelOut,'resp.var'))
+                               data_species = get_formal_data(myBiomodModelOut,'resp.var'),
+                               display_title=FALSE)
 
 ### all the values used to produce this plot are stored into the returned object
 ### you can redo plots by yourself and customised them

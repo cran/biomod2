@@ -48,12 +48,12 @@
   
   if(!do.stack | !keep.in.memory) rasterOptions(todisk=TRUE)
   
-  if(is.null(output.format)){
-    if(!inherits(new.env,"Raster"))
-      output.format <- ".RData"
-    else
-      output.format <- ".grd"
-  }  
+#   if(is.null(output.format)){
+#     if(!inherits(new.env,"Raster"))
+#       output.format <- ".RData"
+#     else
+#       output.format <- ".grd"
+#   }  
   
   if(!silent){
     .bmCat("Do Models Projections")
@@ -68,7 +68,8 @@
                                         binary.meth,
                                         filtered.meth,
                                         compress,
-                                        do.stack)#, clamping.level)
+                                        do.stack,
+                                        output.format)#, clamping.level)
   
   proj.name <- args$proj.name
   selected.models <- args$selected.models
@@ -77,6 +78,7 @@
   compress <- args$compress
   do.stack <- args$do.stack
   xy.new.env <- args$xy.new.env
+  output.format <- args$output.format
 #   clamping.level <- args$clamping.level
   
   rm(args)
@@ -126,7 +128,9 @@
            file = file.path(modeling.output@sp.name, paste("proj_", proj.name, sep= ""), paste("proj_",proj.name,"_ClampingMask", output.format ,sep="") ), compress=compress )      
     } else {
       writeRaster(x=get(paste("proj_",proj.name,"_",modeling.output@sp.name,"_ClampingMask",sep="")),
-                  filename=file.path(modeling.output@sp.name, paste("proj_", proj.name, sep= ""), paste("proj_",proj.name,"_ClampingMask", output.format ,sep="")), overwrite=TRUE)
+                  filename=file.path(modeling.output@sp.name, paste("proj_", proj.name, sep= ""), paste("proj_",proj.name,"_ClampingMask", output.format ,sep="")),
+                  datatype = "INT1S", NAflag=-127,
+                  overwrite=TRUE)
     }
 
 
@@ -190,7 +194,8 @@
     if(do.stack){
       saved.files <- file.path(modeling.output@sp.name, paste("proj_", proj.name, sep= ""), paste("proj_",proj.name,"_", modeling.output@sp.name, output.format ,sep=""))
       writeRaster(x=get(paste("proj_",proj.name, "_", modeling.output@sp.name, sep="")),
-                  filename=saved.files, overwrite=TRUE)
+                  filename=saved.files, overwrite=TRUE, #datatype = "INT2U"
+                  )
       
     }
   }
@@ -232,9 +237,10 @@
         for(i in 1:length(proj_out@proj@link)){
           file.tmp <- proj_out@proj@link[i]
           thres.tmp <- asub(thresholds, eval.meth[drop=FALSE], 1, drop=FALSE)[,i]
-          writeRaster(x = BinaryTransformation(raster(file.tmp),thres.tmp),
+          writeRaster(x = BinaryTransformation(raster(file.tmp, RAT=FALSE),thres.tmp),
                       filename = sub(output.format, paste("_",eval.meth,"bin", output.format, sep=""), file.tmp), 
-                      overwrite=TRUE)
+                      overwrite=TRUE,
+                      datatype = "INT1S",NAflag=-127)
         }
       } else {
       assign(x = paste("proj_",proj.name, "_", modeling.output@sp.name,"_",eval.meth,"bin", sep=""),
@@ -245,7 +251,9 @@
              file = file.path(modeling.output@sp.name, paste("proj_", proj.name, sep= ""), paste("proj_",proj.name,"_", modeling.output@sp.name,"_",eval.meth,"bin", output.format ,sep="")), compress=compress)   
       } else {
         writeRaster(x=get(paste("proj_",proj.name, "_", modeling.output@sp.name,"_",eval.meth,"bin", sep="")),
-                    filename=file.path(modeling.output@sp.name, paste("proj_", proj.name, sep= ""), paste("proj_",proj.name,"_", modeling.output@sp.name,"_",eval.meth,"bin", output.format ,sep="")), overwrite=TRUE)
+                    filename=file.path(modeling.output@sp.name, paste("proj_", proj.name, sep= ""), paste("proj_",proj.name,"_", modeling.output@sp.name,"_",eval.meth,"bin", output.format ,sep="")), 
+                    overwrite=TRUE,
+                    datatype = "INT1S",NAflag=-127)
       }
       
       rm(list=paste("proj_",proj.name, "_", modeling.output@sp.name,"_",eval.meth,"bin", sep=""))
@@ -259,9 +267,10 @@
         for(i in 1:length(proj_out@proj@link)){
           file.tmp <- proj_out@proj@link[i]
           thres.tmp <- asub(thresholds, eval.meth[drop=FALSE], 1, drop=FALSE)[,i]
-          writeRaster(x = FilteringTransformation(raster(file.tmp),thres.tmp),
+          writeRaster(x = FilteringTransformation(raster(file.tmp, RAT=FALSE),thres.tmp),
                       filename = sub(output.format, paste("_",eval.meth,"filt", output.format, sep=""), file.tmp), 
-                      overwrite=TRUE)
+                      overwrite=TRUE, datatype="INT2S", NAflag="-9999"
+                      )
         }
       } else {
         assign(x = paste("proj_",proj.name, "_", modeling.output@sp.name,"_",eval.meth,"filt", sep=""),
@@ -272,7 +281,9 @@
                file = file.path(modeling.output@sp.name, paste("proj_", proj.name, sep= ""), paste("proj_",proj.name,"_", modeling.output@sp.name,"_",eval.meth,"filt", output.format ,sep="")), compress=compress)   
         } else {
           writeRaster(x=get(paste("proj_",proj.name, "_", modeling.output@sp.name,"_",eval.meth,"filt", sep="")),
-                      filename=file.path(modeling.output@sp.name, paste("proj_", proj.name, sep= ""), paste("proj_",proj.name,"_", modeling.output@sp.name,"_",eval.meth,"filt", output.format ,sep="")), overwrite=TRUE)
+                      filename=file.path(modeling.output@sp.name, paste("proj_", proj.name, sep= ""), paste("proj_",proj.name,"_", modeling.output@sp.name,"_",eval.meth,"filt", output.format ,sep="")), 
+                      overwrite=TRUE , datatype="INT2S", NAflag="-9999"
+                      )
         }
         
         rm(list=paste("proj_",proj.name, "_", modeling.output@sp.name,"_",eval.meth,"filt", sep=""))
@@ -311,7 +322,7 @@
 
 .BIOMOD_Projection.check.args <- function(modeling.output, new.env, proj.name, xy.new.env, 
                                           selected.models, binary.meth, filtered.meth,
-                                          compress, do.stack){#, clamping.level){
+                                          compress, do.stack, output.format){#, clamping.level){
   ## modeling.output
   if( class(modeling.output) != 'BIOMOD.models.out'){
     stop("'modeling.output' must be the result of BIOMOD_Modeling() computation")
@@ -419,6 +430,23 @@
     }
   }
 
+  ## output.format ##
+  if(!is.null(output.format)){
+    if(! output.format %in% c(".img",".grd",".RData")){
+      stop("output.format argument should be one of '.img','.grd' or '.RData'\n Note : '.img','.grd' are only available if you give environmental condition as a rasterStack object")
+    }
+    if( output.format %in% c(".img",".grd") & !inherits(new.env,"Raster") ){
+      warning("output.format was automatically set to '.RData' because environmental conditions are not given as a raster object")
+    }
+  }
+  ## set default values 
+  if(is.null(output.format)){
+    if(!inherits(new.env,"Raster"))
+      output.format <- ".RData"
+    else
+      output.format <- ".grd"
+  }  
+
     
 #   ## clamping checking
 #   if(!is.null(clamping.level)){
@@ -447,7 +475,8 @@
               binary.meth = binary.meth,
               filtered.meth = filtered.meth,
               compress = compress,
-              do.stack = do.stack))#, clamping.level = clamping.level))
+              do.stack = do.stack,
+              output.format = output.format))#, clamping.level = clamping.level))
 
 }
 
@@ -474,6 +503,9 @@
         clamp.mask <- clamp.mask + (raster::subset(env, e.v, drop=TRUE) %in% MinMax[[e.v]]$levels)
       }
     }
+    
+    ## fix projection system 
+    
   } else if(is.data.frame(env) | is.matrix(env) | is.numeric(env)){ # matrix and data.frame case
     env <- as.data.frame(env)
     
