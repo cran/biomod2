@@ -22,7 +22,7 @@ BIOMOD_Projection(modeling.output,
 
 \item{modeling.output}{  \code{"\link[=BIOMOD.models.out-class]{BIOMOD.models.out}"} object produced by a \code{\link[biomod2]{BIOMOD_Modeling}} run}
 
-\item{new.env}{ A set of explanatory variables onto which models will be projected . It could be a \code{data.frame}, a \code{matrix}, or a \code{rasterStack} object. Make sure the column names (\code{data.frame} or \code{matrix}) or layerNames (\code{rasterStack}) perfectly match with the names of variables used to build the models in the previous steps.}
+\item{new.env}{ A set of explanatory variables onto which models will be projected . It could be a \code{data.frame}, a \code{matrix}, or a \code{rasterStack} object. Make sure the column names (\code{data.frame} or \code{matrix}) or layer Names (\code{rasterStack}) perfectly match with the names of variables used to build the models in the previous steps.}
 
 \item{proj.name}{a character defining the projection name (a new folder will be created with this name)}
 
@@ -34,7 +34,7 @@ BIOMOD_Projection(modeling.output,
 
 \item{filtered.meth}{a vector of a subset of models evaluation method computed before (see \code{\link[biomod2]{BIOMOD_Modeling}}). if NULL then no filtering transformation computed, else the given binary techniques will be used to transform the projection by stetting to 0 the probability values below a specific threshold.}
 
-\item{compress}{boolean or character, the compression format of objects stored on your hard drive. May be one of \sQuote{TRUE}, \sQuote{FALSE}, \sQuote{xz} or \sQuote{gzip} (see \code{\link{save}})}
+\item{compress}{Boolean or character, the compression format of objects stored on your hard drive. May be one of \sQuote{TRUE}, \sQuote{FALSE}, \sQuote{xz} or \sQuote{gzip} (see \code{\link{save}})}
 
 \item{build.clamping.mask}{ if TRUE, a clamping mask will be saved on hard drive different (see details)}
 
@@ -54,6 +54,7 @@ If \code{build.clamping.mask} is set to \code{TRUE} a file (same type than \code
   \item{\code{keep.in.memory}:}{logical, if FALSE only the link pointing to a hard drive copy of projections are stored in output object. That can be useful to prevent memory issues.}
   \item{\code{output.format}:}{whether \sQuote{.RData}, \sQuote{.grd} or \sQuote{.img} defining projections saving format (on hard drive). If \code{new.env} argument is under table format (\code{data.frame} or \code{matrix}), the only choice you have is \sQuote{.RData} }
   \item{\code{omit.na}:}{logical, if TRUE (default), all not fully referenced environmental points will get a NA as prediction. If FALSE, models that can produce predictions with incomplete data will return a prediction value for this points. }
+  \item{\code{on_0_1000}:}{logical, if TRUE (default), 0 - 1 probabilities are converted into a 0 - 1000 integer scale. This implies a lot of memory saving. User that want to comeback on a 0 - 1 scale latter will just have to divide all projections by 1000  }
 }
 
 }

@@ -30,6 +30,7 @@ Functions to free properly a \code{\link[biomod2]{BIOMOD_Modeling}} outputs
 \seealso{ \code{\link{help}}}
 
 \examples{
+  \dontrun{
   # species occurrences
   DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
                                     package="biomod2"), row.names = 1)
@@ -87,6 +88,7 @@ Functions to free properly a \code{\link[biomod2]{BIOMOD_Modeling}} outputs
   
   # check files had been removed
   list.files(myRespName,all.files=TRUE,recursive=TRUE)
+  }
 }
 
 \keyword{ models }

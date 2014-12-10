@@ -11,14 +11,14 @@
   res.sp.run <- list()
   
   for(i in 1:ncol(X$calibLines)){ # loop on RunEval
-    cat('\n\n-=-=-=--=-=-=-',paste(X$name,colnames(X$calibLines)[i],sep=""),'\n')
-    
-    res.sp.run[[colnames(X$calibLines)[i]]] <- lapply(Model, .Biomod.Models,
+    cat('\n\n-=-=-=--=-=-=-',paste(X$name,dimnames(X$calibLines)[[2]][i],sep=""),'\n')
+
+    res.sp.run[[dimnames(X$calibLines)[[2]][i]]] <- lapply(Model, .Biomod.Models,
                                                       Data = X$dataBM,
                                                       Options = Options,
-                                                      calibLines = na.omit(X$calibLines[,i]),
+                                                      calibLines = na.omit(X$calibLines[,i,]), ## transform 3D calibLines obj into a 1D vector
                                                       Yweights = na.omit(X$Yweights),
-                                                      nam = paste(X$name,colnames(X$calibLines)[i], sep=""),
+                                                      nam = paste(X$name,dimnames(X$calibLines)[[2]][i], sep=""),
                                                       VarImport = VarImport,
                                                       mod.eval.method = mod.eval.method,
                                                       evalData = X$evalDataBM,
@@ -28,7 +28,7 @@
                                                       scal.models = scal.models,
                                                       modeling.id = modeling.id)
     
-    names(res.sp.run[[colnames(X$calibLines)[i]]]) <- Model
+    names(res.sp.run[[dimnames(X$calibLines)[[2]][i]]]) <- Model
     
   }
   
@@ -417,7 +417,7 @@ model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s",
       size <- CV_nnet[1,1]      
     }
 
-    cat("\n*** decay = ", decay, ", size = ", size)
+#     cat("\n*** decay = ", decay, ", size = ", size)
     
     model.sp <- try(nnet(formula = makeFormula(resp_name,head(Data[,expl_var_names,drop=FALSE]), 'simple',0),
                          data = Data[calibLines,,drop=FALSE],
@@ -560,7 +560,7 @@ model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s",
                          " beta_lqp=", Options@MAXENT$beta_lqp,
                          " beta_hinge=", Options@MAXENT$beta_hinge,
                          " defaultprevalence=", Options@MAXENT$defaultprevalence,
-                         " autorun nowarnings notooltips", sep=""), wait = TRUE, intern = TRUE,
+                         " autorun nowarnings notooltips noaddsamplestobackground", sep=""), wait = TRUE, intern = TRUE,
            ignore.stdout = FALSE, ignore.stderr = FALSE)
     
     
@@ -586,11 +586,13 @@ model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s",
   # make prediction =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if((Model != "MAXENT"))
     g.pred <- try(predict(model.bm, Data[,expl_var_names,drop=FALSE], on_0_1000=TRUE))
-  
+
+
   # scale or not predictions =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
   if(scal.models & !inherits(g.pred,'try-error')){
     cat("\n\tModel scaling...")
-    model.bm@scaling_model <- try(.scaling_model(g.pred/1000, Data[, 1]))
+    #     model.bm@scaling_model <- try(.scaling_model(g.pred/1000, Data[, 1])) ## without weigths
+    model.bm@scaling_model <- try( .scaling_model(g.pred/1000, Data[, 1], weights= Yweights )) ## with weights
     g.pred <- try(predict(model.bm, Data[,expl_var_names,drop=FALSE], on_0_1000=TRUE))
   }
   
@@ -614,7 +616,7 @@ model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s",
     # keep the name of uncompleted modelisations
     cat("\n   ! Note : ", model_name, "failed!\n")
     ListOut$calib.failure = model_name
-    return(ListOut)
+    return(ListOut) ## end of function.
   }
   
   # make prediction on evaluation data =-=-=-=-=-=-=-=-=-=-=-=-=-= #

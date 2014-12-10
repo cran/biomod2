@@ -30,8 +30,14 @@ setMethod('FilteringTransformation', signature(data='data.frame'),
   {
     data <- data.matrix(data)
     data[t(t(data)<threshold)] <-0
+    
+    ## check if some thresolds are NAs
+    if(any(is.na(threshold))){
+      data[,is.na(threshold)] <- NA
+    }
     if(ncol(data)==1) data <- data[,1]
-  	return(data)
+  	return(data)    
+    
   })
 
 setMethod('FilteringTransformation', signature(data='matrix'), 
@@ -61,23 +67,35 @@ setMethod('FilteringTransformation', signature(data='array'),
               }
             }  
             
-            return(sweep(data,2:length(dim(data)),threshold,function(x,y) return(ifelse(x>y,x,0))))
+            return(sweep(data,2:length(dim(data)),threshold,
+                         function(x,y) { 
+                           if(!is.na(x)){
+                             return(ifelse(x>y,x,0))
+                           } else { 
+                             return(rep(NA,length(x)) )}
+                         }))
           })
 
 
 setMethod('FilteringTransformation', signature(data='RasterLayer'), 
   function(data, threshold)
   {
-    return(reclassify(data,c(-Inf,threshold,0)))
+    if(!is.na(threshold)){
+      return(reclassify(data,c(-Inf,threshold,0)))
+    } else{ ## return a empty map (NA everywhere)
+      return(reclassify(data,c(-Inf,Inf,NA)))
+    }
   })
 
 setMethod('FilteringTransformation', signature(data='RasterStack'), 
   function(data, threshold)
   {
     if(length(threshold) == 1){
+      cat("\n*** FilteringTransformation.R l94")
       threshold <- rep(threshold, raster::nlayers(data))
     }
     StkTmp <- raster::stack()
+    cat("\n*** FilteringTransformation.R l98")
     for(i in 1:raster::nlayers(data)){
       StkTmp <- raster::addLayer(StkTmp, FilteringTransformation(raster::subset(data,i,drop=TRUE), threshold[i]))
     }

@@ -28,6 +28,11 @@ setGeneric("get_evaluations",
              standardGeneric("get_evaluations")
            })
 
+setGeneric("get_calib_lines",
+           function(obj, ...){
+             standardGeneric("get_calib_lines")
+           })
+
 setGeneric("get_variables_importance",
            function(obj, ...){
              standardGeneric("get_variables_importance")
@@ -106,8 +111,7 @@ setGeneric( "BIOMOD.formated.data",
 
 setMethod('BIOMOD.formated.data', signature(sp='numeric', env='data.frame' ), 
           function(sp,env,xy=NULL,sp.name=NULL, eval.sp=NULL, eval.env=NULL, eval.xy=NULL, na.rm=TRUE, data.mask=NULL ){
-            if(is.null(data.mask)) data.mask <- stack()
-            
+            if(is.null(data.mask)) data.mask <- raster::stack()
             
             if(is.null(eval.sp)){
               BFD <- new('BIOMOD.formated.data', 
@@ -123,8 +127,8 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='data.frame' ),
                                               xy=eval.xy,
                                               sp.name=sp.name)
               
-              if(nlayers(BFDeval@data.mask)>0){
-                data.mask.tmp <- try(addLayer(data.mask,BFDeval@data.mask))
+              if(raster::nlayers(BFDeval@data.mask)>0){
+                data.mask.tmp <- try(raster::addLayer(data.mask,BFDeval@data.mask))
                 if( !inherits(data.mask.tmp,"try-error")){
                   data.mask <- data.mask.tmp
                   names(data.mask) <- c("calibration","validation")
@@ -200,7 +204,9 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='matrix' ),
 
 setMethod('BIOMOD.formated.data', signature(sp='numeric', env='RasterStack' ), 
           function(sp,env,xy=NULL,sp.name=NULL, eval.sp=NULL, eval.env=NULL, eval.xy=NULL, na.rm=TRUE){
-            categorial_var <- names(env)[raster::is.factor(env)]
+#             cat("\n*** sessionInfo() \n")
+#             print(sessionInfo())
+            categorial_var <- names(env)[raster::is.factor(env)]  
             
             # take the same eval environemental variables than calibrating ones 
             if(!is.null(eval.sp)){
@@ -214,19 +220,18 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='RasterStack' ),
                 }
               }
             }
-            
+
             if(is.null(xy)) xy <- as.data.frame(coordinates(env))
-            
+                        
             data.mask = reclassify(raster::subset(env,1,drop=T), c(-Inf,Inf,-1))
             data.mask[cellFromXY(data.mask,xy[which(sp==1),])] <- 1
             data.mask[cellFromXY(data.mask,xy[which(sp==0),])] <- 0
-            data.mask <- stack(data.mask)
+            data.mask <- raster::stack(data.mask)
             names(data.mask) <- sp.name
-            
+                        
             #     env_levels <- levels(env)
             env <- as.data.frame(extract(env,xy, factors=T))
-            
-            
+                        
             if(length(categorial_var)){
               for(cat_var in categorial_var){
                 env[,cat_var] <- as.factor(env[,cat_var])
@@ -251,7 +256,7 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='RasterStack' ),
 
 setMethod('plot', signature(x='BIOMOD.formated.data', y="missing"),
           function(x,coord=NULL,col=NULL){
-            if(nlayers(x@data.mask)>0){
+            if(raster::nlayers(x@data.mask)>0){
               require(rasterVis)
               
               ## check that there is some undefined areas to prevent from strange plotting issues
@@ -543,7 +548,8 @@ BIOMOD.formated.data.PA <-  function(sp, env, xy, sp.name,
 # 2.3 other functions
 setMethod('plot', signature(x='BIOMOD.formated.data.PA', y="missing"),
           function(x,coord=NULL,col=NULL){
-            if(nlayers(x@data.mask)>0){
+
+            if(raster::nlayers(x@data.mask)>0){
               require(rasterVis)
               
               ## check that there is some undefined areas to prevent from strange plotting issues
@@ -1368,6 +1374,16 @@ setMethod("get_evaluations", "BIOMOD.models.out",
 )
 
 
+setMethod("get_calib_lines", "BIOMOD.models.out",
+   function(obj, as.data.frame = FALSE, ...){
+     calib_lines <- load_stored_object(obj@calib.lines)
+     
+     return(calib_lines)
+   }
+          
+)
+
+
 setMethod("get_variables_importance", "BIOMOD.models.out",
           function(obj, ...){
             if(obj@variables.importances@inMemory ){
@@ -1403,7 +1419,7 @@ setMethod("get_formal_data", "BIOMOD.models.out",
                 if(obj@formated.input.data@link != ''){
                   data <- get(load(obj@formated.input.data@link))
                   return(data)
-                } else{ cat("\n***"); return(NA) }
+                } else{ return(NA) }
               }              
             } else if(subinfo == 'MinMax'){
               return(apply(get_formal_data(obj, "expl.var"),2, function(x){
@@ -1599,15 +1615,17 @@ setMethod('plot', signature(x='BIOMOD.projection.out', y="missing"),
                           colorkey=list(labels=list(
                             labels=my.lab,
                             at=my.labs.at)))
-              )
-              if(inherits(try_plot,"try-error")){ # try classical plot
+              ) 
+              if(! inherits(try_plot,"try-error")){ ## produce plot
+                print(try_plot)
+              } else{## try classical plot
                 cat("\nrasterVis' levelplot() function failed. Try to call standard raster plotting function.",
                     "It can lead to unooptimal representations.",
                     "You should try to do it by yourself extracting predicions (see : get_predictions() function)", fill=options()$width)
                 try_plot <- try(
                   plot(get_predictions(x, full.name=models_selected))
                 )
-              }
+              } 
               
               if(inherits(try_plot,"try-error")){ # try classical plot
                 cat("\n Plotting function failed.. You should try to do it by yourself!")
@@ -1918,6 +1936,19 @@ setMethod("get_evaluations", "BIOMOD.EnsembleModeling.out",
 )
 
 
+setMethod("get_variables_importance", "BIOMOD.EnsembleModeling.out",
+          function(obj, ...){
+            vi <- NULL
+            for (mod in get_built_models(obj) ){
+              (vi_tmp <- obj@em.models[[mod]]@model_variables_importance)
+              vi <- abind::abind(vi, vi_tmp, along=3)
+            }
+            dimnames(vi)[[3]] <- get_built_models(obj)
+            
+            return(vi)
+          }
+)
+
 setMethod("get_built_models", "BIOMOD.EnsembleModeling.out",
           function(obj, ...){
             return(obj@em.computed)
@@ -1949,7 +1980,6 @@ setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data'),
             
             ### Calib/Valid lines
             if(!is.null(DataSplitTable)){
-              cat("\n*** DataSplitTable is not NULL")
               calibLines <- DataSplitTable
               colnames(calibLines) <- paste('_RUN',1:ncol(calibLines), sep='')
             } else {
@@ -1963,6 +1993,12 @@ setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data'),
                   colnames(calibLines)[NbRunEval+1] <- '_Full'
                 }
               }
+            }
+            ## force calib.lines object to be 3D array
+            if(length(dim(calibLines)) < 3 ){
+              dn_tmp <- dimnames(calibLines) ## keep track of dimnames
+              dim(calibLines) <- c(dim(calibLines),1)
+              dimnames(calibLines) <- list(dn_tmp[[1]], dn_tmp[[2]], "_AllData")
             }
             
             if(is.null(Yweights)){ # 1 for all points
@@ -2000,8 +2036,7 @@ setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data.PA'),
               colnames(dataBM)[1] <- data@sp.name
               
               ### Calib/Valid lines
-              if(!is.null(DataSplitTable)){
-                cat("\n*** DataSplitTable is not NULL")
+              if(!is.null(DataSplitTable)){                
                 if(length(dim(DataSplitTable))==2){
                   calibLines <- DataSplitTable
                 } else {
@@ -2026,9 +2061,14 @@ setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data.PA'),
                   }                
                 }
               }
-              
-              
-              
+
+              ## force calib.lines object to be 3D array
+              if(length(dim(calibLines)) < 3 ){
+                dn_tmp <- dimnames(calibLines) ## keep track of dimnames
+                dim(calibLines) <- c(dim(calibLines),1)
+                dimnames(calibLines) <- list(dn_tmp[[1]], dn_tmp[[2]], paste("_PA",pa, sep=""))
+              }
+                
               # dealing with evaluation data
               if(data@has.data.eval){
                 evalDataBM <- data.frame(cbind(data@eval.data.species,data@eval.data.env.var))

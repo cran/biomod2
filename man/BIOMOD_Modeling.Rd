@@ -190,7 +190,7 @@ myBiomodModelOut <- BIOMOD_Modeling( myBiomodData,
                                        NbRunEval=2, 
                                        DataSplit=80, 
                                        VarImport=0, 
-                                       models.eval.meth = c('ROC'),
+                                       models.eval.meth = c('TSS','ROC'),
                                        do.full.models=FALSE,
                                        modeling.id="test")
                                        

@@ -11,7 +11,12 @@ setMethod('BinaryTransformation', signature(data='data.frame'),
   		if(ncol(moa)==1) return(moa[,1])
   		else return(moa)
   	}
-  	return(sweep(data.matrix(data), 2, threshold, FUN2))
+    if(is.numeric(threshold)){
+      return(sweep(data.matrix(data), 2, threshold, FUN2))
+    } else { ## return NAs
+      return( matrix(NA, ncol=ncol(data), nrow=nrow(data), dimnames=dimnames(data)) )
+    }
+  	
   })
 
 setMethod('BinaryTransformation', signature(data='matrix'), 
@@ -41,22 +46,35 @@ setMethod('BinaryTransformation', signature(data='array'),
               }
             }  
             
-            return(sweep(data,2:length(dim(data)),threshold,function(x,y) return(x>y)))
+            return(sweep(data,2:length(dim(data)),threshold,
+                         function(x,y) { 
+                           if(!is.na(x)){
+                             return(x>y)
+                            } else { 
+                             return(rep(NA,length(x)) )}
+                           } ))
           })
 
 setMethod('BinaryTransformation', signature(data='RasterLayer'), 
   function(data, threshold)
   {
-    return(reclassify(data,c(-Inf,threshold,0, threshold,+Inf,1)))
+    if(!is.na(threshold)){
+      return(reclassify(data,c(-Inf,threshold,0, threshold,+Inf,1)))
+    } else{ ## return a empty map (NA everywhere)
+      return(reclassify(data,c(-Inf,Inf,NA)))
+    }
+    
   })
 
 setMethod('BinaryTransformation', signature(data='RasterStack'), 
   function(data, threshold)
   {
     if(length(threshold) == 1){
+      cat("\n*** BinaryTransformation.R l73")
       threshold <- rep(threshold, raster::nlayers(data))
     }
     StkTmp <- raster::stack()
+    cat("\n*** BinaryTransformation.R l77")
     for(i in 1:raster::nlayers(data)){
       StkTmp <- raster::addLayer(StkTmp, BinaryTransformation(raster::subset(data,i,drop=TRUE), threshold[i]))
     }

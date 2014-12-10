@@ -39,12 +39,14 @@
 #   clamping.value <- args$clamping.value # reference value for clamped cells 
   output.format <- args$output.format # raster output format
   keep.in.memory <- args$keep.in.memory # store results on memory or only on hard drive
+  on_0_1000 <- args$on_0_1000 # transform projections on a 0 - 1000 scale to limit memory consumption
   
   if(is.null(omit.na)) omit.na <- TRUE
   if(is.null(silent)) silent <- FALSE
   if(is.null(do.stack)) do.stack <- TRUE
 #   if(is.null(clamping.value)) clamping.value <- -1
   if(is.null(keep.in.memory)) keep.in.memory <- TRUE
+  if(is.null(on_0_1000)) on_0_1000 <- TRUE # by default we return projections on a 0 -  1000 scale.
   
   if(!do.stack | !keep.in.memory) rasterOptions(todisk=TRUE)
   
@@ -129,7 +131,7 @@
     } else {
       writeRaster(x=get(paste("proj_",proj.name,"_",modeling.output@sp.name,"_ClampingMask",sep="")),
                   filename=file.path(modeling.output@sp.name, paste("proj_", proj.name, sep= ""), paste("proj_",proj.name,"_ClampingMask", output.format ,sep="")),
-                  datatype = "INT1S", NAflag=-127,
+                  datatype = "INT2S", NAflag=-9999,
                   overwrite=TRUE)
     }
 
@@ -154,7 +156,7 @@
       filename <- file.path(modeling.output@sp.name, paste("proj_", proj.name, sep=""), "individual_projections", paste("proj_", proj.name, "_", mod.name,ifelse(output.format==".RData",".grd",output.format), sep="") )
     }
     
-    pred.tmp <- predict(mod, new.env, on_0_1000=TRUE, filename=filename, omit.na=omit.na)
+    pred.tmp <- predict(mod, new.env, on_0_1000=on_0_1000, filename=filename, omit.na=omit.na)
     
     if(do.stack){ # return the prediction only if stack has to be build
       return(pred.tmp)
@@ -218,6 +220,7 @@
         eval.run <- .extractModelNamesInfo(model.names=mod, info='run.eval')
         algo.run <- .extractModelNamesInfo(model.names=mod, info='models')
         thresholds[eval.meth,mod] <- get_evaluations(modeling.output)[eval.meth,"Cutoff",algo.run,eval.run,PA.run]
+        if(! on_0_1000) thresholds[eval.meth,mod]  <- thresholds[eval.meth,mod] / 1000
       }
     } else{
       thresholds <- array(0,dim=c(length(eval.meth),dim(proj)[-1]) , 
@@ -227,6 +230,9 @@
         eval.run <- .extractModelNamesInfo(model.names=mod, info='run.eval')
         algo.run <- .extractModelNamesInfo(model.names=mod, info='models')
         thresholds[eval.meth,algo.run,eval.run,PA.run] <- get_evaluations(modeling.output)[eval.meth,"Cutoff",algo.run,eval.run,PA.run]
+        if(! on_0_1000) thresholds[eval.meth,algo.run,eval.run,PA.run]  <- thresholds[eval.meth,algo.run,eval.run,PA.run] / 1000
+#         cat("\n***")
+#         cat("thresholds = ", thresholds)
       }
     }
     
@@ -240,7 +246,7 @@
           writeRaster(x = BinaryTransformation(raster(file.tmp, RAT=FALSE),thres.tmp),
                       filename = sub(output.format, paste("_",eval.meth,"bin", output.format, sep=""), file.tmp), 
                       overwrite=TRUE,
-                      datatype = "INT1S",NAflag=-127)
+                      datatype = "INT2S",NAflag=-9999)
         }
       } else {
       assign(x = paste("proj_",proj.name, "_", modeling.output@sp.name,"_",eval.meth,"bin", sep=""),
@@ -253,7 +259,7 @@
         writeRaster(x=get(paste("proj_",proj.name, "_", modeling.output@sp.name,"_",eval.meth,"bin", sep="")),
                     filename=file.path(modeling.output@sp.name, paste("proj_", proj.name, sep= ""), paste("proj_",proj.name,"_", modeling.output@sp.name,"_",eval.meth,"bin", output.format ,sep="")), 
                     overwrite=TRUE,
-                    datatype = "INT1S",NAflag=-127)
+                    datatype = "INT2S",NAflag=-9999)
       }
       
       rm(list=paste("proj_",proj.name, "_", modeling.output@sp.name,"_",eval.meth,"bin", sep=""))
@@ -269,7 +275,7 @@
           thres.tmp <- asub(thresholds, eval.meth[drop=FALSE], 1, drop=FALSE)[,i]
           writeRaster(x = FilteringTransformation(raster(file.tmp, RAT=FALSE),thres.tmp),
                       filename = sub(output.format, paste("_",eval.meth,"filt", output.format, sep=""), file.tmp), 
-                      overwrite=TRUE, datatype="INT2S", NAflag="-9999"
+                      overwrite=TRUE, datatype=ifelse(on_0_1000,"INT2S","FLT4S"), NAflag=-9999
                       )
         }
       } else {
@@ -282,7 +288,7 @@
         } else {
           writeRaster(x=get(paste("proj_",proj.name, "_", modeling.output@sp.name,"_",eval.meth,"filt", sep="")),
                       filename=file.path(modeling.output@sp.name, paste("proj_", proj.name, sep= ""), paste("proj_",proj.name,"_", modeling.output@sp.name,"_",eval.meth,"filt", output.format ,sep="")), 
-                      overwrite=TRUE , datatype="INT2S", NAflag="-9999"
+                      overwrite=TRUE , datatype=ifelse(on_0_1000,"INT2S","FLT4S"), NAflag=-9999
                       )
         }
         
@@ -422,6 +428,7 @@
   } else{
     if(do.stack){
       # test if there is memory enough to work with RasterStack
+      cat("\n*** BIOMOD_Projection l431")
       test = canProcessInMemory( raster::subset(new.env,1), 2*length(selected.models) + nlayers(new.env) )
       if (!test) rasterOptions(todisk=T)
 #       if (!do.stack){ 

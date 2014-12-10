@@ -8,6 +8,8 @@
 import("methods") 
 import("raster")
 import("sp")
+import("ggplot2")
+import("parallel")
 
 importFrom("abind", abind, asub)
 import("reshape")
@@ -117,6 +119,7 @@ export(
 exportMethods(
 	get_built_models,
 	get_evaluations,
+	get_calib_lines,
 	get_formal_data,
 	get_formal_model, 
 	get_kept_models,
@@ -131,6 +134,7 @@ exportMethods(
 export(
 	get_built_models,
 	get_evaluations,
+	get_calib_lines,
 	get_formal_data,
 	get_formal_model, 
 	get_kept_models,
@@ -160,6 +164,7 @@ export(
 	level.plot,
 	LIST_to_ARRAY,
 	makeFormula,
+	models_scores_graph,
 	multiple.plot,
 	Print_Default_ModelingOptions,
 	ProbDensFunc,

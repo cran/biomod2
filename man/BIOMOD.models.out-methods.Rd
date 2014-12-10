@@ -4,10 +4,13 @@
 \alias{get_predictions,BIOMOD.models.out-method}
 \alias{get_predictions,BIOMOD.projection.out-method}
 \alias{get_evaluations}
+\alias{get_calib_lines,BIOMOD.models.out-method}
+\alias{get_calib_lines}
 \alias{get_evaluations,BIOMOD.models.out-method}
 \alias{get_evaluations,BIOMOD.EnsembleModeling.out-method}
 \alias{get_variables_importance}
 \alias{get_variables_importance,BIOMOD.models.out-method}
+\alias{get_variables_importance,BIOMOD.EnsembleModeling.out-method}
 \alias{get_options}
 \alias{get_options,BIOMOD.models.out-method}
 \alias{get_predictions}
@@ -28,6 +31,7 @@ Functions to get attributs of \code{\link[biomod2]{BIOMOD_Modeling}} outputs
   get_predictions(obj, ...)
   get_formal_data(obj, ...)
   get_evaluations(obj, ...)
+  get_calib_lines(obj, ...)
   get_variables_importance(obj, ...)
   get_options(obj, ...)
   get_built_models(obj, ...)
@@ -50,6 +54,9 @@ Functions to get attributs of \code{\link[biomod2]{BIOMOD_Modeling}} outputs
       \itemize{
         \item{\code{as.data.frame}:}{"logical", ( FALSE by default ) if TRUE, a standardized \code{data.frame} will be produced else an 4 dimentions \code{array} is returned }
       }
+    }
+    
+    \item{\bold{get_calib_lines}}{
     }
   
     \item{\bold{get_predictions}}{

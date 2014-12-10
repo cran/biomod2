@@ -49,110 +49,125 @@ ProbDensFunc(initial,
 \examples{
 
 \dontrun{
-  DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
-                                      package="biomod2"), row.names = 1)
-  head(DataSpecies)
-  
-  # the name of studied species
-  myRespName <- 'GuloGulo'
-  
-  # the presence/absences data for our species 
-  myResp <- as.numeric(DataSpecies[,myRespName])
-  
-  # remove all 0 from response vector to work with
-  # presence only data (Pseudo Absences selections)
-  rm_id <- which(myResp==0)
-  myResp <- myResp[-rm_id]
-  
-  
-  # the XY coordinates of species data
-  myRespXY <- DataSpecies[-rm_id,c("X_WGS84","Y_WGS84")]
-  
-  
-  # Environmental variables extracted from BIOCLIM 
-  myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
-                       package="biomod2"),
-                  system.file( "external/bioclim/current/bio4.grd", 
-                               package="biomod2"), 
-                  system.file( "external/bioclim/current/bio7.grd", 
-                               package="biomod2"),  
-                  system.file( "external/bioclim/current/bio11.grd", 
-                               package="biomod2"), 
-                  system.file( "external/bioclim/current/bio12.grd", 
+DataSpecies <- read.csv(system.file("external/species/mammals_table.csv",
+                                    package="biomod2"), row.names = 1)
+head(DataSpecies)
+
+# the name of studied species
+myRespName <- 'GuloGulo'
+
+# the presence/absences data for our species 
+myResp <- as.numeric(DataSpecies[,myRespName])
+
+# remove all 0 from response vector to work with
+# presence only data (Pseudo Absences selections)
+rm_id <- which(myResp==0)
+myResp <- myResp[-rm_id]
+
+
+# the XY coordinates of species data
+myRespXY <- DataSpecies[-rm_id,c("X_WGS84","Y_WGS84")]
+
+
+# Environmental variables extracted from BIOCLIM 
+myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
+                             package="biomod2"),
+                system.file( "external/bioclim/current/bio4.grd", 
+                             package="biomod2"), 
+                system.file( "external/bioclim/current/bio7.grd", 
+                             package="biomod2"),  
+                system.file( "external/bioclim/current/bio11.grd", 
+                             package="biomod2"), 
+                system.file( "external/bioclim/current/bio12.grd", 
                              package="biomod2"))
-    
-  # 1. Formatting Data
-  myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-                                       expl.var = myExpl,
-                                       resp.xy = myRespXY,
-                                       resp.name = myRespName,
-                                       PA.nb.rep=3)
-  
-  # 2. Defining Models Options using default options.
-  myBiomodOption <- BIOMOD_ModelingOptions()
-  
-  # 3. Doing Modelisation
-  myBiomodModelOut <- BIOMOD_Modeling( myBiomodData, 
-                       models = c('CTA','RF','GLM','GAM','ANN','MARS'), 
-                       models.options = myBiomodOption, 
-                       NbRunEval=5, 
-                       DataSplit=70, 
-                       Prevalence=0.5,
-                       models.eval.meth = c('TSS'),
-                       do.full.models = FALSE,
-                       rescal.all.models=T,
-                       modeling.id='test')
-  
-  # 4. Build ensemble-models that will be taken as reference
-  myBiomodEM <- BIOMOD_EnsembleModeling( modeling.output = myBiomodModelOut,
-                                         chosen.models = 'all',
-                                         em.by = 'all',
-                                         eval.metric = c('TSS'),
-                                         eval.metric.quality.threshold = c(0.7),
-                                         prob.mean = TRUE,
-                                         prob.median = TRUE)
-  
-  # 5. Projection on current environemental conditions
-  myBiomodProjection <- BIOMOD_Projection(modeling.output = myBiomodModelOut,
-                                          new.env = myExpl,
-                                          proj.name = 'current',
-                                          selected.models = 'all',
-                                          binary.meth = 'TSS',
-                                          compress = FALSE,
-                                          build.clamping.mask = TRUE)
-  
-  BIOMOD_EnsembleForecasting(projection.output=myBiomodProjection,
-                             EM.output=myBiomodEM,
-                             binary.meth='TSS')
-  
-  # 6. load binary projections
-  consensusBin <- stack('GuloGulo/proj_current/
-  proj_current_GuloGulo_TotalConsensus_EMbyTSS_TSSbin.grd')
-  projectionsBin <- stack('GuloGulo/proj_current/
-  proj_current_GuloGulo_TSSbin.grd')
-  
-  # 7. build a ref state based on ensemble-models
-  ref <- sampleRandom(subset(consensusBin, 1, drop=T), size=5000, sp=T, na.rm=T)
-  
-  # 8. autoatic creation of groups matrix
-  find_groups <- function(diff_by_pix){
-    data.set <- sapply(names(diff_by_pix),.extractModelNamesInfo,info='data.set')
-    run.eval <- sapply(names(diff_by_pix),.extractModelNamesInfo,info='run.eval')
-    models <- sapply(names(diff_by_pix),.extractModelNamesInfo,info='models')
-    return(rbind(data.set,run.eval,models))  
-  }
-  
-  groups <- find_groups(projectionsBin)
-  
-  # 9. plot ProbDensFunct graphs
-  ProbDensFunc(initial = ref,
-               projections = projectionsBin, 
-               plothist=TRUE, 
-               cvsn=TRUE, 
-               groups=groups, 
-               resolution=2, 
-               filename=NULL, 
-               lim=c(0.5,0.8,0.95))
+
+# 1. Formatting Data
+myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
+                                     expl.var = myExpl,
+                                     resp.xy = myRespXY,
+                                     resp.name = myRespName,
+                                     PA.nb.rep=3)
+
+# 2. Defining Models Options using default options.
+myBiomodOption <- BIOMOD_ModelingOptions()
+
+# 3. Doing Modelisation
+myBiomodModelOut <- BIOMOD_Modeling( myBiomodData, 
+                                     models = c('CTA','RF','GLM','GAM','ANN','MARS'), 
+                                     models.options = myBiomodOption, 
+                                     NbRunEval=5, 
+                                     DataSplit=70, 
+                                     Prevalence=0.5,
+                                     models.eval.meth = c('TSS'),
+                                     do.full.models = FALSE,
+                                     rescal.all.models=T,
+                                     modeling.id='test')
+
+# 4. Build ensemble-models that will be taken as reference
+myBiomodEM <- BIOMOD_EnsembleModeling( modeling.output = myBiomodModelOut,
+                                       chosen.models = 'all',
+                                       em.by = 'all',
+                                       eval.metric = c('TSS'),
+                                       eval.metric.quality.threshold = c(0.7),
+                                       prob.mean = TRUE,
+                                       prob.median = TRUE)
+
+# 5. Projection on future environmental conditions
+
+## load future environmental conditions from biomod2 package 
+myExpl_fut <- stack( system.file( "external/bioclim/future/bio3.grd", 
+                                  package="biomod2"),
+                     system.file( "external/bioclim/future/bio4.grd", 
+                                  package="biomod2"), 
+                     system.file( "external/bioclim/future/bio7.grd", 
+                                  package="biomod2"),  
+                     system.file( "external/bioclim/future/bio11.grd", 
+                                  package="biomod2"), 
+                     system.file( "external/bioclim/future/bio12.grd", 
+                                  package="biomod2"))
+
+myBiomodProjection <- BIOMOD_Projection(modeling.output = myBiomodModelOut,
+                                        new.env = myExpl_fut,
+                                        proj.name = 'future',
+                                        selected.models = 'all',
+                                        binary.meth = 'TSS',
+                                        compress = FALSE,
+                                        build.clamping.mask = TRUE)
+
+BIOMOD_EnsembleForecasting(projection.output=myBiomodProjection,
+                           EM.output=myBiomodEM,
+                           binary.meth='TSS')
+
+# 6. load binary projections
+consensusBin <- stack('GuloGulo/proj_future/proj_future_GuloGulo_ensemble_TSSbin.grd')
+projectionsBin <- stack('GuloGulo/proj_future/proj_future_GuloGulo_TSSbin.grd')
+
+# 7. build a ref state based on ensemble-models
+ref <- sampleRandom(subset(consensusBin, 1, drop=T), size=5000, sp=T, na.rm=T)
+
+# 8. autoatic creation of groups matrix
+find_groups <- function(diff_by_pix){
+  data.set <- sapply(names(diff_by_pix),biomod2:::.extractModelNamesInfo,info='data.set')
+  run.eval <- sapply(names(diff_by_pix),biomod2:::.extractModelNamesInfo,info='run.eval')
+  models <- sapply(names(diff_by_pix),biomod2:::.extractModelNamesInfo,info='models')
+  return(rbind(data.set,run.eval,models))  
+}
+
+groups <- find_groups(projectionsBin)
+
+# 9. plot ProbDensFunct graphs
+ProbDensFunc(initial = ref,
+             projections = projectionsBin, 
+             plothist=TRUE, 
+             cvsn=TRUE, 
+             groups=groups, 
+             resolution=2, 
+             filename=NULL, 
+             lim=c(0.5,0.8,0.95))
+
+## 3 plots should be produced.. Should be convenient to save it within a device
+## supporting multiple plots.
+
 }
 }
 

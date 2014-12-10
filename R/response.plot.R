@@ -125,7 +125,8 @@
         
         if(is.factor(Data[,vari])) xlim <- c(1,length(levels(Data[,vari]))) else xlim=c(min(Data[,vari], na.rm=T), max(Data[,vari], na.rm=T))
         
-        plot(0,0,col="white",xlim=xlim, ylim=ylim, main=vari, ann=TRUE, bty="o",xaxs="r", xaxt="s", xaxt=ifelse(is.factor(Data[,vari]),'n','t'))
+        plot(0,0,col="white",xlim=xlim, ylim=ylim, main=vari, ann=TRUE, bty="o",xaxs="r", xaxt="s", xaxt=ifelse(is.factor(Data[,vari]),'n','t'),
+             xlab="",ylab="")
         rug(Data[ ,vari])
         
         if(is.factor(Data[,vari])) axis(1, at=seq(xlim[1],xlim[2],1), labels=levels(Data[,vari]))

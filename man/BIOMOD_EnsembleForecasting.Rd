@@ -36,6 +36,12 @@ BIOMOD_EnsembleForecasting( EM.output,
 This function requires to have successfully run \pkg{biomod2} modeling, ensemble-modeling and projection steps. Ensemble projections will be created in respect to \code{projection.output} projections, which are combined following \code{EM.output} ensemble-modeling rules.
 
 The \sQuote{total.consensus} projection is basically the mean of all projections (for having only one output).  
+
+\ldots may be :
+\itemize{
+  \item{\code{on_0_1000}:}{logical, if TRUE (default), 0 - 1 probabilities are converted into a 0 - 1000 integer scale. This implies a lot of memory saving. User that want to comeback on a 0 - 1 scale latter will just have to divide all projections by 1000  }
+}
+
 } % end of detail 
 
 \value{

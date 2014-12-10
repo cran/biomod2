@@ -30,7 +30,7 @@
 
 ####################################################################################################
 
-'BIOMOD_Modeling' <- function( data, 
+BIOMOD_Modeling <- function( data, 
                                models = c('GLM','GBM','GAM','CTA','ANN','SRE','FDA','MARS','RF','MAXENT'), 
                                models.options = NULL, 
                                NbRunEval=1, 
@@ -98,18 +98,23 @@
   }
   
 
-  # 3. rearanging data and determining calib and eval data -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
-
+  # 3. rearanging data and determining calib and eval data -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #) 
   mod.prep.dat <- .Models.prepare.data(data, NbRunEval, DataSplit, Yweights, Prevalence, do.full.models, DataSplitTable)
   rm(data)
   
   # keeping calibLines
   calib.lines <- mod.prep.dat[[1]]$calibLines
-  if(length(mod.prep.dat) > 1){
+  if(length(mod.prep.dat) > 1){ ## stack calib lines matrix along 3rd dimention of an array
     for(pa in 2:length(mod.prep.dat)){
       calib.lines <- abind(calib.lines, mod.prep.dat[[pa]]$calibLines, along=3)
     }
-  }
+#     ## update dimnames
+#     dimnames(calib.lines) <- list(dimnames(calib.lines)[[1]], dimnames(calib.lines)[[2]], paste("PA", 1:length(mod.prep.dat) ))
+  } # else { ## force calib.line object to be a 3D array
+#     dim(calib.lines) <- c(dim(calib.lines),1)
+#     ## update dimnames
+#     dimnames(calib.lines) <- list(dimnames(calib.lines)[[1]], dimnames(calib.lines)[[2]], paste("PA", 1:length(mod.prep.dat) ))
+#   }
   # save calib.lines
   save(calib.lines, file = file.path(models.out@sp.name,".BIOMOD_DATA",models.out@modeling.id,"calib.lines"), compress = compress.arg)
   models.out@calib.lines@inMemory <- FALSE

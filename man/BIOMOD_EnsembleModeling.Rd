@@ -9,7 +9,7 @@
 \usage{
 BIOMOD_EnsembleModeling( modeling.output,
                          chosen.models = 'all',
-                         em.by = 'all',
+                         em.by = 'PA_dataset+repet',
                          eval.metric = 'all',
                          eval.metric.quality.threshold = NULL,
                          models.eval.meth = c('KAPPA','TSS','ROC'),

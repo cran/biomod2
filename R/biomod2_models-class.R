@@ -235,7 +235,7 @@ setMethod('predict', signature(object = 'ANN_biomod2_model'),
   if (is.null(overwrite)) overwrite <- TRUE
   if (is.null(on_0_1000)) on_0_1000 <- FALSE
   
-  set.seed(555)
+#   set.seed(555)
   proj <- predict(newdata, get_formal_model(object), type="raw")
   
   if(length(get_scaling_model(object))){
@@ -249,7 +249,7 @@ setMethod('predict', signature(object = 'ANN_biomod2_model'),
   if(!is.null(filename)){
     cat("\n\t\tWriting projection on hard drive...")
     if(on_0_1000){ ## projections are stored as positive integer 
-      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag="-9999")
+      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag=-9999)
     } else { ## keep default data format for saved raster 
       writeRaster(proj, filename=filename, overwrite=overwrite) 
     }
@@ -357,7 +357,7 @@ setMethod('predict', signature(object = 'CTA_biomod2_model'),
   if(!is.null(filename)){
     cat("\n\t\tWriting projection on hard drive...")
     if(on_0_1000){ ## projections are stored as positive integer 
-      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag="-9999")
+      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag=-9999)
     } else { ## keep default data format for saved raster 
       writeRaster(proj, filename=filename, overwrite=overwrite) 
     }
@@ -462,7 +462,7 @@ setMethod('predict', signature(object = 'FDA_biomod2_model'),
   if(!is.null(filename)){
     cat("\n\t\tWriting projection on hard drive...")
     if(on_0_1000){ ## projections are stored as positive integer 
-      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag="-9999")
+      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag=-9999)
     } else { ## keep default data format for saved raster 
       writeRaster(proj, filename=filename, overwrite=overwrite) 
     }
@@ -584,7 +584,7 @@ setMethod('predict', signature(object = 'GAM_biomod2_model'),
   if(!is.null(filename)){
     cat("\n\t\tWriting projection on hard drive...")
     if(on_0_1000){ ## projections are stored as positive integer 
-      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag="-9999")
+      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag=-9999)
     } else { ## keep default data format for saved raster 
       writeRaster(proj, filename=filename, overwrite=overwrite) 
     }
@@ -611,6 +611,7 @@ setMethod('predict', signature(object = 'GAM_biomod2_model'),
   }
   
   proj <- as.numeric(.testnull(object = get_formal_model(object), Prev = 0.5 , dat = as.data.frame(newdata[not_na_rows,,drop=FALSE])))
+#   proj <- as.numeric(.testnull(object = get_formal_model(object), Prev = 0.5 , dat = as.data.frame(newdata[not_na_rows,,drop=FALSE])))
   
   ## add original NAs in table if it needed
   if(sum(!not_na_rows) > 0 ){ # some NAs in formal dataset
@@ -690,7 +691,7 @@ setMethod('predict', signature(object = 'GBM_biomod2_model'),
   if(!is.null(filename)){
     cat("\n\t\tWriting projection on hard drive...")
     if(on_0_1000){ ## projections are stored as positive integer 
-      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag="-9999")
+      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag=-9999)
     } else { ## keep default data format for saved raster 
       writeRaster(proj, filename=filename, overwrite=overwrite) 
     }
@@ -796,7 +797,7 @@ setMethod('predict', signature(object = 'GLM_biomod2_model'),
   if(!is.null(filename)){
     cat("\n\t\tWriting projection on hard drive...")
     if(on_0_1000){ ## projections are stored as positive integer 
-      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag="-9999")
+      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag=-9999)
     } else { ## keep default data format for saved raster 
       writeRaster(proj, filename=filename, overwrite=overwrite) 
     }
@@ -900,7 +901,7 @@ setMethod('predict', signature(object = 'MARS_biomod2_model'),
   if(!is.null(filename)){
     cat("\n\t\tWriting projection on hard drive...")
     if(on_0_1000){ ## projections are stored as positive integer 
-      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag="-9999")
+      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag=-9999)
     } else { ## keep default data format for saved raster 
       writeRaster(proj, filename=filename, overwrite=overwrite) 
     }
@@ -1031,7 +1032,7 @@ setMethod('predict', signature(object = 'MAXENT_biomod2_model'),
   if(!is.null(filename)){
     cat("\n\t\tWriting projection on hard drive...")
     if(on_0_1000){ ## projections are stored as positive integer 
-      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag="-9999")
+      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag=-9999)
     } else { ## keep default data format for saved raster 
       writeRaster(proj, filename=filename, overwrite=overwrite) 
     }
@@ -1190,7 +1191,7 @@ setMethod('predict', signature(object = 'RF_biomod2_model'),
   if(!is.null(filename)){
     cat("\n\t\tWriting projection on hard drive...")
     if(on_0_1000){ ## projections are stored as positive integer 
-      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag="-9999")
+      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag=-9999)
     } else { ## keep default data format for saved raster 
       writeRaster(proj, filename=filename, overwrite=overwrite) 
     }
@@ -1285,7 +1286,7 @@ setMethod('predict', signature(object = 'SRE_biomod2_model'),
   if(!is.null(filename)){
     cat("\n\t\tWriting projection on hard drive...")
     if(on_0_1000){ ## projections are stored as positive integer 
-      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag="-9999")
+      writeRaster(proj, filename=filename, overwrite=overwrite, datatype="INT2S", NAflag=-9999)
     } else { ## keep default data format for saved raster 
       writeRaster(proj, filename=filename, overwrite=overwrite) 
     }
@@ -1356,6 +1357,7 @@ setMethod('predict', signature(object = 'EMmean_biomod2_model'),
             args <- list(...)
             
             do_check <- args$do_check
+            
             if(is.null(do_check)) do_check <- TRUE
             
             ## data checking
@@ -1375,7 +1377,7 @@ setMethod('predict', signature(object = 'EMmean_biomod2_model'),
             if(inherits(newdata, 'Raster') | inherits(formal_predictions, 'Raster')){            
               return(.predict.EMmean_biomod2_model.RasterStack(object, newdata, formal_predictions, ... ))
             } else if(inherits(newdata, 'data.frame') | inherits(newdata, 'matrix') | inherits(formal_predictions, 'data.frame') | inherits(formal_predictions, 'matrix')){
-              return(.predict.EMmean_biomod2_model.data.frame(object, newdata, formal_predictions, ... ))
+              return(.predict.EMmean_biomod2_model.data.frame(object, newdata, formal_predictions,  ... ))
             } else{ stop("invalid newdata input") }
             
           })
@@ -1383,27 +1385,47 @@ setMethod('predict', signature(object = 'EMmean_biomod2_model'),
 .predict.EMmean_biomod2_model.RasterStack <- function(object, newdata=NULL, formal_predictions=NULL, ... ){
   args <- list(...)
   
+  on_0_1000 <- args$on_0_1000
+  if (is.null(on_0_1000)) on_0_1000 <- FALSE
+  
   #formal_predictions <- args$formal_predictions
   
   if(is.null(formal_predictions)){
     # make prediction of all models required
-    formal_predictions <- raster::stack(lapply(object@model, predict, newdata=newdata, on_0_1000=TRUE))
+    formal_predictions <- raster::stack(lapply(object@model, predict, newdata=newdata, on_0_1000=on_0_1000))
   }
   
-  return(round(raster::mean(formal_predictions)))
+  out <- raster::mean(formal_predictions)
+  
+  if (on_0_1000){
+    out <- round(out)
+  } 
+  
+  return(out)
+  
 }
 
 .predict.EMmean_biomod2_model.data.frame <- function(object, newdata=NULL, formal_predictions=NULL, ... ){
   args <- list(...)
   
+  on_0_1000 <- args$on_0_1000
+  if (is.null(on_0_1000)) on_0_1000 <- FALSE
+  
   #formal_predictions <- args$formal_predictions
   
   if(is.null(formal_predictions)){
     # make prediction of all models required
-    formal_predictions <- sapply(object@model, predict, newdata=newdata, on_0_1000=TRUE)
+    formal_predictions <- sapply(object@model, predict, newdata=newdata, on_0_1000=on_0_1000)
   }
   
-  return(round(rowMeans(formal_predictions, na.rm=T)))
+  out <- rowMeans(formal_predictions, na.rm=T)
+  
+  if (on_0_1000){
+    out <- round(out)
+  } 
+  
+  return(out)
+  
 }
 
 
@@ -1454,27 +1476,47 @@ setMethod('predict', signature(object = 'EMmedian_biomod2_model'),
 .predict.EMmedian_biomod2_model.RasterStack <- function(object, newdata=NULL, formal_predictions=NULL, ... ){
   args <- list(...)
   
+  on_0_1000 <- args$on_0_1000
+  if (is.null(on_0_1000)) on_0_1000 <- FALSE
+  
   #formal_predictions <- args$formal_predictions
   
   if(is.null(formal_predictions)){
     # make prediction of all models required
-    formal_predictions <- raster::stack(lapply(object@model, predict, newdata=newdata, on_0_1000=TRUE))
+    formal_predictions <- raster::stack(lapply(object@model, predict, newdata=newdata, on_0_1000=on_0_1000))
   }
+  
+  out <- calc(formal_predictions, median)
+  
+  if (on_0_1000){
+    out <- round(out)
+  } 
+  
+  return(out)
 
-  return(round(calc(formal_predictions, median)))
 }
 
 .predict.EMmedian_biomod2_model.data.frame <- function(object, newdata=NULL, formal_predictions=NULL, ... ){
   args <- list(...)
   
+  on_0_1000 <- args$on_0_1000
+  if (is.null(on_0_1000)) on_0_1000 <- FALSE
+  
   #formal_predictions <- args$formal_predictions
   
   if(is.null(formal_predictions)){
     # make prediction of all models required
-    formal_predictions <- sapply(object@model, predict, newdata=newdata, on_0_1000=TRUE)
+    formal_predictions <- sapply(object@model, predict, newdata=newdata, on_0_1000=on_0_1000)
   }
   
-  return(round(apply(formal_predictions, 1, median, na.rm=T)))
+  out <- apply(formal_predictions, 1, median, na.rm=T)
+  
+  if (on_0_1000){
+    out <- round(out)
+  } 
+  
+  return(out)
+  
 }
 
 
@@ -1525,26 +1567,39 @@ setMethod('predict', signature(object = 'EMcv_biomod2_model'),
 .predict.EMcv_biomod2_model.RasterStack <- function(object, newdata=NULL, formal_predictions=NULL, ... ){
   args <- list(...)
   
+  on_0_1000 <- args$on_0_1000
+  if (is.null(on_0_1000)) on_0_1000 <- FALSE
+  
   #formal_predictions <- args$formal_predictions
   mean_prediction <- args$mean_prediction
   
   if(is.null(formal_predictions)){
     # make prediction of all models required
-    formal_predictions <- raster::stack(lapply(object@model, predict, newdata=newdata, on_0_1000=TRUE))
+    formal_predictions <- raster::stack(lapply(object@model, predict, newdata=newdata, on_0_1000=on_0_1000))
   }
  
-  return(round(raster::cv(formal_predictions, na.rm=TRUE, aszero=TRUE), digits=0))
+  out <- raster::cv(formal_predictions, na.rm=TRUE, aszero=TRUE)
+    
+#   if (on_0_1000){
+#     out <- round(out)
+#   } 
+  
+  return(out)
+  
 }
 
 .predict.EMcv_biomod2_model.data.frame <- function(object, newdata=NULL, formal_predictions=NULL, ... ){
   args <- list(...)
+  
+  on_0_1000 <- args$on_0_1000
+  if (is.null(on_0_1000)) on_0_1000 <- FALSE
   
   #formal_predictions <- args$formal_predictions
 #   mean_prediction <- args$mean_prediction # mean of predictions should be given for time saving
   
   if(is.null(formal_predictions)){
     # make prediction of all models required
-    formal_predictions <- sapply(object@model, predict, newdata=newdata, on_0_1000=TRUE)
+    formal_predictions <- sapply(object@model, predict, newdata=newdata, on_0_1000=on_0_1000)
   }
   
 #   if(is.null(mean_prediction)){
@@ -1558,8 +1613,15 @@ setMethod('predict', signature(object = 'EMcv_biomod2_model'),
 #   sd_prediction <- apply(formal_predictions,1,sd, na.rm=T)
 #   
 #   return(round(sd_prediction / mean_prediction, 2))
-  return(round(apply(formal_predictions, 1, cv, na.rm=T, aszero=T)))
   
+  out <- apply(formal_predictions, 1, cv, na.rm=T, aszero=T)
+  
+#   if (on_0_1000){
+#     out <- round(out)
+#   } 
+  
+  return(out)
+
 }
 
 
@@ -1615,13 +1677,16 @@ setMethod('predict', signature(object = 'EMci_biomod2_model'),
 .predict.EMci_biomod2_model.RasterStack <- function(object, newdata=NULL, formal_predictions=NULL, ... ){
   args <- list(...)
   
+  on_0_1000 <- args$on_0_1000
+  if (is.null(on_0_1000)) on_0_1000 <- FALSE
+  
   #formal_predictions <- args$formal_predictions
   mean_prediction <- args$mean_prediction # mean of predictions should be given for time saving
   sd_prediction <- args$sd_prediction # mean of predictions should be given for time saving
   
   if(is.null(formal_predictions)){
     # make prediction of all models required
-    formal_predictions <- raster::stack(lapply(object@model, predict, newdata=newdata, on_0_1000=TRUE))
+    formal_predictions <- raster::stack(lapply(object@model, predict, newdata=newdata, on_0_1000=on_0_1000))
   }
   
   if(is.null(mean_prediction)){
@@ -1635,9 +1700,13 @@ setMethod('predict', signature(object = 'EMci_biomod2_model'),
   ci_prediction <- switch(object@side,
                           inferior = mean_prediction -  (sd_prediction * (qt((1-object@alpha/2), df = length(object@model) + 1 ) / sqrt(length(object@model))) ),
                           superior = mean_prediction +  (sd_prediction * (qt((1-object@alpha/2), df = length(object@model) + 1 ) / sqrt(length(object@model))) ))
-    
+  
   # reclassify prediction to prevent from out of bounds prediction
-  ci_prediction <- reclassify(round(ci_prediction), c(-Inf,0,0, 1000,Inf,1000))
+  if (on_0_1000){
+    ci_prediction <- reclassify(round(ci_prediction), c(-Inf,0,0, 1000,Inf,1000))
+  } else {
+    ci_prediction <- reclassify(ci_prediction, c(-Inf,0,0, 1,Inf,1))
+  }
   
   return(ci_prediction)
 }
@@ -1645,13 +1714,16 @@ setMethod('predict', signature(object = 'EMci_biomod2_model'),
 .predict.EMci_biomod2_model.data.frame <- function(object, newdata=NULL, formal_predictions=NULL, ... ){
   args <- list(...)
   
+  on_0_1000 <- args$on_0_1000
+  if (is.null(on_0_1000)) on_0_1000 <- FALSE
+  
   #formal_predictions <- args$formal_predictions
   mean_prediction <- args$mean_prediction # mean of predictions should be given for time saving
   sd_prediction <- args$sd_prediction # mean of predictions should be given for time saving
   
   if(is.null(formal_predictions)){
     # make prediction of all models required
-    formal_predictions <- sapply(object@model, predict, newdata=newdata, on_0_1000=TRUE)
+    formal_predictions <- sapply(object@model, predict, newdata=newdata, on_0_1000=on_0_1000)
   }
   
   if(is.null(mean_prediction)){
@@ -1667,10 +1739,16 @@ setMethod('predict', signature(object = 'EMci_biomod2_model'),
   ci_prediction <- switch(object@side,
                           inferior = mean_prediction -  (sd_prediction * (qt((1-object@alpha/2), df = length(object@model) + 1 ) / sqrt(length(object@model))) ),
                           superior = mean_prediction +  (sd_prediction * (qt((1-object@alpha/2), df = length(object@model) + 1 ) / sqrt(length(object@model))) ))
+  
   # reclassify prediction to prevent from out of bounds prediction
+  if (on_0_1000){
   ci_prediction <- round(ci_prediction)
   ci_prediction[ci_prediction > 1000] <- 1000
   ci_prediction[ci_prediction < 0] <- 0
+  } else {
+    ci_prediction[ci_prediction > 1] <- 1
+    ci_prediction[ci_prediction < 0] <- 0
+  }
 
   return(ci_prediction)
 }
@@ -1723,27 +1801,55 @@ setMethod('predict', signature(object = 'EMca_biomod2_model'),
 .predict.EMca_biomod2_model.RasterStack <- function(object, newdata=NULL, formal_predictions=NULL, ... ){
   args <- list(...)
   
+  on_0_1000 <- args$on_0_1000
+  if (is.null(on_0_1000)) on_0_1000 <- FALSE
+  
   #formal_predictions <- args$formal_predictions
   
   if(is.null(formal_predictions)){
     # make prediction of all models required
-    formal_predictions <- raster::stack(lapply(object@model, predict, newdata=newdata, on_0_1000=TRUE))
+    formal_predictions <- raster::stack(lapply(object@model, predict, newdata=newdata, on_0_1000=on_0_1000))
   }
   
-  return(round(raster::mean(BinaryTransformation(formal_predictions, object@tresholds), na.rm=T) * 1000))
+  if (on_0_1000){
+    thresh <- object@tresholds
+  } else { thresh <- object@tresholds / 1000 }
+  
+  out <- raster::mean(BinaryTransformation(formal_predictions, thresh), na.rm=T)
+  
+  if (on_0_1000){
+    out <- round(out* 1000)
+  } 
+  
+  return(out)
+
 }
 
 .predict.EMca_biomod2_model.data.frame <- function(object, newdata=NULL, formal_predictions=NULL, ... ){
   args <- list(...)
   
+  on_0_1000 <- args$on_0_1000
+  if (is.null(on_0_1000)) on_0_1000 <- FALSE
+  
   #formal_predictions <- args$formal_predictions
   
   if(is.null(formal_predictions)){
     # make prediction of all models required
-    formal_predictions <- sapply(object@model, predict, newdata=newdata, on_0_1000=TRUE)
+    formal_predictions <- sapply(object@model, predict, newdata=newdata, on_0_1000=on_0_1000)
   }
   
-  return(round(apply(as.data.frame(BinaryTransformation(formal_predictions, object@tresholds)), 1, mean, na.rm=T)*1000))
+  if (on_0_1000){
+    thresh <- object@tresholds
+  } else { thresh <- object@tresholds / 1000 }
+  
+  out <- apply(as.data.frame(BinaryTransformation(formal_predictions, thresh)), 1, mean, na.rm=T)
+  
+  if (on_0_1000){
+    out <- round(out * 1000)
+  } 
+  
+  return(out)
+  
 }
 
 # EMwmean Class =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
@@ -1788,26 +1894,46 @@ setMethod('predict', signature(object = 'EMwmean_biomod2_model'),
 .predict.EMwmean_biomod2_model.RasterStack <- function(object, newdata=NULL, formal_predictions=NULL, ... ){
   args <- list(...)
   
+  on_0_1000 <- args$on_0_1000
+  if (is.null(on_0_1000)) on_0_1000 <- FALSE
+  
   #formal_predictions <- args$formal_predictions
   
   if(is.null(formal_predictions)){
     # make prediction of all models required
-    formal_predictions <- raster::stack(lapply(object@model, predict, newdata=newdata, on_0_1000=TRUE))
+    formal_predictions <- raster::stack(lapply(object@model, predict, newdata=newdata, on_0_1000=on_0_1000))
   }
   
-  return(round(sum(formal_predictions * object@penalization_scores)))
+  out <- sum(formal_predictions * object@penalization_scores)
+    
+  if (on_0_1000){
+    out <- round(out)
+  } 
+  
+  return(out)
+
 }
 
 .predict.EMwmean_biomod2_model.data.frame <- function(object, newdata=NULL, formal_predictions=NULL, ... ){
   args <- list(...)
   
+  on_0_1000 <- args$on_0_1000
+  if (is.null(on_0_1000)) on_0_1000 <- FALSE
+  
   #formal_predictions <- args$formal_predictions
   
   if(is.null(formal_predictions)){
     # make prediction of all models required
-    formal_predictions <- sapply(object@model, predict, newdata=newdata, on_0_1000=TRUE)
+    formal_predictions <- sapply(object@model, predict, newdata=newdata, on_0_1000=on_0_1000)
   }
   
-  return(round(as.vector(as.matrix(formal_predictions) %*% object@penalization_scores)))
+  out <- as.vector(as.matrix(formal_predictions) %*% object@penalization_scores)
+  
+  if (on_0_1000){
+    out <- round(out)
+  } 
+  
+  return(out)
+
 }
 

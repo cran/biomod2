@@ -172,7 +172,7 @@ setMethod('.transform.outputs', signature(modOut='list'),
                       lapply(names(modOut[[d1]][[d2]]), function(d3){ # models
                         if(is.null(modOut[[d1]][[d2]][[d3]][['calib.failure']])){
                           return(data.frame(modOut[[d1]][[d2]][[d3]][['evaluation']]))
-                        } else { matrix(NA, ncol=4, nrow=length(eval.meth.names), dimnames=list(eval.meth.names,eval.col.names))}
+                        } else { matrix(NA, ncol=length(eval.col.names), nrow=length(eval.meth.names), dimnames=list(eval.meth.names,eval.col.names))}
                       })
                     })
                   })
@@ -452,6 +452,8 @@ setMethod('.transform.outputs', signature(modOut='list'),
   })
 
 DF_to_ARRAY <- function(df){
+#   cat("\n*** class(df) = ", class(df))
+#   cat("\n*** colnames(df) = ", colnames(df))
   if(!is.data.frame(df) & !is.matrix(df)){
     if(is.list(df)){
       df.names <- names(df)
@@ -462,7 +464,11 @@ DF_to_ARRAY <- function(df){
     }
   }
   
-  array.dim.names <- c(list(c(NULL)),rev(apply(sapply(strsplit(colnames(df), '_'), tail, n=3),1,unique)))
+  a <- sapply(strsplit(colnames(df), '_'), tail, n=3)
+  b <- lapply(1:3, function(id) return(unique(a[id,])))
+  array.dim.names <- c(list(c(NULL)),rev(b))
+#   array.dim.names <- c(list(c(NULL)),rev(apply(sapply(strsplit(colnames(df), '_'), tail, n=3),1,unique)))
+  
   array.dim <- c(nrow(df),sapply(array.dim.names[-1],length))
   array.out <- array(data=NA, dim=array.dim, dimnames=array.dim.names)
 

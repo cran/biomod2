@@ -30,6 +30,7 @@ sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.
   }
   
   if(inherits(Response, 'Raster')){
+    cat("\n*** sre.R l33")
     nb.resp <- nlayers(Response)
     resp.names <- names(Response)
     for(j in 1:nb.resp){
@@ -82,6 +83,7 @@ sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.
   
     if(inherits(NewData, 'Raster')){
       lout <- stack(lout)
+      cat("\n*** sre.R l86")
       if(nlayers(lout)==1){
         lout <- raster::subset(lout,1,drop=TRUE)
       }
@@ -129,6 +131,7 @@ sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.
     if(!inherits(Explanatory, 'Raster')){
       stop("If Response variable is raster object then Explanatory must also be one")
     }
+    cat("\n*** sre.R l134")
     nb.expl.vars <- nlayers(Explanatory)
     names.expl.vars <- names(Explanatory) 
   }
@@ -153,6 +156,7 @@ sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.
         stop("Explanatory variables names differs in the 2 dataset given")
       }
       NewData <- raster::subset(NewData, names.expl.vars)
+      cat("\n*** sre.R l159")
       if(nlayers(NewData) != nb.expl.vars ){
         stop("Incompatible number of variables in NewData objects")
       }
@@ -179,6 +183,7 @@ sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.
   
   if(inherits(NewData, "Raster")){
     out <- reclassify(raster::subset(NewData,1,drop=TRUE), c(-Inf, Inf, 1))
+    cat("\n*** sre.R l186")
     for(j in 1:nlayers(NewData)){
       out <- out * ( raster::subset(NewData,j,drop=TRUE) >= ExtremCond[j,1] ) * ( raster::subset(NewData,j,drop=TRUE) <= ExtremCond[j,2] )
     }

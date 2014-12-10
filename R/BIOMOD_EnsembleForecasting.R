@@ -30,6 +30,9 @@
   compress <- args$compress # compress or not output
   do.stack <- args$do.stack # save raster as stack or layers
   keep.in.memory <- args$keep.in.memory # store results on memory or only on hard drive
+  on_0_1000 <- args$on_0_1000 # convert 0-1 predictions on 0-1000 scale to limit memory consuming
+
+
   
   
   if(is.null(output.format)){
@@ -74,6 +77,8 @@
       xy.new.env <- matrix()
     }
   } 
+
+  if(is.null(on_0_1000)) on_0_1000 = TRUE # by default outputs are return on a 0 - 1000 scale 
   
   rm(list=c('args_checked','args'))
   
@@ -135,7 +140,7 @@
                                       selected.models = needed_predictions,
                                       compress = TRUE,
                                       build.clamping.mask = F,
-                                      do.stack=T, silent = T)
+                                      do.stack=T, silent = T, on_0_1000 = on_0_1000 )
     # getting the results
     formal_pred <- get_predictions(formal_pred, full.name=needed_predictions, as.data.frame=ifelse(inherits(new.env,'Raster'),F,T))
     
@@ -150,10 +155,14 @@
     model.tmp <- NULL
     BIOMOD_LoadModels(EM.output, full.name=em.comp, as='model.tmp')
     if(inherits(formal_pred,'Raster')){
-      ef.tmp <- predict(model.tmp, formal_predictions = raster::subset(formal_pred, subset=model.tmp@model, drop=FALSE))
+      ef.tmp <- predict(model.tmp, formal_predictions = raster::subset(formal_pred, subset=model.tmp@model, drop=FALSE), on_0_1000 = on_0_1000)
     } else {
-      ef.tmp <- predict(model.tmp, formal_predictions = formal_pred[,model.tmp@model, drop=FALSE])
+      ef.tmp <- predict(model.tmp, formal_predictions = formal_pred[,model.tmp@model, drop=FALSE], on_0_1000 = on_0_1000)
     }
+    
+#     cat("\n***")
+#     plot(ef.tmp)
+#     writeRaster(ef.tmp, "ef_tmp1.img", overwrite=T)
     
     
     if(inherits(ef.tmp,'Raster')){
@@ -211,8 +220,11 @@
     
     ## get all treshold
     thresholds <- sapply(selected.models, function(x){
-      get_evaluations(EM.output)[[x]][eval.meth, "Cutoff"]
+      get_evaluations(EM.output)[[x]][eval.meth, "Cutoff"]  
     })
+    
+    ## convert thresholds deopending on the chosen scale
+    if(! on_0_1000 ) { thresholds <- thresholds / 1000 }
     
     ## do binary transformation
     for(eval.meth in binary.meth){
@@ -220,11 +232,11 @@
       if(!do.stack){
         for(i in 1:length(proj_out@proj@link)){
           file.tmp <- proj_out@proj@link[i]
-          thres.tmp <- thresholds[i]          
-          writeRaster(x = BinaryTransformation(raster(file.tmp, RAT=FALSE),thres.tmp),
+          thres.tmp <- thresholds[i]
+          proj_bin <- BinaryTransformation(raster(file.tmp, RAT=FALSE),thres.tmp)
+          writeRaster(x = proj_bin,
                       filename = sub(output.format, paste("_",eval.meth,"bin", output.format, sep=""), file.tmp), 
-                      overwrite=TRUE,
-                      datatype = "INT1S",NAflag=-127)
+                      overwrite=TRUE ) ## , datatype = "INT2S",NAflag=-9999)
         }
       } else {
         assign(x = paste("proj_",proj.name, "_", EM.output@sp.name,"_ensemble_",eval.meth,"bin", sep=""),
@@ -236,8 +248,8 @@
         } else {
           writeRaster(x=get(paste("proj_",proj.name, "_", EM.output@sp.name,"_ensemble_",eval.meth,"bin", sep="")),
                       filename=file.path(EM.output@sp.name, paste("proj_", proj.name, sep= ""), paste("proj_",proj.name,"_", EM.output@sp.name,"_ensemble_",eval.meth,"bin", output.format ,sep="")), 
-                      overwrite=TRUE,
-                      datatype = "INT1S", NAflag=-127)
+                      overwrite=TRUE) ## , datatype = "INT2S", NAflag=-9999)
+                      
         }
         
         rm(list=paste("proj_",proj.name, "_", EM.output@sp.name,"_ensemble_",eval.meth,"bin", sep=""))
@@ -252,7 +264,8 @@
           file.tmp <- proj_out@proj@link[i]
           thres.tmp <- thresholds[i]
           ## TODO : define the raster dataformat (depends if em.cv has been computed)
-          writeRaster(x = FilteringTransformation(raster(file.tmp, RAT=FALSE),thres.tmp),
+          filt_proj <- FilteringTransformation(raster(file.tmp, RAT=FALSE),thres.tmp)
+          writeRaster(x = filt_proj,
                       filename = sub(output.format, paste("_",eval.meth,"filt", output.format, sep=""), file.tmp), 
                       overwrite=TRUE)
         }
