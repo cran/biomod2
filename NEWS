@@ -1,3 +1,32 @@
+3.3-6 (2016-01-14)
+  * add get_predictions function for ensemble models
+
+3.3-5 (2016-01-04)
+  * MARS models are now computed throw earth package (was mda in previous verisons)
+  * MARS now supports factorial explanatory variables
+  * MARS now supports formula 
+
+
+3.3-4 (2015-11-04)
+  * update biomod tuning function (Frank B.)
+
+3.3-3 (2015-10-27)
+  * force sampling of each level of factorial variables
+  * add 'betamultiplier' parameter to tune MAXENT.Phillips (Frank B. request)
+
+3.3-00 (2015-10-05)
+  MAJOR RELEASE
+  * optimize the memory consumtion of projections and ensemble projections procedure
+  * add the possibility to run MAXENT.Phillips with proper background data
+  * classical version of MAXENT has been renamed MAXENT.Phillips
+  * add a new version of MAXENT MAXENT.Tsuruoka
+
+3.2-00 (2015-07-28)
+  * add 3 new functions in biomod2 (Frank B. contribution)
+  * BIOMOD_cv to control models cross validation procedure
+  * BIOMOD_presenceonly to evaluate biomods models using boyce and mpa indices
+  * BIOMOD_tuning to automatically tune BIOMOD_ModelingOptions parameters
+
 3.1-59 (2014-10-23)
 	* add model evaluation scores plottinfg function
 	* dependence to ggplot2
@@ -39,7 +68,7 @@
 	* new variable_importance function.
 	* ...
 
-﻿2.1.37 (2013-06-12)
+2.1.37 (2013-06-12)
 	* change (temporally?) gam default package from 'mgcv' to 'gam' to deal with memory (cache) over-consuming (Thanks to Burke G.)
 	* update of response.plot2 function (optimization + deal with factorial variables)
 

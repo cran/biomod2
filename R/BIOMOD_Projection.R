@@ -40,6 +40,7 @@
   output.format <- args$output.format # raster output format
   keep.in.memory <- args$keep.in.memory # store results on memory or only on hard drive
   on_0_1000 <- args$on_0_1000 # transform projections on a 0 - 1000 scale to limit memory consumption
+  split.proj <- args$split.proj
   
   if(is.null(omit.na)) omit.na <- TRUE
   if(is.null(silent)) silent <- FALSE
@@ -47,8 +48,9 @@
 #   if(is.null(clamping.value)) clamping.value <- -1
   if(is.null(keep.in.memory)) keep.in.memory <- TRUE
   if(is.null(on_0_1000)) on_0_1000 <- TRUE # by default we return projections on a 0 -  1000 scale.
-  
-  if(!do.stack | !keep.in.memory) rasterOptions(todisk=TRUE)
+  if(is.null(split.proj)) split.proj <- 1 # by default we return projections on a 0 -  1000 scale.
+
+#   if(!do.stack | !keep.in.memory) rasterOptions(todisk=TRUE)
   
 #   if(is.null(output.format)){
 #     if(!inherits(new.env,"Raster"))
@@ -156,7 +158,7 @@
       filename <- file.path(modeling.output@sp.name, paste("proj_", proj.name, sep=""), "individual_projections", paste("proj_", proj.name, "_", mod.name,ifelse(output.format==".RData",".grd",output.format), sep="") )
     }
     
-    pred.tmp <- predict(mod, new.env, on_0_1000=on_0_1000, filename=filename, omit.na=omit.na)
+    pred.tmp <- predict(mod, new.env, on_0_1000=on_0_1000, filename=filename, omit.na=omit.na, split.proj = split.proj)
     
     if(do.stack){ # return the prediction only if stack has to be build
       return(pred.tmp)
@@ -231,8 +233,6 @@
         algo.run <- .extractModelNamesInfo(model.names=mod, info='models')
         thresholds[eval.meth,algo.run,eval.run,PA.run] <- get_evaluations(modeling.output)[eval.meth,"Cutoff",algo.run,eval.run,PA.run]
         if(! on_0_1000) thresholds[eval.meth,algo.run,eval.run,PA.run]  <- thresholds[eval.meth,algo.run,eval.run,PA.run] / 1000
-#         cat("\n***")
-#         cat("thresholds = ", thresholds)
       }
     }
     
@@ -378,7 +378,7 @@
   
   # check that given models exits
   files.check <- paste(modeling.output@sp.name,'/models/',modeling.output@modeling.id,"/",selected.models,sep='')
-  not.checked.files <- c(grep('MAXENT', files.check), grep('SRE', files.check))
+  not.checked.files <- c(grep('MAXENT.Phillips', files.check), grep('SRE', files.check))
   if(length(not.checked.files) > 0){files.check <- files.check[-not.checked.files]}
   missing.files <- files.check[!file.exists(files.check)]
   if( length(missing.files) > 0 ){
@@ -428,7 +428,6 @@
   } else{
     if(do.stack){
       # test if there is memory enough to work with RasterStack
-      cat("\n*** BIOMOD_Projection l431")
       test = canProcessInMemory( raster::subset(new.env,1), 2*length(selected.models) + nlayers(new.env) )
       if (!test) rasterOptions(todisk=T)
 #       if (!do.stack){ 

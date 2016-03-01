@@ -62,8 +62,92 @@ evaluate <- function(model, data, stat, as.array=FALSE){
 
 ######## LOW LEVEL FUCTIONS ##############
 
+##' @name Find.Optim.Stat
+##' @title Calculate the best score according to a given evaluation method
+##' 
+##' @description \code{Find.Optim.Stat} is an internal \pkg{biomod2} function 
+##' to find the threshold to convert continuous values into binary ones leading 
+##' to the best score for a given evaluation metric.
+##' 
+##' @usage
+##'   Find.Optim.Stat(Stat='TSS',
+##'                   Fit,
+##'                   Obs,
+##'                   Nb.thresh.test = 100,
+##'                   Fixed.thresh = NULL)
+##' 
+##' @param Stat either 'ROC', TSS', 'KAPPA', 'ACCURACY', 'BIAS', 'POD', 'FAR', 
+##'         'POFD', 'SR', 'CSI', 'ETS', 'HK', 'HSS', 'OR' or 'ORSS'
+##' @param Fit vector of fitted values (continuous)
+##' @param Obs vector of observed values (binary)
+##' @param Nb.thresh.test integer, the numer of thresholds tested over the 
+##'        range of fitted value
+##' @param Fixed.thresh integer, if not \code{NULL}, the only threshold value tested
+##'                 
+##' @details
+##'   Please refer to \code{\link[biomod2]{BIOMOD_Modeling}} to get more information about this metrics.
+##'   If you give a \code{Fixed.thresh}, no optimisation will be done. Only the score for this threshold will be returned.
+##'                 
+##' @return
+##'   A 1 row x 4 column \code{matrix} :
+##'   \itemize{
+##'     \item{\code{best.iter}:}{ the best score obtained for chosen statistic}
+##'     \item{\code{cutoff}:}{ the associated cut-off used for transform fitted vector into binary}
+##'     \item{\code{sensibility}:}{ the sensibility with this threshold}
+##'     \item{\code{specificity}:}{ the specificity with this threshold}
+##'   }
+##'                
+##' @author Damien Georges
+##' 
+##' @seealso 
+##'   \code{\link[biomod2]{BIOMOD_Modeling}}, 
+##'   \code{\link[biomod2]{getStatOptimValue}}, 
+##'   \code{\link[biomod2]{calculate.stat}} 
+##'                 
+##' @examples
+##'   a <- sample(c(0,1),100, replace=TRUE)
+##'                 
+##'   ##' random drawing
+##'   b <- runif(100,min=0,max=1000)
+##'   Find.Optim.Stat(Stat='TSS',
+##'                   Fit=b,
+##'                   Obs=a)
+##'                 
+##'   ##' biased drawing
+##'   BiasedDrawing <- function(x, m1=300, sd1=200, m2=700, sd2=200){
+##'     return(ifelse(x<0.5, rnorm(1,m1,sd1), rnorm(1,m2,sd2)))
+##'   }
+##'                 
+##'   c <- sapply(a,BiasedDrawing)
+##'                 
+##'   Find.Optim.Stat(Stat='TSS',
+##'                   Fit=c,
+##'                   Obs=a,
+##'                   Nb.thresh.test = 100)  
+##'                 
+##'                 
+##' @keywords models, options, evaluate, evaluation
+Find.Optim.Stat <- function(Stat = 'TSS',
+                            Fit, 
+                            Obs,
+                            Nb.thresh.test = 100,
+                            Fixed.thresh = NULL){
+  
+  ## remove all uninite values
+  to_keep <- ( is.finite(Fit) & is.finite(Obs) )
+  Fit <- Fit[to_keep]
+  Obs <- Obs[to_keep]
 
-Find.Optim.Stat <- function(Stat='TSS',Fit,Obs,Precision = 5, Fixed.thresh = NULL){
+  ## guess fit value scale (e.g. 0-1 for a classic fit or 0-1000 for a biomod2 model fit)
+  fit.scale <- .guess.scale(Fit)
+  
+  ## check some data are still here.
+  if(!length(Obs) | !length(Fit)){
+    cat("Non finite obs or fit available => model evaluation skipped !")
+    eval.out <- matrix(NA,1,4, dimnames = list(Stat, c("best.stat","cutoff","sensitivity","specificity")))
+    return(eval.out)
+  }
+  
   if(length(unique(Obs)) == 1 | length(unique(Fit)) == 1){
 #     warning("\nObserved or fited data contains only a value.. Evaluation Methods switched off\n",immediate.=T)
 #     best.stat <- cutoff <- true.pos <- sensitivity <- true.neg <- specificity <- NA  
@@ -75,16 +159,25 @@ Find.Optim.Stat <- function(Stat='TSS',Fit,Obs,Precision = 5, Fixed.thresh = NUL
       if(is.null(Fixed.thresh)){ # test a range of threshold to get the one giving the best score
         if(length(unique(Fit)) == 1){
           valToTest <- unique(Fit)
-          valToTest <- round(c(mean(c(0,valToTest)), mean(c(1000,valToTest))))
+          ## add 2 values to test based on maen with 0 and the guessed max of Fit (1 or 1000) 
+          valToTest <- round(c(mean(c(fit.scale["min"],valToTest)), 
+                               mean(c(fit.scale["max"],valToTest))))
         } else{
 #           mini <- max(min(quantile(Fit,0.05, na.rm=T), na.rm=T),0)
 #           maxi <- min(max(quantile(Fit,0.95, na.rm=T), na.rm=T),1000)
-          mini <- max(min(Fit, na.rm=T),0)
-          maxi <- min(max(Fit, na.rm=T),1000)        
-          valToTest <- unique( round(c(seq(mini,maxi,length.out=100), mini, maxi)) )
+          mini <- max(min(Fit, na.rm=T), fit.scale["min"], na.rm = T)
+          maxi <- min(max(Fit, na.rm=T), fit.scale["max"], na.rm = T) 
+          valToTest <- try(unique( round(c(seq(mini, maxi, 
+                                               length.out = Nb.thresh.test), 
+                                           mini, maxi)) ))
+          if(inherits(valToTest, "try-error")){
+            valToTest <- seq(fit.scale["min"], fit.scale["max"], 
+                             length.out = Nb.thresh.test)
+          }
           # deal with unique value to test case
           if(length(valToTest)<3){
-            valToTest <- round(c(mean(0,mini), valToTest, mean(1000,maxi)))
+            valToTest <- round(c(mean(fit.scale["min"],mini), valToTest, 
+                                 mean(fit.scale["max"], maxi)))
           }
         }
 #         valToTest <- unique( c(seq(mini,maxi,by=Precision), mini, maxi) )        
@@ -111,6 +204,8 @@ Find.Optim.Stat <- function(Stat='TSS',Fit,Obs,Precision = 5, Fixed.thresh = NUL
 #       require(pROC,quietly=T)
       roc1 <- pROC::roc(Obs, Fit, percent=T, direction="<")
       roc1.out <- pROC::coords(roc1, "best", ret=c("threshold", "sens", "spec"))
+      ## if two optimal values are returned keep only the first one
+      if(!is.null(ncol(roc1.out))) roc1.out <- roc1.out[, 1]
       best.stat <- as.numeric(pROC::auc(roc1))/100
       cutoff <- as.numeric(roc1.out["threshold"])
       sensitivity <- as.numeric(roc1.out["sensitivity"])
@@ -119,20 +214,14 @@ Find.Optim.Stat <- function(Stat='TSS',Fit,Obs,Precision = 5, Fixed.thresh = NUL
   #}
   eval.out <- cbind(best.stat,cutoff,sensitivity,specificity)
   rownames(eval.out) <- Stat
-  
-  ## deal with NAs
-#   if(!all(is.finite(eval.out))) warnings("\nsome NAs occurs in models evalutions that can lead to strange results afterwards !!")
-#   if(!is.finite(eval.out[1,"best.stat"])) eval.out[1,"best.stat"]<- NA
-#   if(!is.finite(eval.out[1,"sensitivity"])) eval.out[1,"sensitivity"] <- NA
-#   if(!is.finite(eval.out[1,"specificity"])) eval.out[1,"specificity"] <- NA
-#   if(!is.finite(eval.out[1,"cutoff"])) eval.out[1,"cutoff"] <- NA
-    
+
   return(eval.out)
 }
 
 getStatOptimValue <- function(stat){
   if(stat == 'TSS') return(1)
   if(stat == 'KAPPA') return(1)
+  if(stat == 'PBC') return(1)
   if(stat == 'ACCURACY') return(1)
   if(stat == 'BIAS') return(1)
   if(stat == 'POD') return(1)
@@ -259,4 +348,13 @@ function(Misc, stat='TSS')
   if('1' %in% rownames(Misc)) rownames(Misc)[which(rownames(Misc)=='1')] <- 'TRUE'  
     
   return(Misc)
+}
+
+
+.guess.scale <- function(Fit){
+  min <- 0
+  max <- ifelse(max(Fit, na.rm = TRUE) <= 1, 1, 1000)
+  out <- c(min, max)
+  names(out) <- c("min", "max")
+  return(out)
 }

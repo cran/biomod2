@@ -46,9 +46,13 @@
 \alias{MARS_biomod2_model}
 \alias{predict,MARS_biomod2_model-method}
 
-\alias{MAXENT_biomod2_model-class}
-\alias{MAXENT_biomod2_model}
-\alias{predict,MAXENT_biomod2_model-method}
+\alias{MAXENT.Phillips_biomod2_model-class}
+\alias{MAXENT.Phillips_biomod2_model}
+\alias{predict,MAXENT.Phillips_biomod2_model-method}
+
+\alias{MAXENT.Tsuruoka_biomod2_model-class}
+\alias{MAXENT.Tsuruoka_biomod2_model}
+\alias{predict,MAXENT.Tsuruoka_biomod2_model-method}
 
 \alias{RF_biomod2_model-class}
 \alias{RF_biomod2_model}
@@ -95,7 +99,7 @@
 
   \describe{
     \item{\code{model_name}:}{ "character", model name }
-    \item{\code{model_class}:}{"character", type of model (e.g. 'GLM', 'RF', 'MAXENT','EMmean')}
+    \item{\code{model_class}:}{"character", type of model (e.g. 'GLM', 'RF', 'MAXENT.Phillips','EMmean')}
     \item{\code{model_options}:}{ "list", list of options used for model building }
     \item{\code{model}:}{"ANY", the formal R model (if exists)}
     \item{\code{scaling_model}:}{"ANY", the associated glm to scale prediction on 0-1 (if exists)}

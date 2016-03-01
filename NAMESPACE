@@ -18,14 +18,15 @@ import("gbm")
 importFrom("MASS",stepAIC)
 #importFrom("mda", fda, mars)
 import("mda")
+import("earth")
 #importFrom("nnet", nnet)
 import("nnet")
 #importFrom("parallel", detectCores) # for gbm package
 import("pROC") # import the whole package to get S3 Methods
 #importFrom("rpart", prune, rpart)
 import("rpart")
-#importFrom("randomForest",randomForest)
-import("randomForest")
+importFrom("randomForest",randomForest)
+#import("randomForest")
 ### raster package is at time consider as dependencie
 #importFrom(raster, addLayer, calc, canProcessInMemory, cellFromXY, cv, extract, inMemory, maxValue, minValue, ncell, nlayers, predict, raster, rasterOptions, reclassify, readAll, sampleRandom, stack, Which, writeRaster)
 importFrom(rasterVis, levelplot)
@@ -34,8 +35,23 @@ importFrom(rasterVis, levelplot)
 #importFrom(sp, coordinates, read.asciigrid, SpatialPointsDataFrame, spplot)
 #import("survivial") # for gbm package
 #import("spline") # for gbm package
+#importFrom("gam", s)
+import("maxent")
 
+### imports for ecospat.xxx functions (to be removed at some point?)
+importFrom("dismo", kfold)
+importFrom("PresenceAbsence", presence.absence.accuracy)
+## importFrom("caret", trainControl, twoClassSummary)
+## importFrom("ENMeval", ENMevaluate)
 
+importFrom("grDevices", "colorRampPalette", "colors", "dev.new",
+           "dev.off", "gray", "jpeg", "pdf", "png", "postscript",
+           "rainbow", "tiff")
+importFrom("graphics", "abline", "axis", "layout", "legend", "par",
+           "plot.new", "points", "polygon", "rug")
+importFrom("stats", "as.formula", "binomial", "cor", "formula", "glm",
+           "median", "na.omit", "qt", "sd", "terms")
+importFrom("utils", "combn", "read.csv", "str", "write.table") 
 
 
 ####################################
@@ -80,7 +96,8 @@ exportClasses(
 	GBM_biomod2_model,
 	GLM_biomod2_model,
 	MARS_biomod2_model,
-	MAXENT_biomod2_model,
+	MAXENT.Phillips_biomod2_model,
+  MAXENT.Tsuruoka_biomod2_model,
 	RF_biomod2_model,
 	SRE_biomod2_model,
 	EMca_biomod2_model,
@@ -172,7 +189,12 @@ export(
 	response.plot2,
 	sre,
 	update_objects,
-	variables_importance
+	variables_importance,
+  .create.maxent.bg.dir,
+	BIOMOD_cv,
+	BIOMOD_presenceonly,
+	BIOMOD_tuning,
+  sample.factor.levels
 )
 
 ## to be hidden

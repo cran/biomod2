@@ -14,10 +14,10 @@ setMethod( 'Projection', signature(new.env.data = 'data.frame'),
            proj.name = NULL,
            binary.proj = NULL,
            filtred.proj = NULL,
-#            models.evaluation = NULL,
-#            models.options = NULL,
+           models.evaluation = NULL,
+           models.options = NULL,
            compress = TRUE,
-#            scaled.models=TRUE,
+           scaled.models=TRUE,
            do.stack = FALSE){
         
 #     # 1. loading resuired libraries =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
@@ -42,9 +42,9 @@ setMethod( 'Projection', signature(new.env.data = 'data.frame'),
 #       kept.algo.run <- algo.run
 #     }
     
-    proj.array <- lapply(kept.models.name, .Projection.do.proj, env=new.env.data, xy=xy, scaled.models=scaled.models, proj.name=paste("proj_",proj.name, sep=""), models.options=models.options)
+    proj.array <- lapply(models.name, .Projection.do.proj, env=new.env.data, xy=xy, scaled.models=scaled.models, proj.name=paste("proj_",proj.name, sep=""), models.options=models.options)
     proj.array <- as.data.frame(proj.array)
-    names(proj.array) <- kept.models.name
+    names(proj.array) <- models.name
     
     # 5. Computing Binary transformation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
     if(length(binary.proj)>0){
@@ -283,7 +283,7 @@ setMethod( 'Projection', signature(new.env.data = 'RasterStack'),
       
     }
     
-    ## remove MAXENT tmp dir if exists
+    ## remove MAXENT.Phillips tmp dir if exists
     if(file.exists(file.path(sp.name, proj.name, 'MaxentTmpData'))){
       .Delete.Maxent.WorkDir( file.path(sp.name, proj.name) )
     }
@@ -313,7 +313,7 @@ setMethod('.Projection.do.proj', signature(env='data.frame'),
   
     # check model.type
     model.type <- tail(unlist(strsplit(model.name, split="_")),1)
-    if(!( model.type %in% c('GLM','GBM','GAM','CTA','ANN','SRE','FDA','MARS','RF', 'MAXENT') )){
+    if(!( model.type %in% c('GLM','GBM','GAM','CTA','ANN','SRE','FDA','MARS','RF', 'MAXENT.Phillips') )){
       if(!grep('EF.',model.type))
         stop('Unknow model type')
     }
@@ -372,11 +372,11 @@ setMethod('.Projection.do.proj', signature(env='data.frame'),
       return( data.frame( proj = proj ) )
     }
     
-    if(model.type == 'MARS'){
-      # proj automaticly scaled
-      return(data.frame( proj = as.integer(.Rescaler5(as.numeric(predict(model.sp, env)), 
-                                              name = model.name) * 1000)))
-    }
+#     if(model.type == 'MARS'){
+#       # proj automaticly scaled
+#       return(data.frame( proj = as.integer(.Rescaler5(as.numeric(predict(model.sp, env)), 
+#                                               name = model.name) * 1000)))
+#     }
     
     if(model.type == 'RF'){
       proj <- as.integer(as.numeric(predict(model.sp,env, type='prob')[,'1']) *1000)
@@ -396,7 +396,7 @@ setMethod('.Projection.do.proj', signature(env='data.frame'),
                                    "$Quant)*1000", sep=""))))
     }
     
-    if(model.type == 'MAXENT'){
+    if(model.type == 'MAXENT.Phillips'){
       if(!is.null(xy)){
         proj <- as.integer(predict( object=model.sp, newdata=env, proj_name=proj.name, xy=xy) * 1000)
         
@@ -410,8 +410,8 @@ setMethod('.Projection.do.proj', signature(env='data.frame'),
 #         
 #         cat("\t Running Maxent...")
 #         
-#         system(command=paste("java -cp ", file.path(models.options@MAXENT$path_to_maxent.jar, "maxent.jar"), " density.Project \"", model.dir,.Platform$file.sep,
-#                              model.name, .Platform$file.sep ,sub("_MAXENT","",model.name),
+#         system(command=paste("java -cp ", file.path(models.options@MAXENT.Phillips$path_to_maxent.jar, "maxent.jar"), " density.Project \"", model.dir,.Platform$file.sep,
+#                              model.name, .Platform$file.sep ,sub("_MAXENT.Phillips","",model.name),
 #                              ".lambdas\" ", .extractModelNamesInfo(model.name, info='species'), "/", proj.name, "/MaxentTmpData/Proj_swd.csv ", .extractModelNamesInfo(model.name, info='species'), "/", proj.name, "/MaxentTmpData/projMaxent", sep=""), wait = TRUE)
 #         
 #         maxent.proj <- read.asciigrid(paste(species.name=.extractModelNamesInfo(model.name, info='species'), "/", proj.name , "/MaxentTmpData/projMaxent.asc", sep=""))@data
@@ -419,7 +419,7 @@ setMethod('.Projection.do.proj', signature(env='data.frame'),
 #         return(proj = as.integer(.Rescaler5(as.numeric(maxent.proj[,1]), 
 #                                               name = model.name) * 1000))
       } else {
-        cat('\n MAXENT need coordinates to run! NA returned ')
+        cat('\n MAXENT.Phillips need coordinates to run! NA returned ')
         return(data.frame(rep(NA,nrow(env))))
       }
     }
@@ -450,7 +450,7 @@ setMethod('.Projection.do.proj', signature(env='RasterStack'),
   
     # check model.type
     model.type <- tail(unlist(strsplit(model.name, split="_")),1)
-    if(!( model.type %in% c('GLM','GBM','GAM','CTA','ANN','SRE','FDA','MARS','RF', 'MAXENT') )){
+    if(!( model.type %in% c('GLM','GBM','GAM','CTA','ANN','SRE','FDA','MARS','RF', 'MAXENT.Phillips') )){
       if(!grep('EF.',model.type))
         stop('Unknow model type')
     }
@@ -544,7 +544,7 @@ setMethod('.Projection.do.proj', signature(env='RasterStack'),
       return(sre.out)
     }
     
-    if(model.type == 'MAXENT'){
+    if(model.type == 'MAXENT.Phillips'){
       proj.ras <- predict( object=model.sp, newdata=env, proj_name=proj.name)
       
 #       if(scaled.models){

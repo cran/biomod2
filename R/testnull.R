@@ -1,6 +1,5 @@
 .testnull <-
 function(object, Prev = 0.5 , dat){
-  
   if( is.finite(object$deviance) & is.finite(object$null.deviance)){
     if(object$deviance != object$null.deviance){
       if(inherits(dat,'Raster')){

@@ -30,7 +30,6 @@ sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.
   }
   
   if(inherits(Response, 'Raster')){
-    cat("\n*** sre.R l33")
     nb.resp <- nlayers(Response)
     resp.names <- names(Response)
     for(j in 1:nb.resp){
@@ -57,9 +56,6 @@ sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.
 #         maskTmp <- reclassify(maskTmp, c(-Inf,Inf,NA))
         maskTmp[] <- NA
         maskTmp[cellFromXY(maskTmp, coordinates(Response)[occ.pts,])] <- 1
-#         cat("\n*** sum(!is.na(maskTmp[])=",sum(!is.na(maskTmp[])))
-        
-        
         extrem.cond <- quantile(raster::mask(Explanatory, maskTmp), probs = c(0 + Quant, 1 - Quant), na.rm = TRUE)      
       } else { if(inherits(Explanatory, 'SpatialPoints')){
         ## May be good to check corespondances of Response and Explanatory variables
@@ -83,7 +79,6 @@ sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.
   
     if(inherits(NewData, 'Raster')){
       lout <- stack(lout)
-      cat("\n*** sre.R l86")
       if(nlayers(lout)==1){
         lout <- raster::subset(lout,1,drop=TRUE)
       }
@@ -120,7 +115,7 @@ sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.
       }
     }
   }
-  
+    
   if(inherits(Explanatory, 'SpatialPoints')){
     Explanatory <- as.data.frame(Explanatory@data)
     nb.expl.vars <- ncol(Explanatory)
@@ -131,10 +126,24 @@ sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.
     if(!inherits(Explanatory, 'Raster')){
       stop("If Response variable is raster object then Explanatory must also be one")
     }
-    cat("\n*** sre.R l134")
     nb.expl.vars <- nlayers(Explanatory)
     names.expl.vars <- names(Explanatory) 
   }
+
+  ## check explanatory variables class
+  test_no_factorial_var <- TRUE
+  if(is.data.frame(Explanatory)){ 
+    if(any(unlist(lapply(Explanatory, is.factor)))){
+      test_no_factorial_var <- FALSE
+    }
+  } else if (inherits(Explanatory, 'Raster')){
+    if(any(is.factor(Explanatory))){
+      test_no_factorial_var <- FALSE
+    }
+  }
+  
+  if(!test_no_factorial_var) stop("SRE algorithm does not handle factorial variables")
+    
   
   # If no NewData given, projection will be done on Explanatory variables
   if(is.null(NewData)){
@@ -156,7 +165,6 @@ sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.
         stop("Explanatory variables names differs in the 2 dataset given")
       }
       NewData <- raster::subset(NewData, names.expl.vars)
-      cat("\n*** sre.R l159")
       if(nlayers(NewData) != nb.expl.vars ){
         stop("Incompatible number of variables in NewData objects")
       }
@@ -183,7 +191,6 @@ sre <- function (Response = NULL, Explanatory = NULL, NewData = NULL, Quant = 0.
   
   if(inherits(NewData, "Raster")){
     out <- reclassify(raster::subset(NewData,1,drop=TRUE), c(-Inf, Inf, 1))
-    cat("\n*** sre.R l186")
     for(j in 1:nlayers(NewData)){
       out <- out * ( raster::subset(NewData,j,drop=TRUE) >= ExtremCond[j,1] ) * ( raster::subset(NewData,j,drop=TRUE) <= ExtremCond[j,2] )
     }

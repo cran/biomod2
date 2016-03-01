@@ -154,16 +154,19 @@ function(sp, env, nb.repet=1, strategy='random', distMin=0, distMax=NULL, nb.poi
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
 
-.nb.available.pa.cells <- function(data){
-  if(is.vector(data)){ return(sum(is.na(data))) }
-  
-  if(is.data.frame(data) | is.matrix(data)){ return(sum(is.na(data))) }
-
-  if(inherits(data, 'SpatialPoints')){ return(sum(is.na(data@data))) }
-  
-#   if(inherits(data, 'Raster')){ cat("\n\t***") ; return( sum(na.omit(data[]) == -1) )}
-  
-  if(inherits(data, 'Raster')){ return(sum(data[] == -1, na.rm=T)) }
+.nb.available.pa.cells <- function(data, PA.flag = NA){
+  if(is.vector(data)){
+    return(ifelse(is.na(PA.flag), sum(is.na(data)), sum(data == PA.flag, na.rm = TRUE)))
+  }
+  if(is.data.frame(data) | is.matrix(data)){
+    return(ifelse(is.na(PA.flag), sum(is.na(data)), sum(data == PA.flag, na.rm = TRUE)))
+  }
+  if(inherits(data, 'SpatialPoints')){
+    return(ifelse(is.na(PA.flag), sum(is.na(data@data)), sum(data@data == PA.flag, na.rm = TRUE)))
+  }
+  if(inherits(data, 'Raster')){
+    return(ifelse(is.na(PA.flag), sum(is.na(data[])), sum(data[] == PA.flag, na.rm = TRUE)))
+  }
 }
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
@@ -203,7 +206,16 @@ setMethod('random.pseudo.abs.selection', signature(env="SpatialPointsDataFrame")
               # and a subset of candidates cells
               cand.cells <- which(is.na(sp@data))
               for(j in 1:ncol(pa.tab)){
-                pa.tab[sample(x=cand.cells,size=nb.points,replace=FALSE),j] <- TRUE
+                ## force to get at least one value of each factorial variable
+                fact.level.cells <- sample.factor.levels(x = as.data.frame(env), 
+                                                         mask.out = pa.tab[, j, drop = FALSE])
+                if(length(fact.level.cells)){
+                  pa.tab[fact.level.cells, j] <- TRUE
+                  cand.cells <- setdiff(cand.cells, fact.level.cells)
+                }
+                pa.tab[sample(x = cand.cells, 
+                              size = nb.points - length(fact.level.cells),
+                              replace = FALSE), j] <- TRUE
               }
               return(list(xy = coordinates(sp),
                           sp = as.vector(sp@data),
@@ -237,38 +249,59 @@ setMethod('random.pseudo.abs.selection', signature(env="RasterStack"),
               for(j in 1:ncol(pa.tab)){
                 pa.tab[sample(x=cand.cells,size=nb.points,replace=FALSE),j] <- TRUE
               }
-              env <- as.data.frame(extract(env, coordinates(sp), method='bilinear'))
-              
+              env <- as.data.frame(extract(env, coordinates(sp)))
+
               return(list(xy = coordinates(sp),
                           sp = as.numeric(unlist(sp@data, use.names=FALSE)),
                           env = as.data.frame(env),
                           pa.tab = as.data.frame(pa.tab)))
             } else {
               cat("\n   > Pseudo absences are selected in explanatory variables")
-              # create a mask
-              mask <- raster::subset(env, 1, drop=TRUE)
-              mask <- raster::reclassify(mask, c(-Inf,Inf,-1))
+              # create a mask containing all not already sampled points (presences and absences) 
+              mask.env <- mask.out <- raster::subset(env, 1, drop = TRUE)
+              mask.env <- raster::reclassify(mask.env, c(-Inf, Inf, -1)) ## the area we want to sample
+              mask.out[] <- NA
 
-              # remove presences and true absences from our raster
-              mask[cellFromXY(mask,coordinates(sp))] <- NA
+              # add presences and true absences in our mask
+              in.cells <- cellFromXY(mask.env, coordinates(sp))
+              mask.env[in.cells] <- NA
+              mask.out[in.cells] <- 1
               
               # checking of nb candidates
-              nb.cells <- .nb.available.pa.cells(mask)
+              nb.cells <- .nb.available.pa.cells(mask.env, PA.flag = -1)
               if(nb.cells <= nb.points){
                 nb.repet <- 1
                 nb.points <- nb.cells
                 cat("\n   > All availables cells have been selected (", nb.points, "pseudo absences selected )")
               }
               
-              
               # select cells into raster
-              pa.tab.tmp <- matrix(NA, ncol=nb.repet, nrow=nb.points)
+              pa.tab.tmp <- matrix(NA, ncol = nb.repet, nrow = nb.points)
               for( j in 1:ncol(pa.tab.tmp)){
-                SR <- sampleRandom(x=mask, size=nb.points, cells=T, na.rm=T)[,"cell", drop=T]
+                ## initialise the vector of sample cells
+                SR <- NULL
+                ## define a compy of the sampling mask
+                mask.env.tmp <- mask.env
+                ## force to get at least one value of each factorial variable
+                fact.level.cells <- sample.factor.levels(env, mask.out = mask.out)
+                if(length(fact.level.cells)){
+                  SR <- c(SR, fact.level.cells)
+                  ## update the mask by removing already selected cells
+                  mask.env.tmp[SR] <- NA
+                }
+                SR <- c(SR, sampleRandom(x = mask.env.tmp, 
+                                         size = nb.points - length(SR), 
+                                         cells = T,
+                                         na.rm = T)[, "cell", drop = TRUE])
                 ## repeat sampling until haing the right number of points
-                ## NOTE: it's a bit tricky way to process becaus some points shoul appe several times
                 while(length(SR)<nb.points){
-                  SR <- c(SR, sampleRandom(x=mask, size=nb.points-length(SR), cells=T, na.rm=T)[,"cell", drop=T])
+                  ## update the mask by removing already selected cells
+                  mask.tmp[SR] <- NA
+                  ## extract the missing number of points
+                  SR <- c(SR, sampleRandom(x = mask.env.tmp, 
+                                           size = nb.points - length(SR), 
+                                           cells = T, 
+                                           na.rm = T)[, "cell", drop = TRUE])
                 }
                 pa.tab.tmp[,j] <- SR
               }
@@ -278,17 +311,19 @@ setMethod('random.pseudo.abs.selection', signature(env="RasterStack"),
               pa.tab <- matrix(FALSE, ncol = nb.repet, nrow = length(selected.cells))
               colnames(pa.tab) <- paste("PA", 1:nb.repet, sep="")
               for( j in 1:ncol(pa.tab)){
-                pa.tab[selected.cells %in% pa.tab.tmp[,j], j] <- TRUE
+                pa.tab[is.element(selected.cells, pa.tab.tmp[,j]), j] <- TRUE
               }
               
               # puting presences, true absences and pseudo absences together
-              xy <- rbind(coordinates(sp), xyFromCell(mask, selected.cells))
+              xy <- rbind(coordinates(sp), xyFromCell(mask.env, selected.cells))
               xy <- .add_PA_rownames(xy) 
-              sp <- as.numeric(unlist(c(as.vector(sp@data), rep(NA,length(selected.cells))), use.names=FALSE))
+              sp <- as.numeric(unlist(c(as.vector(sp@data), 
+                                        rep(NA, length(selected.cells))),
+                                      use.names = FALSE))
               env <- extract(env, xy)
 
-              pa.tab <- rbind(matrix(TRUE,nrow=(nrow(xy)-length(selected.cells)), ncol=ncol(pa.tab)),
-                             pa.tab)
+              pa.tab <- rbind(matrix(TRUE, nrow = (nrow(xy) - length(selected.cells)), 
+                                     ncol = ncol(pa.tab)), pa.tab)
               
               return(list(xy = xy,
                           sp = sp,
@@ -322,8 +357,10 @@ setMethod('user.defined.pseudo.abs.selection', signature(env="RasterStack"),
 #             require('raster',quietly=T)
             cat("\n   > User defined pseudo absences selection")
 
-            env <- as.data.frame(extract(env, coordinates(sp), method='bilinear'))
-              
+#             env <- as.data.frame(extract(env, coordinates(sp), method='bilinear'))
+              env <- as.data.frame(extract(env, coordinates(sp)))
+
+
             return(list(xy = coordinates(sp),
                         sp = as.numeric(unlist(sp@data, use.names=FALSE)),
                         env = as.data.frame(env),
@@ -343,16 +380,17 @@ setMethod('sre.pseudo.abs.selection', signature(env="SpatialPointsDataFrame"),
             cat("\n   > SRE pseudo absences selection")
 
             # 1. calculate sre to determine availables 
-            mask <- sre(Response = sp, Explanatory = env, NewData = env@data, Quant = quant.SRE)
-            
-            # removing cells in envelops, presences and absences
-            mask[mask == 0] <- NA
-            mask[which(as.vector(sp@data)==1),1] <- 1
-            mask[which(as.vector(sp@data)==0),1] <- 0
+            mask.in <- sre(Response = sp, Explanatory = env, NewData = env@data, Quant = quant.SRE)
+            ## we want to sample PA out of the SRE => have to revert the mask
+            mask.in <- data.frame(mask.in = !as.logical(mask.in))
+#             # mask of already sampled points (presneces/absences)
+#             mask[mask == 0] <- NA
+#             mask[which(as.vector(sp@data)==1),1] <- 1
+#             mask[which(as.vector(sp@data)==0),1] <- 0
 
             # 2. Check if NA are present in sp or not to determine which dataset to use
 #             if(.nb.available.pa.cells(mask) > 0 ){ # PA will be taken into response variable
-              nb.cells <- .nb.available.pa.cells(mask)
+              nb.cells <- .nb.available.pa.cells(mask.in$mask.in, PA.flag = TRUE)
               if(nb.cells <= nb.points){
                 nb.repet <- 1
                 nb.points <- nb.cells
@@ -363,9 +401,16 @@ setMethod('sre.pseudo.abs.selection', signature(env="SpatialPointsDataFrame"),
               # select always the presences and the true absences
               pa.tab[c(which(sp@data == 1), which(sp@data == 0)),] <- TRUE
               # and a subset of candidates cells
-              cand.cells <- which(is.na(mask))
+              cand.cells <- which(!mask.in$mask.in)
               for(j in 1:ncol(pa.tab)){
-                pa.tab[sample(x=cand.cells,size=nb.points,replace=FALSE),j] <- TRUE
+                ## force to get at least one value of each factorial variable
+                fact.level.cells <- sample.factor.levels(as.data.frame(env), 
+                                                         mask.out = pa.tab[, j, drop = FALSE],
+                                                         mask.in = mask.in)
+                pa.tab[c(fact.level.cells, 
+                         sample(x = setdiff(cand.cells, fact.level.cells),
+                                size = nb.points - length(fact.level.cells), 
+                                replace = FALSE)), j] <- TRUE
               }
               return(list(xy = coordinates(sp),
                           sp = as.vector(sp@data),
@@ -381,18 +426,25 @@ setMethod('sre.pseudo.abs.selection', signature(env="RasterStack"),
           function(sp, env, quant.SRE, nb.points, nb.repet){
             cat("\n   > SRE pseudo absences selection")
             
-            # 1. calculate sre to determine availables 
-            mask <- sre(Response = sp, Explanatory = env, NewData = env, Quant = quant.SRE) 
+            # 1. calculate sre to determine availables
+            ## mask in which we want to sample
+            mask.in <- sre(Response = sp, Explanatory = env, NewData = env, Quant = quant.SRE)
+            ## remove all points that are in the cpecies SRE
+            mask.in[mask.in[] > 0] <- NA
             
-            # removing cells in envelops, presences and absences
-            mask[mask==1] <- NA
-            mask[cellFromXY(mask,coordinates(sp)[which(as.vector(sp@data)==1),])] <- NA
-            mask[cellFromXY(mask,coordinates(sp)[which(as.vector(sp@data)==0),])] <- NA
+            ## mask of already sampled points (presences/absences)
+            mask.out <- raster::subset(env, 1)
+            mask.out[] <- NA; mask.out[cellFromXY(mask.out, 
+                                                  coordinates(sp)[is.element(as.vector(sp@data), c(0, 1)), ])]
             
-            mask <- raster::reclassify(mask, c(-Inf,Inf,-1))
+#             # removing cells in envelops, presences and absences
+#             mask[mask == 1] <- NA
+#             mask[cellFromXY(mask, coordinates(sp)[which(as.vector(sp@data) ==1 ), ])] <- NA
+#             mask[cellFromXY(mask, coordinates(sp)[which(as.vector(sp@data) == 0), ])] <- NA
+      
             
             # checking of nb candidates
-            nb.cells <- .nb.available.pa.cells(mask)
+            nb.cells <- .nb.available.pa.cells(mask.in, PA.flag = 0)
             if(nb.cells <= nb.points){
               nb.repet <- 1
               nb.points <- nb.cells
@@ -400,15 +452,36 @@ setMethod('sre.pseudo.abs.selection', signature(env="RasterStack"),
             }
             
             # select cells into raster
-            pa.tab.tmp <- matrix(NA, ncol=nb.repet, nrow=nb.points)
+            pa.tab.tmp <- matrix(NA, ncol = nb.repet, nrow = nb.points)
             for( j in 1:ncol(pa.tab.tmp)){
-              SR <- sampleRandom(x=mask, size=nb.points, cells=T, na.rm=T)[,"cell", drop=T]
-              ## repeat sampling until haing the right number of points
-              ## NOTE: it's a bit tricky way to process becaus some points shoul appe several times
-              while(length(SR)<nb.points){
-                SR <- c(SR, sampleRandom(x=mask, size=nb.points-length(SR), cells=T, na.rm=T)[,"cell", drop=T])
+              ## initialise the vector of sample cells
+              SR <- NULL
+              ## define a compy of the sampling mask
+              mask.in.tmp <- mask.in
+              ## force to get at least one value of each factorial variable
+              fact.level.cells <- sample.factor.levels(env, 
+                                                       mask.out  = mask.out,
+                                                       mask.in = mask.in)
+              if(length(fact.level.cells)){
+                SR <- c(SR, fact.level.cells)
+                ## update the mask by removing already selected cells
+                mask.in.tmp[SR] <- NA
               }
-              pa.tab.tmp[,j] <- SR
+              SR <- c(SR, sampleRandom(x = mask.in.tmp, 
+                                       size = nb.points - length(SR), 
+                                       cells = TRUE,
+                                       na.rm = TRUE)[, "cell", drop = TRUE])
+              ## repeat sampling until haing the right number of points
+              while(length(SR) < nb.points){
+                ## update the mask by removing already selected cells
+                mask.tmp[SR] <- NA
+                ## extract the missing number of points
+                SR <- c(SR, sampleRandom(x = mask.in.tmp, 
+                                         size = nb.points - length(SR), 
+                                         cells = T, 
+                                         na.rm = T)[, "cell", drop = TRUE])
+              }
+              pa.tab.tmp[, j] <- SR
             }
 
             # puting cells in good format
@@ -420,7 +493,8 @@ setMethod('sre.pseudo.abs.selection', signature(env="RasterStack"),
             }
             
             # puting presences, true absences and pseudo absences together
-            xy <- rbind(coordinates(sp)[which(!is.na(as.vector(sp@data))),], xyFromCell(mask, selected.cells))
+            xy <- rbind(coordinates(sp)[which(!is.na(as.vector(sp@data))),], 
+                        xyFromCell(mask.in, selected.cells))
             xy <- .add_PA_rownames(xy) 
             sp <- as.numeric(unlist(c(na.omit(as.vector(sp@data)), rep(NA,length(selected.cells))), use.names=FALSE))
             env <- extract(env, xy)
@@ -477,6 +551,8 @@ setMethod('disk.pseudo.abs.selection', signature(env="SpatialPointsDataFrame"),
 
           })
 
+
+## TODO(damien): remimplement disk.pseudo.abs.selection to call random.pseudo.abs.selection
 setMethod('disk.pseudo.abs.selection', signature(env="RasterStack"),
           function(sp, env, distMin, distMax, nb.points, nb.repet){
             cat("\n   > Disk pseudo absences selection")
@@ -484,7 +560,8 @@ setMethod('disk.pseudo.abs.selection', signature(env="RasterStack"),
             # 1. Check if NA are present in sp or not to determine which dataset to use
             if(.nb.available.pa.cells(sp) > 0 ){ # PA will be taken into response variable
               env.tmp <- SpatialPointsDataFrame(coords = coordinates(sp),
-                                                data = as.data.frame(extract(env,coordinates(sp),method='bilinear')))
+#                                                 data = as.data.frame(extract(env,coordinates(sp),method='bilinear'))
+                                                data = as.data.frame(extract(env,coordinates(sp))))
                                                 
               return(disk.pseudo.abs.selection(sp, env.tmp, distMin, distMax, nb.points, nb.repet))
             } else {
@@ -501,13 +578,14 @@ setMethod('disk.pseudo.abs.selection', signature(env="RasterStack"),
               dist.mask <- mask(dist.mask, raster::subset(env,1, drop=TRUE))
               
               if(is.null(distMax)) distMax <- Inf
-              mask <- reclassify(dist.mask, c(-Inf,distMin,NA ,distMin, distMax,-1, distMax,Inf,NA))
               
-              # remove presences and true absences from our raster
-              mask[cellFromXY(mask,coordinates(sp))] <- NA
+              mask.in <- reclassify(dist.mask, c(-Inf,distMin,NA ,distMin, distMax,-1, distMax,Inf,NA))
+      
+              # get the mask of already sampled mask
+              mask.out <- mask.in; mask.out[] <- NA; mask.out[cellFromXY(mask.out, coordinates(sp))] <- 1
               
               # checking of nb candidates
-              nb.cells <- .nb.available.pa.cells(mask)
+              nb.cells <- .nb.available.pa.cells(mask.in, PA.flag = -1)
               if(nb.cells <= nb.points){
                 nb.repet <- 1
                 nb.points <- nb.cells
@@ -515,27 +593,55 @@ setMethod('disk.pseudo.abs.selection', signature(env="RasterStack"),
               }
               
               # select cells into raster
-              pa.tab.tmp <- matrix(NA, ncol=nb.repet, nrow=nb.points)
+              pa.tab.tmp <- matrix(NA, ncol = nb.repet, nrow = nb.points)
               for( j in 1:ncol(pa.tab.tmp)){
-                pa.tab.tmp[,j] <- sampleRandom(x=mask, size=nb.points, cells=T)[,"cell"]
+                ## initialise the vector of sample cells
+                SR <- NULL
+                ## define a compy of the sampling mask
+                mask.in.tmp <- mask.in
+                ## force to get at least one value of each factorial variable
+                fact.level.cells <- sample.factor.levels(env, mask.out = mask.out)
+                if(length(fact.level.cells)){
+                  SR <- c(SR, fact.level.cells)
+                  ## update the mask by removing already selected cells
+                  mask.in.tmp[SR] <- NA
+                }
+                SR <- c(SR, sampleRandom(x = mask.in.tmp, 
+                                         size = nb.points - length(SR), 
+                                         cells = T,
+                                         na.rm = T)[, "cell", drop = TRUE])
+                ## repeat sampling until haing the right number of points
+                while(length(SR)<nb.points){
+                  ## update the mask by removing already selected cells
+                  mask.in.tmp[SR] <- NA
+                  ## extract the missing number of points
+                  SR <- c(SR, sampleRandom(x = mask.in.tmp, 
+                                           size = nb.points - length(SR), 
+                                           cells = T, 
+                                           na.rm = T)[, "cell", drop = TRUE])
+                }
+                pa.tab.tmp[,j] <- SR
               }
-              
+
               # puting cells in good format
               selected.cells <- sort(unique(as.vector(pa.tab.tmp)))
               pa.tab <- matrix(FALSE, ncol = nb.repet, nrow = length(selected.cells))
               colnames(pa.tab) <- paste("PA", 1:nb.repet, sep="")
               for( j in 1:ncol(pa.tab)){
-                pa.tab[selected.cells %in% pa.tab.tmp[,j], j] <- TRUE
+                pa.tab[is.element(selected.cells, pa.tab.tmp[,j]), j] <- TRUE
               }
               
               # puting presences, true absences and pseudo absences together
-              xy <- rbind(coordinates(sp), xyFromCell(mask, selected.cells))
+              xy <- rbind(coordinates(sp), xyFromCell(mask.in, 
+                                                      selected.cells))
               xy <- .add_PA_rownames(xy) 
-              sp <- as.numeric(unlist(c(as.vector(sp@data), rep(NA,length(selected.cells))), use.names=FALSE))
+              sp <- as.numeric(unlist(c(as.vector(sp@data), rep(NA,length(selected.cells))), 
+                                      use.names = FALSE))
               env <- extract(env, xy)
 
-              pa.tab <- rbind(matrix(TRUE,nrow=(nrow(xy)-length(selected.cells)), ncol=ncol(pa.tab)),
-                             pa.tab)
+              pa.tab <- rbind(matrix(TRUE, 
+                                     nrow = (nrow(xy) - length(selected.cells)), 
+                                     ncol = ncol(pa.tab)), pa.tab)
               
               return(list(xy = xy,
                           sp = sp,

@@ -91,11 +91,9 @@ setMethod('FilteringTransformation', signature(data='RasterStack'),
   function(data, threshold)
   {
     if(length(threshold) == 1){
-      cat("\n*** FilteringTransformation.R l94")
       threshold <- rep(threshold, raster::nlayers(data))
     }
     StkTmp <- raster::stack()
-    cat("\n*** FilteringTransformation.R l98")
     for(i in 1:raster::nlayers(data)){
       StkTmp <- raster::addLayer(StkTmp, FilteringTransformation(raster::subset(data,i,drop=TRUE), threshold[i]))
     }

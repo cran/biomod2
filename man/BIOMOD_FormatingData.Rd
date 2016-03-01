@@ -84,7 +84,7 @@ BIOMOD_FormatingData(resp.var,
         \item{No Information : NA (if any, might latter be used for pseudo-absence)}
       }
       
-      If \code{resp.var} is a non-spatial object (\code{vector}, \code{matrix}/\code{data.frame}) and that some models requiring spatial data are being used (e.g. MAXENT) and/or pseudo absences spatialy dependent (i.e 'disk'), make sure to give the XY coordinates of the sites/rows (\sQuote{resp.xy}). 
+      If \code{resp.var} is a non-spatial object (\code{vector}, \code{matrix}/\code{data.frame}) and that some models requiring spatial data are being used (e.g. MAXENT.Phillips) and/or pseudo absences spatialy dependent (i.e 'disk'), make sure to give the XY coordinates of the sites/rows (\sQuote{resp.xy}). 
       
     }
     

@@ -93,7 +93,7 @@ full_suffling <- function(x,id=NULL){
 # library(biomod2)
 # 
 # load("GuloGulo/GuloGulo.test.models.out")
-# xx <- BIOMOD_LoadModels(GuloGulo.test.models.out,models='MAXENT')
+# xx <- BIOMOD_LoadModels(GuloGulo.test.models.out,models='MAXENT.Phillips')
 # 
 # VI <- variables_importance(get(xx[1]), getModelsInputData(GuloGulo.test.models.out,'expl.var'), nb_rand=10)
 

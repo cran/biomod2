@@ -161,28 +161,31 @@
     ### Old version
     if(Options@GAM$algo == 'GAM_gam'){ ## gam package
       # package loading
-      if( ("package:mgcv" %in% search()) ){ detach("package:mgcv", unload=TRUE)}
-      if( ! ("package:gam" %in% search()) ){ require("gam",quietly=TRUE) }
-#       loadNamespace("gam")
+      if(isNamespaceLoaded("mgcv")){
+        if(isNamespaceLoaded("caret")){unloadNamespace("caret")} ## need to unload caret before car
+        if(isNamespaceLoaded("car")){unloadNamespace("car")} ## need to unload car before mgcv
+        unloadNamespace("mgcv")
+      }
+      if(!isNamespaceLoaded("gam")){requireNamespace("gam", quietly = TRUE)}
       
       cat('\n\t> GAM (gam) modelling...')
       
       gamStart <- eval(parse(text=paste("gam::gam(",colnames(Data)[1] ,"~1 ," ,
                                         " data = Data[calibLines,,drop=FALSE], family = ", Options@GAM$family$family,"(link = '",Options@GAM$family$link,"')",#eval(Options@GAM$family),
                                         ", weights = Yweights[calibLines])" ,sep="")))
-      
-model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s", Options@GAM$k),
-                               data = Data[calibLines,,drop=FALSE],
-#                                keep = .functionkeep, 
-                               direction = "both",
-                               trace= Options@GAM$control$trace,
-                               control = Options@GAM$control))#eval(control.list)) )
-      
+      model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "gam::s", Options@GAM$k),
+                                     data = Data[calibLines,,drop=FALSE],
+      #                                keep = .functionkeep, 
+                                     direction = "both",
+                                     trace= Options@GAM$control$trace,
+                                     control = Options@GAM$control))#eval(control.list)) )
     } else { ## mgcv package
       # package loading
-      if( ("package:gam" %in% search()) ){ detach("package:gam", unload=TRUE)}
-      if( ! ("package:mgcv" %in% search()) ){ require(mgcv,quietly=TRUE) }
-#       loadNamespace("mgcv")
+#       if( ("package:gam" %in% search()) ){ detach("package:gam", unload=TRUE)}
+#       if( ! ("package:mgcv" %in% search()) ){ require("mgcv",quietly=TRUE) }
+      if(isNamespaceLoaded("gam")){unloadNamespace("gam")}
+      if(!isNamespaceLoaded("mgcv")){requireNamespace("mgcv", quietly = TRUE)}
+      
       
       if(is.null(Options@GAM$myFormula)){
         cat("\n\tAutomatic formula generation...")
@@ -243,8 +246,7 @@ model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s",
                         n.trees = Options@GBM$n.trees,
                         verbose = Options@GBM$verbose,
                         #class.stratify.cv = Options@GBM$class.stratify.cv,
-                        cv.folds = Options@GBM$cv.folds))#,
-                        #n.cores=1)) ## to prevent from parallel issues
+                        cv.folds = Options@GBM$cv.folds ))##, n.cores=1)) ## to prevent from parallel issues
     
     if( !inherits(model.sp,"try-error") ){
       best.iter <- try(gbm.perf(model.sp, method = Options@GBM$perf.method , plot.it = FALSE)) 
@@ -334,26 +336,71 @@ model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s",
   
   
   
+#   # MARS models creation -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
+#   if (Model == "MARS"){
+#     ## deal with nk argument 
+#     ## if not defined, it will be setted up to default mars value i.e max(21, 2 * ncol(x) + 1)
+#     nk <- Options@MARS$nk
+#     if(is.null(nk)){
+#       nk <- max(21, 2 * length(expl_var_names) + 1)
+#     }
+#     
+#     model.sp <- try( mars(x = Data[calibLines,expl_var_names,drop=FALSE],
+#                           y = Data[calibLines,1],
+#                           degree = Options@MARS$degree,
+#                           nk = nk,
+#                           penalty = Options@MARS$penalty,
+#                           thresh = Options@MARS$thresh,
+#                           prune = Options@MARS$prune,
+#                           w = Yweights[calibLines]) )
+#     
+#     if( !inherits(model.sp,"try-error") ){
+#       
+#       model.bm <- new("MARS_biomod2_model",
+#                       model = model.sp,
+#                       model_name = model_name,
+#                       model_class = 'MARS',
+#                       model_options = Options@MARS,
+#                       resp_name = resp_name,
+#                       expl_var_names = expl_var_names,
+#                       expl_var_type = get_var_type(Data[calibLines,expl_var_names,drop=F]),
+#                       expl_var_range = get_var_range(Data[calibLines,expl_var_names,drop=F]))
+#     }
+#   }
+#   # end MARS models creation -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
+
   # MARS models creation -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
   if (Model == "MARS"){
+    
+    ## build the most complete model formula
+    if(is.null(Options@MARS$myFormula)){
+      mars.formula <- makeFormula(colnames(Data)[1],head(Data)[, -ncol(Data), drop = FALSE],Options@MARS$type, Options@MARS$interaction.level)
+    } else{
+      mars.formula <- Options@MARS$myFormula
+    }    
+    
     ## deal with nk argument 
     ## if not defined, it will be setted up to default mars value i.e max(21, 2 * ncol(x) + 1)
     nk <- Options@MARS$nk
     if(is.null(nk)){
-      nk <- max(21, 2 * length(expl_var_names) + 1)
+      # nk <- max(21, 2 * length(expl_var_names) + 1)
+      nk <- min(200, max(20, 2 * length(expl_var_names))) + 1
     }
-    
-    model.sp <- try( mars(x = Data[calibLines,expl_var_names,drop=FALSE],
-                          y = Data[calibLines,1],
-                          degree = Options@MARS$degree,
+
+    model.sp <- try(earth(formula = mars.formula, 
+                          data = Data[calibLines, , drop=FALSE],
+                          weights = Yweights,
+                          glm = list(family = binomial),
+                          ncross = 0,
+                          keepxy = FALSE,
+                          # degree = Options@MARS$degree,
+                          pmethod = Options@MARS$pmethod,
+                          nprune = Options@MARS$nprune,
                           nk = nk,
                           penalty = Options@MARS$penalty,
-                          thresh = Options@MARS$thresh,
-                          prune = Options@MARS$prune,
-                          w = Yweights[calibLines]) )
+                          thresh = Options@MARS$thresh))
     
     if( !inherits(model.sp,"try-error") ){
-      
       model.bm <- new("MARS_biomod2_model",
                       model = model.sp,
                       model_name = model_name,
@@ -366,15 +413,17 @@ model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s",
     }
   }
   # end MARS models creation -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
-  
+
   
   
   # FDA models creation =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
-  if (Model == "FDA") {
-    model.sp <- try( fda(formula = makeFormula(colnames(Data)[1],head(Data)[,expl_var_names,drop=FALSE], 'simple',0),
-                         data = Data[calibLines,,drop=FALSE],
-                         method = eval(parse(text=call(Options@FDA$method))),
-                         weights = Yweights) )
+  if (Model == "FDA") {  
+    model.sp <- try( do.call(fda,
+                             c( list( formula = makeFormula(colnames(Data)[1],head(Data)[,expl_var_names,drop=FALSE], 'simple',0),
+                                      data = Data[calibLines,,drop=FALSE],
+                                      method = eval(parse(text=call(Options@FDA$method))),
+                                      weights = Yweights[calibLines] ),
+                                Options@FDA$add_args) ) )
     
     if( !inherits(model.sp,"try-error") ){
       
@@ -417,8 +466,6 @@ model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s",
       size <- CV_nnet[1,1]      
     }
 
-#     cat("\n*** decay = ", decay, ", size = ", size)
-    
     model.sp <- try(nnet(formula = makeFormula(resp_name,head(Data[,expl_var_names,drop=FALSE]), 'simple',0),
                          data = Data[calibLines,,drop=FALSE],
                          size = size,
@@ -527,65 +574,94 @@ model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s",
   
   
   
-  # MAXENT models creation -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
-  if (Model == "MAXENT"){
-    MWD <- .Prepare.Maxent.WorkDir(Data, xy, calibLines, nam, VarImport = 0, evalData, eval.xy, species.name=resp_name, modeling.id=modeling.id)
+  # MAXENT.Phillips models creation -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
+  if (Model == "MAXENT.Phillips"){
+    MWD <- .Prepare.Maxent.WorkDir(Data, xy, calibLines, nam, VarImport = 0, 
+									evalData, eval.xy, species.name=resp_name, 
+									modeling.id = modeling.id, 
+                                   	background_data_dir = Options@MAXENT.Phillips$background_data_dir)
     
     # run MaxEnt:
     cat("\n Running Maxent...")  
     system(command=paste("java ",
-                         ifelse(is.null(Options@MAXENT$memory_allocated),"",paste("-mx",Options@MAXENT$memory_allocated,"m",sep="")),
-                         " -jar ", file.path(Options@MAXENT$path_to_maxent.jar, "maxent.jar"), 
+                         ifelse(is.null(Options@MAXENT.Phillips$memory_allocated),"",paste("-mx",Options@MAXENT.Phillips$memory_allocated,"m",sep="")),
+                         " -jar ", file.path(Options@MAXENT.Phillips$path_to_maxent.jar, "maxent.jar"), 
                          " environmentallayers=\"", MWD$m_backgroundFile,
                          "\" samplesfile=\"", MWD$m_speciesFile,
                          "\" projectionlayers=\"", gsub(", ",",",toString(MWD$m_predictFile)), 
                          "\" outputdirectory=\"", MWD$m_outdir, "\"",
                          " outputformat=logistic ",
-                         #                            "jackknife maximumiterations=",Options@MAXENT$maximumiterations,
+                         #                            "jackknife maximumiterations=",Options@MAXENT.Phillips$maximumiterations,
                          ifelse(length(categorial_var), 
                                 paste(" togglelayertype=",categorial_var, collapse=" ",sep=""), 
                                 ""),
                          " redoifexists",
-                         " visible=", Options@MAXENT$visible,
-                         " linear=", Options@MAXENT$linear,
-                         " quadratic=", Options@MAXENT$quadratic,
-                         " product=", Options@MAXENT$product,
-                         " threshold=", Options@MAXENT$threshold,
-                         " hinge=", Options@MAXENT$hinge,
-                         " lq2lqptthreshold=", Options@MAXENT$lq2lqptthreshold,
-                         " l2lqthreshold=", Options@MAXENT$l2lqthreshold,
-                         " hingethreshold=", Options@MAXENT$hingethreshold,
-                         " beta_threshold=", Options@MAXENT$beta_threshold,
-                         " beta_categorical=", Options@MAXENT$beta_categorical,
-                         " beta_lqp=", Options@MAXENT$beta_lqp,
-                         " beta_hinge=", Options@MAXENT$beta_hinge,
-                         " defaultprevalence=", Options@MAXENT$defaultprevalence,
+                         " visible=", Options@MAXENT.Phillips$visible,
+                         " linear=", Options@MAXENT.Phillips$linear,
+                         " quadratic=", Options@MAXENT.Phillips$quadratic,
+                         " product=", Options@MAXENT.Phillips$product,
+                         " threshold=", Options@MAXENT.Phillips$threshold,
+                         " hinge=", Options@MAXENT.Phillips$hinge,
+                         " lq2lqptthreshold=", Options@MAXENT.Phillips$lq2lqptthreshold,
+                         " l2lqthreshold=", Options@MAXENT.Phillips$l2lqthreshold,
+                         " hingethreshold=", Options@MAXENT.Phillips$hingethreshold,
+                         " beta_threshold=", Options@MAXENT.Phillips$beta_threshold,
+                         " beta_categorical=", Options@MAXENT.Phillips$beta_categorical,
+                         " beta_lqp=", Options@MAXENT.Phillips$beta_lqp,
+                         " beta_hinge=", Options@MAXENT.Phillips$beta_hinge,
+                         " betamultiplier=", Options@MAXENT.Phillips$betamultiplier,
+                         " defaultprevalence=", Options@MAXENT.Phillips$defaultprevalence,
                          " autorun nowarnings notooltips noaddsamplestobackground", sep=""), wait = TRUE, intern = TRUE,
            ignore.stdout = FALSE, ignore.stderr = FALSE)
     
     
-    model.bm <- new("MAXENT_biomod2_model",
+    model.bm <- new("MAXENT.Phillips_biomod2_model",
                     model_output_dir = MWD$m_outdir,
                     model_name = model_name,
-                    model_class = 'MAXENT',
-                    model_options = Options@MAXENT,
+                    model_class = 'MAXENT.Phillips',
+                    model_options = Options@MAXENT.Phillips,
                     resp_name = resp_name,
                     expl_var_names = expl_var_names,
                     expl_var_type = get_var_type(Data[calibLines,expl_var_names,drop=F]),
                     expl_var_range = get_var_range(Data[calibLines,expl_var_names,drop=F]))
     
-    # for MAXENT predicitons are calculated in the same time than models building to save time.
+    # for MAXENT.Phillips predicitons are calculated in the same time than models building to save time.
     cat("\n Getting predictions...")
     g.pred <- try(round(as.numeric(read.csv(MWD$m_outputFile)[,3]) * 1000))
     
     # remove tmp dir
     .Delete.Maxent.WorkDir(MWD)
   }
-  # end MAXENT models creation -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
+  # end MAXENT.Phillips models creation -=-=-=-=-=-=-=-=-=-=-=-=-= #
+
+  # MAXENT.Tsuruoka models creation -=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
+  if(Model == "MAXENT.Tsuruoka"){
+    model.sp <- try(maxent::maxent(feature_matrix = Data[calibLines, expl_var_names, drop = FALSE],
+                                   code_vector = as.factor(Data[calibLines, 1]),
+                                   l1_regularizer = Options@MAXENT.Tsuruoka$l1_regularizer,
+                                   l2_regularizer = Options@MAXENT.Tsuruoka$l2_regularizer,
+                                   use_sgd = Options@MAXENT.Tsuruoka$use_sgd,
+                                   set_heldout = Options@MAXENT.Tsuruoka$set_heldout,
+                                   verbose = Options@MAXENT.Tsuruoka$verbose))
+    
+    if( !inherits(model.sp,"try-error") ){
+      model.bm <- new("MAXENT.Tsuruoka_biomod2_model",
+                      model = model.sp,
+                      model_name = model_name,
+                      model_class = 'MAXENT.Tsuruoka',
+                      model_options = Options@MAXENT.Tsuruoka,
+                      resp_name = resp_name,
+                      expl_var_names = expl_var_names,
+                      expl_var_type = get_var_type(Data[calibLines,expl_var_names,drop=F]),
+                      expl_var_range = get_var_range(Data[calibLines,expl_var_names,drop=F]))
+    }
+  }
+  # end of MAXENT.Tsuruoka models creation -=-=-=-=-=-=-=-=-=-=-=- #
   
   # make prediction =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
-  if((Model != "MAXENT"))
-    g.pred <- try(predict(model.bm, Data[,expl_var_names,drop=FALSE], on_0_1000=TRUE))
+  if((Model != "MAXENT.Phillips")){
+    g.pred <- try(predict(model.bm, Data[, expl_var_names, drop = FALSE], on_0_1000 = TRUE))
+  }
 
 
   # scale or not predictions =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
@@ -720,11 +796,11 @@ model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s",
 #         TempDS <- Data[, expl_var_names,drop=FALSE]
 #         TempDS[, vari] <- sample(TempDS[, vari])
 #         
-#         if(Model != "MAXENT"){
+#         if(Model != "MAXENT.Phillips"){
 #           ## make projection on suffled dataset
 #           shuffled.pred <- try(predict(model.bm, TempDS, on_0_1000=TRUE))
 #         } else{
-#           ## for MAXENT, we have created all the permutation at model building step
+#           ## for MAXENT.Phillips, we have created all the permutation at model building step
 #           shuffled.pred <- try(round(as.numeric(read.csv(file.path(model.bm@model_output_dir, paste(nam, vari, run, "swd.csv", sep="_")))[,3])*1000) )
 #           ## scal suffled.pred if necessary
 #           if(length(getScalingModel(model.bm))){
@@ -822,15 +898,15 @@ model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s",
     Yweights <- rep(1,nrow(Data))
   }
   
-  if(Model %in% c('GBM','CTA','ANN','FDA','GAM')){ # this models required data and weights to be in a same datdaset
+  if(Model %in% c('GBM', 'CTA', 'ANN', 'FDA', 'GAM', 'MARS')){ # this models required data and weights to be in a same datdaset
     Data <- cbind(Data,Yweights)
   }
   
   # scaling parameter checking
   # never scal SRE
   if(Model == "SRE") scal.models <- FALSE
-  # always scal ANN, FDA, MARS
-  if(Model %in% c("ANN", "FDA", "MARS") ) scal.models <- TRUE
+  # always scal ANN, FDA
+  if(Model %in% c("ANN", "FDA") ) scal.models <- TRUE
   
   
   # models options checking and printing
@@ -839,7 +915,7 @@ model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s",
     if(!is.null(Options@GLM$myFormula)){
       cat('\n\tformula = ', paste(Options@GLM$myFormula[2],Options@GLM$myFormula[1],Options@GLM$myFormula[3]))
     } else{
-      cat('',Options@GLM$type,'with', ifelse(Options@GLM$interaction.level == 0, 'no interaction', paste('order',Options@GLM$interaction.level,'interaction level')))                  
+      cat(' (',Options@GLM$type,'with', ifelse(Options@GLM$interaction.level == 0, 'no interaction )', paste('order',Options@GLM$interaction.level,'interaction level )')))                  
     }
     
     if(Options@GLM$test == "AIC"){
@@ -894,6 +970,12 @@ model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s",
   
   if (Model == "MARS"){ 
     cat("\nModel=Multiple Adaptive Regression Splines")
+    if(!is.null(Options@MARS$myFormula)){
+      cat('\n\tformula = ', paste(Options@MARS$myFormula[2],Options@MARS$myFormula[1],Options@MARS$myFormula[3]))
+    } else{
+      cat(' (',Options@MARS$type,'with', ifelse(Options@MARS$interaction.level == 0, 'no interaction )', paste('order',Options@MARS$interaction.level,'interaction level )')))                  
+    }
+    cat("\n")
   }
   
   if (Model == "RF"){ 
@@ -901,8 +983,12 @@ model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "s",
     set.seed(71)
   }
   
-  if(Model == 'MAXENT'){
-    cat('\nModel=MAXENT')
+  if(Model == 'MAXENT.Phillips'){
+    cat('\nModel=MAXENT.Phillips')
+  }
+  
+  if(Model == 'MAXENT.Tsuruoka'){
+    cat('\nModel=MAXENT.Tsuruoka')
   }
   
   #     if (Model == "GLM" | Model == "GAM") 

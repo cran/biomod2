@@ -2,6 +2,7 @@
 
 \alias{get_predictions}
 \alias{get_predictions,BIOMOD.models.out-method}
+\alias{get_predictions,BIOMOD.EnsembleModeling.out-method}
 \alias{get_predictions,BIOMOD.projection.out-method}
 \alias{get_evaluations}
 \alias{get_calib_lines,BIOMOD.models.out-method}
@@ -59,7 +60,7 @@ Functions to get attributs of \code{\link[biomod2]{BIOMOD_Modeling}} outputs
     \item{\bold{get_calib_lines}}{
     }
   
-    \item{\bold{get_predictions}}{
+    \item{\bold{get_predictions (for BIOMOD_Modeling() outputs only)}}{
       \itemize{
         \item{\code{as.data.frame}:}{logical(default FALSE). If TRUE, models predictions will be returned as \code{data.frame} rather than \code{array}}
         \item{\code{evaluation}:}{logical (default FALSE). If TRUE, model prediction over evaluation data will be returned }}
@@ -90,8 +91,10 @@ Functions to get attributs of \code{\link[biomod2]{BIOMOD_Modeling}} outputs
   \enumerate{
     \item{\bold{get_predictions: }}{ an \code{array} (or a \code{data.frame}) containing models predictions over calibrating and testing data (those used for evaluate models)}
 
+    \item{\bold{get_calib_lines: }}{ an \code{array} (or a \code{data.frame}) having the same dimention than the outpurt of \bold{get_predictions()} of logical values. All lines containing TRUE have been used to calibrate the model}
     
     \item{\bold{get_evaluations: }}{ an \code{array}, a \code{data.frame} or a \code{list} containing models evaluation scores}
+    
     
     \item{\bold{get_variables_importance: }}{ an \code{array} containing models variables importances}
     

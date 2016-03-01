@@ -80,7 +80,6 @@ function(dataToRescale, ref=NULL, name, original=FALSE, weights=NULL)
     if(! inherits(dataToRescale, "Raster")){
       RescaledData <- predict(Rescaling_GLM, data.frame(pred=as.numeric(dataToRescale)), type="response")
     } else{
-      cat("\n*** scaler5 raster scaling")
       RescaledData <- predict(dataToRescale, model=Rescaling_GLM, type='response')
     }
     

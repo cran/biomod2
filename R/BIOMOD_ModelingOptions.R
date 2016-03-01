@@ -28,7 +28,8 @@
                         FDA = NULL,
                         MARS = NULL,
                         RF = NULL,
-                        MAXENT = NULL
+                        MAXENT.Phillips = NULL,
+                        MAXENT.Tsuruoka = NULL
                         ){
   # 1. create a defaut BIOMOD.Model.Options object
   opt <- new('BIOMOD.Model.Options')
@@ -181,15 +182,20 @@
   if(!is.null(FDA)){
 #     if(!is.null(FDA$type )) { opt@FDA$type <- FDA$type }
 #     if(!is.null(FDA$interaction.level )) { opt@FDA$interaction.level <- FDA$interaction.level }
-    if(!is.null(FDA$method )) { opt@FDA$method <- FDA$method }  
+    if(!is.null(FDA$method )) { opt@FDA$method <- FDA$method }
+    if(!is.null(FDA$add_args )) { opt@FDA$add_args <- FDA$add_args } ## additional args such as degree, nk
   }
 
   if(!is.null(MARS)){
-    if(!is.null(MARS$degree )) { opt@MARS$degree <- MARS$degree }
+    if(!is.null(MARS$type)) { opt@MARS$type <- MARS$type }
+    if(!is.null(MARS$interaction.level)) { opt@MARS$interaction.level <- MARS$interaction.level }
+    if(!is.null(MARS$myFormula)) { opt@MARS$myFormula <- MARS$myFormula }
+#     if(!is.null(MARS$degree )) { opt@MARS$degree <- MARS$degree }
     if(!is.null(MARS$nk )) { opt@MARS$nk <- MARS$nk }
     if(!is.null(MARS$penalty )) { opt@MARS$penalty <- MARS$penalty }
     if(!is.null(MARS$thresh )) { opt@MARS$thresh <- MARS$thresh }
-    if(!is.null(MARS$prune )) { opt@MARS$prune <- MARS$prune }
+    if(!is.null(MARS$nprune )) { opt@MARS$nprune <- MARS$nprune }
+    if(!is.null(MARS$pmethod )) { opt@MARS$pmethod <- MARS$pmethod }
   }
 
   if(!is.null(RF)){
@@ -202,28 +208,39 @@
     if(!is.null(RF$maxnodes )) { opt@RF$maxnodes <- RF$maxnodes }
   }
 
-  if(!is.null(MAXENT)){
-    if(!is.null(MAXENT$path_to_maxent.jar )) {
-      opt@MAXENT$path_to_maxent.jar <- normalizePath(sub("maxent.jar", "", MAXENT$path_to_maxent.jar)) # ensure path format validity
-      } else {opt@MAXENT$path_to_maxent.jar <- getwd()}
-    if(!is.null(MAXENT$memory_allocated )) { opt@MAXENT$memory_allocated <- MAXENT$memory_allocated }
-    if(!is.null(MAXENT$maximumiterations )) { opt@MAXENT$maximumiterations <- MAXENT$maximumiterations }
-    if(!is.null(MAXENT$visible )) { opt@MAXENT$visible <- MAXENT$visible }
-    if(!is.null(MAXENT$linear )) { opt@MAXENT$linear <- MAXENT$linear }
-    if(!is.null(MAXENT$quadratic )) { opt@MAXENT$quadratic <- MAXENT$quadratic }
-    if(!is.null(MAXENT$product )) { opt@MAXENT$product <- MAXENT$product }
-    if(!is.null(MAXENT$threshold )) { opt@MAXENT$threshold <- MAXENT$threshold }
-    if(!is.null(MAXENT$hinge )) { opt@MAXENT$hinge <- MAXENT$hinge }
-    if(!is.null(MAXENT$lq2lqptthreshold )) { opt@MAXENT$lq2lqptthreshold <- MAXENT$lq2lqptthreshold }
-    if(!is.null(MAXENT$l2lqthreshold )) { opt@MAXENT$l2lqthreshold <- MAXENT$l2lqthreshold }
-    if(!is.null(MAXENT$hingethreshold )) { opt@MAXENT$hingethreshold <- MAXENT$hingethreshold }
-    if(!is.null(MAXENT$beta_threshold )) { opt@MAXENT$beta_threshold <- MAXENT$beta_threshold }
-    if(!is.null(MAXENT$beta_categorical )) { opt@MAXENT$beta_categorical <- MAXENT$beta_categorical }
-    if(!is.null(MAXENT$beta_lqp )) { opt@MAXENT$beta_lqp <- MAXENT$beta_lqp }
-    if(!is.null(MAXENT$beta_hinge )) { opt@MAXENT$beta_hinge <- MAXENT$beta_hinge }
-    if(!is.null(MAXENT$defaultprevalence )) { opt@MAXENT$defaultprevalence <- MAXENT$defaultprevalence }
+  if(!is.null(MAXENT.Phillips)){
+    if(!is.null(MAXENT.Phillips$path_to_maxent.jar )) {
+      opt@MAXENT.Phillips$path_to_maxent.jar <- normalizePath(sub("maxent.jar", "", MAXENT.Phillips$path_to_maxent.jar)) # ensure path format validity
+      } else {opt@MAXENT.Phillips$path_to_maxent.jar <- getwd()}
+    if(!is.null(MAXENT.Phillips$memory_allocated )) { opt@MAXENT.Phillips$memory_allocated <- MAXENT.Phillips$memory_allocated }
+	if(!is.null(MAXENT.Phillips$background_data_dir )) { opt@MAXENT.Phillips$background_data_dir <- MAXENT.Phillips$background_data_dir }
+    if(!is.null(MAXENT.Phillips$maximumbackground )) { opt@MAXENT.Phillips$maximumbackground <- MAXENT.Phillips$maximumbackground }
+    if(!is.null(MAXENT.Phillips$maximumiterations )) { opt@MAXENT.Phillips$maximumiterations <- MAXENT.Phillips$maximumiterations }
+    if(!is.null(MAXENT.Phillips$visible )) { opt@MAXENT.Phillips$visible <- MAXENT.Phillips$visible }
+    if(!is.null(MAXENT.Phillips$linear )) { opt@MAXENT.Phillips$linear <- MAXENT.Phillips$linear }
+    if(!is.null(MAXENT.Phillips$quadratic )) { opt@MAXENT.Phillips$quadratic <- MAXENT.Phillips$quadratic }
+    if(!is.null(MAXENT.Phillips$product )) { opt@MAXENT.Phillips$product <- MAXENT.Phillips$product }
+    if(!is.null(MAXENT.Phillips$threshold )) { opt@MAXENT.Phillips$threshold <- MAXENT.Phillips$threshold }
+    if(!is.null(MAXENT.Phillips$hinge )) { opt@MAXENT.Phillips$hinge <- MAXENT.Phillips$hinge }
+    if(!is.null(MAXENT.Phillips$lq2lqptthreshold )) { opt@MAXENT.Phillips$lq2lqptthreshold <- MAXENT.Phillips$lq2lqptthreshold }
+    if(!is.null(MAXENT.Phillips$l2lqthreshold )) { opt@MAXENT.Phillips$l2lqthreshold <- MAXENT.Phillips$l2lqthreshold }
+    if(!is.null(MAXENT.Phillips$hingethreshold )) { opt@MAXENT.Phillips$hingethreshold <- MAXENT.Phillips$hingethreshold }
+    if(!is.null(MAXENT.Phillips$beta_threshold )) { opt@MAXENT.Phillips$beta_threshold <- MAXENT.Phillips$beta_threshold }
+    if(!is.null(MAXENT.Phillips$beta_categorical )) { opt@MAXENT.Phillips$beta_categorical <- MAXENT.Phillips$beta_categorical }
+    if(!is.null(MAXENT.Phillips$beta_lqp )) { opt@MAXENT.Phillips$beta_lqp <- MAXENT.Phillips$beta_lqp }
+    if(!is.null(MAXENT.Phillips$beta_hinge )) { opt@MAXENT.Phillips$beta_hinge <- MAXENT.Phillips$beta_hinge }
+	  if(!is.null(MAXENT.Phillips$betamultiplier )) { opt@MAXENT.Phillips$betamultiplier <- MAXENT.Phillips$betamultiplier }
+    if(!is.null(MAXENT.Phillips$defaultprevalence )) { opt@MAXENT.Phillips$defaultprevalence <- MAXENT.Phillips$defaultprevalence }
   } else{
-    opt@MAXENT$path_to_maxent.jar <- getwd()
+    opt@MAXENT.Phillips$path_to_maxent.jar <- getwd()
+  }
+
+  if(!is.null(MAXENT.Tsuruoka)){
+    if(!is.null(MAXENT.Tsuruoka$l1_regularizer )) { opt@MAXENT.Tsuruoka$l1_regularizer <- MAXENT.Tsuruoka$l1_regularizer }
+    if(!is.null(MAXENT.Tsuruoka$l2_regularizer )) { opt@MAXENT.Tsuruoka$l2_regularizer <- MAXENT.Tsuruoka$l2_regularizer }
+    if(!is.null(MAXENT.Tsuruoka$use_sgd )) { opt@MAXENT.Tsuruoka$use_sgd <- MAXENT.Tsuruoka$use_sgd }
+    if(!is.null(MAXENT.Tsuruoka$set_heldout )) { opt@MAXENT.Tsuruoka$set_heldout <- MAXENT.Tsuruoka$set_heldout }
+    if(!is.null(MAXENT.Tsuruoka$verbose )) { opt@MAXENT.Tsuruoka$verbose <- MAXENT.Tsuruoka$verbose }
   }
   
   test <- as.logical(validObject(object = opt, test = TRUE, complete = FALSE))

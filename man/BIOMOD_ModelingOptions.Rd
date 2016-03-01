@@ -17,7 +17,8 @@ BIOMOD_ModelingOptions( GLM = NULL,
                         FDA = NULL,
                         MARS = NULL,
                         RF = NULL,
-                        MAXENT = NULL)
+                        MAXENT.Phillips = NULL,
+                        MAXENT.Tsuruoka = NULL)
 }
 
 \arguments{
@@ -30,7 +31,8 @@ BIOMOD_ModelingOptions( GLM = NULL,
 \item{FDA}{list of FDA options}
 \item{MARS}{list of MARS options}
 \item{RF}{list of RF options}
-\item{MAXENT}{list of MAXENT options}
+\item{MAXENT.Phillips}{list of MAXENT.Phillips options}
+\item{MAXENT.Tsuruoka}{list of MAXENT.Tsuruoka options}
 }
 
 \details{
@@ -154,18 +156,29 @@ NOTE: for method and parms, you can give a 'real' value as described in the rpar
   Please refer to \code{\link[mda]{fda}} help file to get the meaning of these options.
   \itemize{
     \item{\code{method} (default \code{'mars'})}
+    \item{\code{add_args} (default \code{NULL}) : additional arguments to \code{method} given as a list of parameters
+    (corespond to the \ldots options of fda function) }
   }
 }
 
-\section{=-=-= MARS -=-= (\code{\link[mda]{mars}})}{
+\section{=-=-= MARS -=-= (\code{\link[earth]{earth}})}{
 
-  Please refer to \code{\link[mda]{mars}} help file to get the meaning of these options.
+  Please refer to \code{\link[earth]{earth}} help file to get the meaning of these options.
   \itemize{
-    \item{\code{degree} (default \code{2})}
+    \item{\code{myFormula} : a typical formula object (see example). If not NULL, type and interaction.level args are switched off. 
+    You can choose to either: 
+    \itemize{
+    \item{generate automatically the GLM formula by using the type and interaction.level arguments 
+    type (default \code{'simple'}) : formula given to the model ('simple', 'quadratic' or 'polynomial'). 
+    interaction.level (default \code{0}) : integer corresponding to the interaction level between variables considered. Consider that interactions quickly enlarge the number of effective variables used into the GLM/MARS.}
+    \item{or construct specific formula}
+    }}
+%    \item{\code{degree} (default \code{2})}
     \item{\code{nk}} (default \code{NULL}) : an optional integer specifying the maximum number of model terms. If NULL is given then default mars function value is used ( i.e max(21, 2 * nb_expl_var + 1) )
     \item{\code{penalty} (default \code{2})}
     \item{\code{thresh} (default \code{0.001})}
-    \item{\code{prune} (default \code{TRUE})}
+    \item{\code{nprune} (default \code{NULL})}
+    \item{\code{pmethod} (default \code{"backward"})}
   }
 
 }
@@ -184,10 +197,10 @@ NOTE: for method and parms, you can give a 'real' value as described in the rpar
   
 }
 
-\section{=-=-= MAXENT -=  \url{http://www.cs.princeton.edu/~schapire/maxent/}}{
+\section{=-=-= MAXENT.Phillips -=  \url{http://www.cs.princeton.edu/~schapire/maxent/}}{
   \itemize{
     \item{\code{path_to_maxent.jar} : character, the link to \pkg{maxent.jar} file (the working directory by default) }
-    \item{\code{memory_allocated} : integer (default \code{512}), the amount of memory (in Mo) reserved for java to run MAXENT. should be 64, 128, 256, 512, 1024, 2048... or NULL if you want to use default java memory limitation parameter.}
+    \item{\code{memory_allocated} : integer (default \code{512}), the amount of memory (in Mo) reserved for java to run MAXENT.Phillips. should be 64, 128, 256, 512, 1024, 2048... or NULL if you want to use default java memory limitation parameter.}
     \item{\code{maximumiterations} : integer (default \code{200}), maximum iteration done}
     \item{\code{visible} : logical (default \code{FALSE}), make the Maxent user interface visible}
     \item{\code{linear} : logical (default \code{TRUE}), allow linear features to be used}
@@ -202,11 +215,25 @@ NOTE: for method and parms, you can give a 'real' value as described in the rpar
     \item{\code{beta_categorical} : numeric (default \code{-1.0}), regularization parameter to be applied to all categorical features; negative value enables automatic setting}
     \item{\code{beta_lqp} : numeric (default \code{-1.0}), regularization parameter to be applied to all linear, quadratic and product features; negative value enables automatic setting}
     \item{\code{beta_hinge} : numeric (default \code{-1.0}), regularization parameter to be applied to all hinge features; negative value enables automatic setting}
+    \item{\code{betamultiplier} : numeric (default \code{1}), multiply all automatic regularization parameters by this number. A higher number gives a more spread-out distribution.}
     \item{\code{defaultprevalence} : numeric (default \code{0.5}), default prevalence of the species: probability of presence at ordinary occurrence points}
   }
-
 }
 
+\section{=-=-= MAXENT.Tsuruoka -=-=-= (\code{\link[maxent]{maxent}})}{
+
+  \itemize{
+    \item{\code{l1_regularizer} (default \code{0.0}): An numeric turning on L1 regularization and setting the regularization parameter. A value of 0 will disable L1 regularization}
+    \item{\code{l2_regularizer} (default \code{0.0}): An numeric turning on L2 regularization and setting the regularization parameter. A value of 0 will disable L2 regularization}
+    \item{\code{use_sgd} (default \code{FALSE}): A logical indicating that SGD parameter estimation should be used. Defaults to FALSE}
+    \item{\code{set_heldout} (default \code{0}): An integer specifying the number of documents to hold out. Sets a held-out subset of your data to test against and prevent overfitting}
+    \item{\code{verbose} (default \code{FALSE}): A logical specifying whether to provide descriptive output about the training process}
+  }
+
+  NOTE: if you use the \code{set_heldout} parameter then the data that will be held out will be taken in the 
+  calibration data pool. It can be penilizing in case of low number of occurences dataset.
+  
+}
 
 \value{ 
  A \code{"\link[=BIOMOD.Model.Options-class]{BIOMOD.Model.Options}"} object given to \code{\link[biomod2]{BIOMOD_Modeling}}

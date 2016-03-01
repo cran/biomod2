@@ -335,8 +335,28 @@
         #### Models Evaluation ####
         pred.bm <- predict(model.bm, expl, formal_predictions=needed_predictions$predictions[,model.bm@model, drop=F], on_0_1000 = T )
         
+        ## store models prediction on the hard drive ---------------------------
+        ## create the suitable directory architecture
+        pred.bm.name <- paste0(model_name, ".predictions")
+        pred.bm.outfile <- file.path(model.bm@resp_name, ".BIOMOD_DATA", model.bm@modeling.id, 
+                                     "ensemble.models", "ensemble.models.predictions",
+                                     pred.bm.name)
+        dir.create(dirname(pred.bm.outfile), showWarnings = FALSE, recursive = TRUE)
+        ## save models predictions
+        assign(pred.bm.name, pred.bm)
+        save(list = pred.bm.name, file = pred.bm.outfile, compress = TRUE)
+        rm(list = pred.bm.name)
+        ## end strore models preciciton on the hard drive ----------------------
+        
         if(exists('eval.obs') & exists('eval.expl')){
           eval_pred.bm <- predict(model.bm, eval.expl)
+          ## store models prediction on the hard drive -------------------------
+          pred.bm.name <- paste0(model_name, ".predictionsEval")
+          ## save models predictions
+          assign(pred.bm.name, eval_pred.bm)
+          save(list = pred.bm.name, file = pred.bm.outfile, compress = TRUE)
+          rm(list = pred.bm.name)
+          ## end strore models preciciton on the hard drive --------------------
         }
  
         
@@ -360,6 +380,10 @@
                 eval_lines <- rep(T, length(pred.bm))
               } else {
                 eval_lines <- ! na.omit(calib_lines[ , repet_id, pa_dataset_id])
+                ## trick to detect when it is a full model but with a non common name
+                if(all(!eval_lines)){ ## i.e. all lines used for calib => full model
+                  eval_lines <- !eval_lines
+                }
               }
             } else {
               eval_lines <- rep(T, length(pred.bm))
@@ -388,8 +412,6 @@
                                                                   Obs = eval.obs,
                                                                   Fixed.thresh = cross.validation["Cutoff",x]) )
                                         })
-              
-              
               cross.validation <- rbind(cross.validation["Testing.data",], true.evaluation)
               rownames(cross.validation) <- c("Testing.data","Evaluating.data","Cutoff","Sensitivity", "Specificity")
             }
@@ -706,9 +728,17 @@
         # transform array into data.frame
         out$predictions <- as.data.frame(out$predictions)
         names(out$predictions) <- unlist(lapply(strsplit(names(out$predictions),".", fixed=TRUE), 
-                                                function(x){
-                                                  return(paste(modeling.output@sp.name, x[3], x[2], x[1],sep="_"))
-                                                }))
+                                         function(x){
+                                           x.rev <- rev(x) ## we reverse the order of the splitted vector to have algo a t the end
+                                           data.set.id <- x.rev[1]
+                                           cross.valid.id <- x.rev[2]
+                                           algo.id <- paste(rev(x.rev[3:length(x.rev)]), collapse = ".", sep = "")
+                                           model.id <- paste(modeling.output@sp.name,
+                                                             data.set.id,
+                                                             cross.valid.id,
+                                                             algo.id, sep="_")
+                                           return(model.id)
+                                         }))
         # keep only wanted columns
         out$predictions <- out$predictions[,models.kept.union, drop=F]
         unlink(file.path(modeling.output@sp.name,paste("proj_", temp_name, sep="") ),recursive = TRUE, force = TRUE)

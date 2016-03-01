@@ -64,7 +64,7 @@ setMethod("getModelsPredictionEval", "BIOMOD.models.out",
                 return(obj@models.prediction.eval@val)
               } else{
                 if(obj@models.prediction.eval@link != ''){
-                  load(obj@models.prediction.eval@link)
+                  models.prediction.eval <- get(load(obj@models.prediction.eval@link))
                   return(models.prediction.eval)
                 } else{ return(NULL) }
               }              
@@ -223,19 +223,19 @@ setMethod("getProjection", "BIOMOD.projection.out",
                 } else if(grepl(".grd", obj@proj@link) | grepl(".img", obj@proj@link)){
                   return(raster::stack(obj@proj@link, RAT=FALSE))
                 } else {
-                  filesToLoad <- list.files(path=sub("/individual_projections","", bm_proj@proj@link), full.names=T)
+                  filesToLoad <- list.files(path=sub("/individual_projections","", obj@proj@link), full.names=T)
                   toMatch <- c('.grd$','.img$')
                   filesToLoad <- grep(pattern=paste(toMatch,collapse="|"), filesToLoad, value=T)  
                   if(length(filesToLoad)){
                     return(raster::stack(filesToLoad[1], RAT=FALSE))
                   } else {
-                    filesToLoad <- list.files(path=bm_proj@proj@link, full.names=T)
+                    filesToLoad <- list.files(path=obj@proj@link, full.names=T)
                     toMatch <- c('.grd$','.img$')
                     filesToLoad <- grep(pattern=paste(toMatch,collapse="|"), filesToLoad, value=T)
-                    toMatch <- bm_proj@models.projected
+                    toMatch <- obj@models.projected
                     filesToLoad <- grep(pattern=paste(toMatch,collapse="|"), filesToLoad, value=T)
                     proj <- raster::stack(filesToLoad, RAT=FALSE)
-                    toMatch <- c(bm_proj@proj@link,".img$",'.grd$', .Platform$file.sep)
+                    toMatch <- c(obj@proj@link,".img$",'.grd$', .Platform$file.sep)
                     names(proj) <- gsub(pattern=paste(toMatch,collapse="|"), "", filesToLoad)
                     return(proj)
                   }   

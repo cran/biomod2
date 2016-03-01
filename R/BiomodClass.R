@@ -8,9 +8,9 @@
 # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- #
 
 # We choose here to create monospecific objects to make all procedures and parallelising easier
-require(sp, quietly=TRUE)
-require(raster, quietly=TRUE)
-require(rasterVis, quietly=TRUE)
+requireNamespace("sp", quietly=TRUE)
+requireNamespace("raster", quietly=TRUE)
+requireNamespace("rasterVis", quietly=TRUE)
 
 # 0. Generic Functions definition -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=- #
 setGeneric("get_predictions",
@@ -204,8 +204,6 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='matrix' ),
 
 setMethod('BIOMOD.formated.data', signature(sp='numeric', env='RasterStack' ), 
           function(sp,env,xy=NULL,sp.name=NULL, eval.sp=NULL, eval.env=NULL, eval.xy=NULL, na.rm=TRUE){
-#             cat("\n*** sessionInfo() \n")
-#             print(sessionInfo())
             categorial_var <- names(env)[raster::is.factor(env)]  
             
             # take the same eval environemental variables than calibrating ones 
@@ -235,9 +233,6 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='RasterStack' ),
             if(length(categorial_var)){
               for(cat_var in categorial_var){
                 env[,cat_var] <- as.factor(env[,cat_var])
-                #         cat("\n***",which(colnames(env)==cat_var))
-                #         
-                #         levels(env[,cat_var]) <- env_levels[[which(colnames(env)==cat_var)]][[1]][,ncol(env_levels[[which(colnames(env)==cat_var)]][[1]])]
               }
             }
             
@@ -257,7 +252,7 @@ setMethod('BIOMOD.formated.data', signature(sp='numeric', env='RasterStack' ),
 setMethod('plot', signature(x='BIOMOD.formated.data', y="missing"),
           function(x,coord=NULL,col=NULL){
             if(raster::nlayers(x@data.mask)>0){
-              require(rasterVis)
+              requireNamespace("rasterVis")
               
               ## check that there is some undefined areas to prevent from strange plotting issues
               if(min(cellStats(x@data.mask,min)) == -1){ # there is undifined area
@@ -550,7 +545,7 @@ setMethod('plot', signature(x='BIOMOD.formated.data.PA', y="missing"),
           function(x,coord=NULL,col=NULL){
 
             if(raster::nlayers(x@data.mask)>0){
-              require(rasterVis)
+              requireNamespace("rasterVis")
               
               ## check that there is some undefined areas to prevent from strange plotting issues
               if(min(cellStats(x@data.mask,min)) == -1){ # there is undifined area
@@ -668,7 +663,8 @@ setClass("BIOMOD.Model.Options",
                         FDA = "list",
                         MARS = "list",
                         RF = "list",
-                        MAXENT = "list"),
+                        MAXENT.Phillips = "list",
+                        MAXENT.Tsuruoka = "list"),
          
          prototype(GLM = list( type = 'quadratic',
                                interaction.level = 0,
@@ -720,13 +716,18 @@ setClass("BIOMOD.Model.Options",
                    
                    SRE = list(quant = 0.025),
                    
-                   FDA = list(method = 'mars'),
+                   FDA = list(method = 'mars',
+                              add_args = NULL),
                    
-                   MARS = list(degree = 2,
+                   MARS = list(type = 'simple',
+                               interaction.level = 0,
+                               myFormula = NULL,
+#                                degree = 1,
                                nk = NULL,
                                penalty = 2,
                                thresh = 0.001,
-                               prune = TRUE),
+                               nprune = NULL,
+                               pmethod = 'backward'),
                    
                    RF = list(do.classif = TRUE,
                              ntree = 500,
@@ -734,8 +735,10 @@ setClass("BIOMOD.Model.Options",
                              nodesize = 5,
                              maxnodes= NULL),
                    
-                   MAXENT = list(path_to_maxent.jar = getwd(),
+                   MAXENT.Phillips = list(path_to_maxent.jar = getwd(),
                                  memory_allocated = 512,
+                                 background_data_dir = 'default',
+                                 maximumbackground = 'default',
                                  maximumiterations = 200,
                                  visible = FALSE,
                                  linear = TRUE,
@@ -750,7 +753,14 @@ setClass("BIOMOD.Model.Options",
                                  beta_categorical = -1.0,
                                  beta_lqp = -1.0,
                                  beta_hinge = -1.0,
-                                 defaultprevalence = 0.5)
+                                 betamultiplier = 1,
+                                 defaultprevalence = 0.5),
+                   
+                   MAXENT.Tsuruoka = list(l1_regularizer = 0.0,
+                                          l2_regularizer = 0.0,
+                                          use_sgd = FALSE,
+                                          set_heldout = 0,
+                                          verbose = FALSE)
                    
          ),
          validity = function(object){
@@ -875,7 +885,7 @@ setClass("BIOMOD.Model.Options",
            
            ## FDA ##
            if(! object@FDA$method %in% c( 'polyreg', 'mars', 'bruto')){cat("\nFDA$method must be 'polyreg', 'mars' or 'bruto'"); test <- FALSE }
-           
+           if(!is.null(object@FDA$add_args)){ if(!is.list(object@FDA$add_args)) {cat("\nFDA$add_args must be a list or NULL"); test <- FALSE } }
            
            
            ## SRE ##
@@ -886,25 +896,27 @@ setClass("BIOMOD.Model.Options",
            
            
            ## MARS ##
-           if(!is.numeric(object@MARS$degree)){ cat("\nMARS$degree must be a integer"); test <- FALSE } else{
-             if(object@MARS$degree < 0 | object@MARS$degree%%1!=0){ cat("\nMARS$degree must be a positive integer"); test <- FALSE }
+           if(!(object@MARS$type %in% c('simple','quadratic','polynomial','user.defined'))){ cat("\nMARS$type must be 'simple',  'quadratic', 'polynomial' or 'user.defined'"); test <- FALSE}
+           if(!is.numeric(object@MARS$interaction.level)){ cat("\nMARS$interaction.level must be a integer"); test <- FALSE } else{
+             if(object@MARS$interaction.level < 0 | object@MARS$interaction.level%%1!=0){ cat("\nMARS$interaction.level must be a positive integer"); test <- FALSE }
            }
-           
+           if(!is.null(object@MARS$myFormula)) if(class(object@MARS$myFormula) != "formula"){ cat("\nMARS$myFormula must be NULL or a formula object"); test <- FALSE }
+#            if(!is.numeric(object@MARS$degree)){ cat("\nMARS$degree must be a integer"); test <- FALSE } else{
+#              if(object@MARS$degree < 0 | object@MARS$degree%%1!=0){ cat("\nMARS$degree must be a positive integer"); test <- FALSE }
+#            }
            if(!is.null(object@MARS$nk)){ 
              if(object@MARS$nk < 0 | object@MARS$nk%%1!=0){ cat("\nMARS$nk must be a positive integer or NULL if you want to use default parameter"); test <- FALSE }
            }
-           
            if(!is.numeric(object@MARS$penalty)){ cat("\nMARS$penalty must be a integer"); test <- FALSE } else{
              if(object@MARS$penalty < 0 | object@MARS$penalty%%1!=0){ cat("\nMARS$penalty must be a positive integer"); test <- FALSE }
            }
-           
            if(!is.numeric(object@MARS$thresh)){ cat("\nMARS$thresh must be a numeric"); test <- FALSE } else{
              if(object@MARS$thresh < 0 ){ cat("\nMARS$thresh must be positive"); test <- FALSE }
            }
-           
-           if(!is.logical(object@MARS$prune)){ cat("\nMARS$prune must be a logical"); test <- FALSE }
-           
-           
+           if(!is.null(object@MARS$nprune)){ if(!is.numeric(object@MARS$nprune)){ cat("\nMARS$nprune must be a numeric or NULL"); test <- FALSE }}
+           supported.pmethod <- c('backward', 'none', 'exhaustive', 'forward', 'seqrep', 'cv')
+           if(!is.element(object@MARS$pmethod, supported.pmethod)){cat("\nMARS$pmethod must be a one of", supported.pmethod); test <- FALSE }
+
            
            ## RF ##
            if(!is.logical(object@RF$do.classif)){ cat("\nRF$do.classif must be a logical"); test <- FALSE }
@@ -931,48 +943,43 @@ setClass("BIOMOD.Model.Options",
            
            
            
-           ## MAXENT ##
-           if(!is.character(object@MAXENT$path_to_maxent.jar)){ cat("\nMAXENT$path_to_maxent.jar must be a character"); test <- FALSE }
-           if(!is.null(object@MAXENT$memory_allocated)){
-             if(!is.numeric(object@MAXENT$memory_allocated)){
-               cat("\nMAXENT$memory_allocated must be a positive integer or NULL for unlimited memory allocation"); test <- FALSE }
+           ## MAXENT.Phillips ##
+           if(!is.character(object@MAXENT.Phillips$path_to_maxent.jar)){ cat("\nMAXENT.Phillips$path_to_maxent.jar must be a character"); test <- FALSE }
+           if(!is.null(object@MAXENT.Phillips$memory_allocated)){
+             if(!is.numeric(object@MAXENT.Phillips$memory_allocated)){
+               cat("\nMAXENT.Phillips$memory_allocated must be a positive integer or NULL for unlimited memory allocation"); test <- FALSE }
            }
-           
-           
-           if(!is.numeric(object@MAXENT$maximumiterations)){ cat("\nMAXENT$maximumiterations must be a integer"); test <- FALSE } else{
-             if(object@MAXENT$maximumiterations < 0 | object@MAXENT$maximumiterations%%1!=0){ cat("\nMAXENT$maximumiterations must be a positive integer"); test <- FALSE }
+           if(!is.character(object@MAXENT.Phillips$background_data_dir)){ cat("\nMAXENT.Phillips$background_data_dir must be 'default' (=> use the same pseudo absences than other models as background) or a path to the directory where your environmental layer are stored"); test <- FALSE }
+           tt <- is.character(object@MAXENT.Phillips$maximumbackground) | is.numeric(object@MAXENT.Phillips$maximumbackground)
+           if(is.character(object@MAXENT.Phillips$maximumbackground)) if(object@MAXENT.Phillips$maximumbackground != 'default') tt <- FALSE
+           if(!tt){ cat("\nMAXENT.Phillips$maximumbackground must be 'default' or numeric"); test <- FALSE }
+           if(!is.numeric(object@MAXENT.Phillips$maximumiterations)){ cat("\nMAXENT.Phillips$maximumiterations must be a integer"); test <- FALSE } else{
+             if(object@MAXENT.Phillips$maximumiterations < 0 | object@MAXENT.Phillips$maximumiterations%%1!=0){ cat("\nMAXENT.Phillips$maximumiterations must be a positive integer"); test <- FALSE }
            }
+           if(!is.logical(object@MAXENT.Phillips$visible)){ cat("\nMAXENT.Phillips$visible must be a logical"); test <- FALSE }
+           if(!is.logical(object@MAXENT.Phillips$linear)){ cat("\nMAXENT.Phillips$linear must be a logical"); test <- FALSE }
+           if(!is.logical(object@MAXENT.Phillips$quadratic)){ cat("\nMAXENT.Phillips$quadratic must be a logical"); test <- FALSE }
+           if(!is.logical(object@MAXENT.Phillips$product)){ cat("\nMAXENT.Phillips$product must be a logical"); test <- FALSE }
+           if(!is.logical(object@MAXENT.Phillips$threshold)){ cat("\nMAXENT.Phillips$threshold must be a logical"); test <- FALSE }
+           if(!is.logical(object@MAXENT.Phillips$hinge)){ cat("\nMAXENT.Phillips$hinge must be a logical"); test <- FALSE }
+           if(!is.numeric(object@MAXENT.Phillips$lq2lqptthreshold)){ cat("\nMAXENT.Phillips$lq2lqptthreshold must be a numeric"); test <- FALSE }
+           if(!is.numeric(object@MAXENT.Phillips$l2lqthreshold)){ cat("\nMAXENT.Phillips$l2lqthreshold must be a numeric"); test <- FALSE }
+           if(!is.numeric(object@MAXENT.Phillips$lq2lqptthreshold)){ cat("\nMAXENT.Phillips$lq2lqptthreshold must be a numeric"); test <- FALSE }
+           if(!is.numeric(object@MAXENT.Phillips$hingethreshold)){ cat("\nMAXENT.Phillips$hingethreshold must be a numeric"); test <- FALSE }
+           if(!is.numeric(object@MAXENT.Phillips$beta_threshold)){ cat("\nMAXENT.Phillips$beta_threshold must be a numeric"); test <- FALSE }
+           if(!is.numeric(object@MAXENT.Phillips$beta_categorical)){ cat("\nMAXENT.Phillips$beta_categorical must be a numeric"); test <- FALSE }
+           if(!is.numeric(object@MAXENT.Phillips$beta_lqp)){ cat("\nMAXENT.Phillips$beta_lqp must be a numeric"); test <- FALSE }
+           if(!is.numeric(object@MAXENT.Phillips$beta_hinge)){ cat("\nMAXENT.Phillips$beta_hinge must be a numeric"); test <- FALSE }
+		       if(!is.numeric(object@MAXENT.Phillips$betamultiplier)){ cat("\nMAXENT.Phillips$betamultiplier must be a numeric"); test <- FALSE }
+           if(!is.numeric(object@MAXENT.Phillips$defaultprevalence)){ cat("\nMAXENT.Phillips$defaultprevalence must be a numeric"); test <- FALSE }
            
-           if(!is.logical(object@MAXENT$visible)){ cat("\nMAXENT$visible must be a logical"); test <- FALSE }
-           
-           if(!is.logical(object@MAXENT$linear)){ cat("\nMAXENT$linear must be a logical"); test <- FALSE }
-           
-           if(!is.logical(object@MAXENT$quadratic)){ cat("\nMAXENT$quadratic must be a logical"); test <- FALSE }
-           
-           if(!is.logical(object@MAXENT$product)){ cat("\nMAXENT$product must be a logical"); test <- FALSE }
-           
-           if(!is.logical(object@MAXENT$threshold)){ cat("\nMAXENT$threshold must be a logical"); test <- FALSE }
-           
-           if(!is.logical(object@MAXENT$hinge)){ cat("\nMAXENT$hinge must be a logical"); test <- FALSE }
-           
-           if(!is.numeric(object@MAXENT$lq2lqptthreshold)){ cat("\nMAXENT$lq2lqptthreshold must be a numeric"); test <- FALSE }
-           
-           if(!is.numeric(object@MAXENT$l2lqthreshold)){ cat("\nMAXENT$l2lqthreshold must be a numeric"); test <- FALSE }
-           
-           if(!is.numeric(object@MAXENT$lq2lqptthreshold)){ cat("\nMAXENT$lq2lqptthreshold must be a numeric"); test <- FALSE }
-           
-           if(!is.numeric(object@MAXENT$hingethreshold)){ cat("\nMAXENT$hingethreshold must be a numeric"); test <- FALSE }
-           
-           if(!is.numeric(object@MAXENT$beta_threshold)){ cat("\nMAXENT$beta_threshold must be a numeric"); test <- FALSE }
-           
-           if(!is.numeric(object@MAXENT$beta_categorical)){ cat("\nMAXENT$beta_categorical must be a numeric"); test <- FALSE }
-           
-           if(!is.numeric(object@MAXENT$beta_lqp)){ cat("\nMAXENT$beta_lqp must be a numeric"); test <- FALSE }
-           
-           if(!is.numeric(object@MAXENT$beta_hinge)){ cat("\nMAXENT$beta_hinge must be a numeric"); test <- FALSE }
-           
-           if(!is.numeric(object@MAXENT$defaultprevalence)){ cat("\nMAXENT$defaultprevalence must be a numeric"); test <- FALSE }
-           
+           ## MAXENT.Tsuruoka
+		       if(!is.numeric(object@MAXENT.Tsuruoka$l1_regularizer)){ cat("\nMAXENT.Tsuruoka$l1_regularizer must be a numeric"); test <- FALSE }		   
+		       if(!is.numeric(object@MAXENT.Tsuruoka$l2_regularizer)){ cat("\nMAXENT.Tsuruoka$l2_regularizer must be a numeric"); test <- FALSE }
+		       if(!is.logical(object@MAXENT.Tsuruoka$use_sgd)){ cat("\nMAXENT.Tsuruoka$use_sgd must be a logical"); test <- FALSE }
+		       if(!is.numeric(object@MAXENT.Tsuruoka$set_heldout)){ cat("\nMAXENT.Tsuruoka$set_heldout must be a numeric"); test <- FALSE }
+		       if(!is.logical(object@MAXENT.Tsuruoka$verbose)){ cat("\nMAXENT.Tsuruoka$verbose must be a logical"); test <- FALSE }
+		   
            return(test)
          })
 
@@ -1047,15 +1054,22 @@ setMethod('show', signature('BIOMOD.Model.Options'),
             
             ## FDA options
             cat("\n")
-            cat("\nFDA = list( method = '", object@FDA$method, "'),", sep="")
+            cat("\nFDA = list( method = '", object@FDA$method, "',", sep="")
+            cat("\n            add_args = ", ifelse(length(object@FDA$add_args)<1,
+                                                    'NULL', 
+                                                    paste("list(", paste(.print.control(object@FDA$add_args), collapse=""), ")", sep="")), "),",sep="")
             
             ## MARS options
             cat("\n")
-            cat("\nMARS = list( degree = ", object@MARS$degree, ",", sep="")
+            cat("\nMARS = list( type = '", object@MARS$type, "',", sep="")
+            cat("\n             interaction.level = ", object@MARS$interaction.level, ",", sep="")
+            cat("\n             myFormula = ",  ifelse(length(object@MARS$myFormula) < 1,'NULL',paste(object@GLM$myFormula[2],object@GLM$myFormula[1],object@GLM$myFormula[3])), ",", sep="") 
+#             cat("\n             degree = ", object@MARS$degree, ",", sep="")
             cat("\n             nk = ", ifelse(length(object@MARS$nk) < 1,'NULL',object@MARS$nk), ",", sep="")
             cat("\n             penalty = ", object@MARS$penalty, ",", sep="")
             cat("\n             thresh = ", object@MARS$thresh, ",", sep="")
-            cat("\n             prune = ", object@MARS$prune, "),", sep="")
+            cat("\n             nprune = ", ifelse(length(object@MARS$nprune) < 1,'NULL',object@MARS$nprune), ",", sep="")
+            cat("\n             pmethod = '", object@MARS$pmethod, "'),", sep="")
             
             ## RF options
             cat("\n")
@@ -1065,25 +1079,36 @@ setMethod('show', signature('BIOMOD.Model.Options'),
             cat("\n           nodesize = ", object@RF$nodesize, ",", sep="")
             cat("\n           maxnodes = ", ifelse(length(object@RF$maxnodes) < 1,'NULL',object@RF$maxnodes), "),", sep="")
             
-            ## MAXENT options
+            ## MAXENT.Phillips options
             cat("\n")
-            cat("\nMAXENT = list( path_to_maxent.jar = '", object@MAXENT$path_to_maxent.jar, "',", sep="")
-            cat("\n               memory_allocated = ", ifelse(length(object@MAXENT$memory_allocated) < 1,'NULL',object@MAXENT$memory_allocated), ",", sep="")
-            cat("\n               maximumiterations = ", object@MAXENT$maximumiterations, ",", sep="")
-            cat("\n               visible = ", object@MAXENT$visible, ",", sep="")
-            cat("\n               linear = ", object@MAXENT$linear, ",", sep="")
-            cat("\n               quadratic = ", object@MAXENT$quadratic, ",", sep="")
-            cat("\n               product = ", object@MAXENT$product, ",", sep="")
-            cat("\n               threshold = ", object@MAXENT$threshold, ",", sep="")
-            cat("\n               hinge = ", object@MAXENT$hinge, ",", sep="")
-            cat("\n               lq2lqptthreshold = ", object@MAXENT$lq2lqptthreshold, ",", sep="")
-            cat("\n               l2lqthreshold = ", object@MAXENT$l2lqthreshold, ",", sep="")
-            cat("\n               hingethreshold = ", object@MAXENT$hingethreshold, ",", sep="")
-            cat("\n               beta_threshold = ", object@MAXENT$beta_threshold, ",", sep="")
-            cat("\n               beta_categorical = ", object@MAXENT$beta_categorical, ",", sep="")
-            cat("\n               beta_lqp = ", object@MAXENT$beta_lqp, ",", sep="")
-            cat("\n               beta_hinge = ", object@MAXENT$beta_hinge, ",", sep="")
-            cat("\n               defaultprevalence = ", object@MAXENT$defaultprevalence, ")", sep="")
+            cat("\nMAXENT.Phillips = list( path_to_maxent.jar = '", object@MAXENT.Phillips$path_to_maxent.jar, "',", sep="")
+            cat("\n               memory_allocated = ", ifelse(length(object@MAXENT.Phillips$memory_allocated) < 1,'NULL',object@MAXENT.Phillips$memory_allocated), ",", sep="")
+            cat("\n               background_data_dir = ", ifelse(is.character(object@MAXENT.Phillips$background_data_dir), "'", ""), object@MAXENT.Phillips$background_data_dir, ifelse(is.character(object@MAXENT.Phillips$background_data_dir), "'", ""), ",", sep="")
+            cat("\n               maximumbackground = ", ifelse(is.character(object@MAXENT.Phillips$maximumbackground), "'", ""), object@MAXENT.Phillips$maximumbackground, ifelse(is.character(object@MAXENT.Phillips$maximumbackground), "'", ""), ",", sep="")
+            cat("\n               maximumiterations = ", object@MAXENT.Phillips$maximumiterations, ",", sep="")
+            cat("\n               visible = ", object@MAXENT.Phillips$visible, ",", sep="")
+            cat("\n               linear = ", object@MAXENT.Phillips$linear, ",", sep="")
+            cat("\n               quadratic = ", object@MAXENT.Phillips$quadratic, ",", sep="")
+            cat("\n               product = ", object@MAXENT.Phillips$product, ",", sep="")
+            cat("\n               threshold = ", object@MAXENT.Phillips$threshold, ",", sep="")
+            cat("\n               hinge = ", object@MAXENT.Phillips$hinge, ",", sep="")
+            cat("\n               lq2lqptthreshold = ", object@MAXENT.Phillips$lq2lqptthreshold, ",", sep="")
+            cat("\n               l2lqthreshold = ", object@MAXENT.Phillips$l2lqthreshold, ",", sep="")
+            cat("\n               hingethreshold = ", object@MAXENT.Phillips$hingethreshold, ",", sep="")
+            cat("\n               beta_threshold = ", object@MAXENT.Phillips$beta_threshold, ",", sep="")
+            cat("\n               beta_categorical = ", object@MAXENT.Phillips$beta_categorical, ",", sep="")
+            cat("\n               beta_lqp = ", object@MAXENT.Phillips$beta_lqp, ",", sep="")
+            cat("\n               beta_hinge = ", object@MAXENT.Phillips$beta_hinge, ",", sep="")
+            cat("\n               betamultiplier = ", object@MAXENT.Phillips$betamultiplier, ",", sep="")
+            cat("\n               defaultprevalence = ", object@MAXENT.Phillips$defaultprevalence, "),", sep="")
+
+            ## MAXENT.Tsuruoka
+            cat("\n")
+            cat("\nMAXENT.Tsuruoka = list( l1_regularizer = ", object@MAXENT.Tsuruoka$l1_regularizer, ",", sep="")
+            cat("\n                        l2_regularizer = ", object@MAXENT.Tsuruoka$l2_regularizer, ",", sep="")
+            cat("\n                        use_sgd = ", object@MAXENT.Tsuruoka$use_sgd, ",", sep="")
+            cat("\n                        set_heldout = ", object@MAXENT.Tsuruoka$set_heldout, ",", sep="")
+            cat("\n                        verbose = ", object@MAXENT.Tsuruoka$verbose, ")", sep="")
             
             .bmCat()
           })
@@ -1308,17 +1333,31 @@ setMethod("get_predictions", "BIOMOD.models.out",
                 mod.pred <- as.data.frame(pred@val)
                 names(mod.pred) <- unlist(lapply(strsplit(names(mod.pred),".", fixed=TRUE), 
                                                  function(x){
-                                                   return(paste(obj@sp.name, x[3], x[2], x[1],sep="_"))
+                                                   x.rev <- rev(x) ## we reverse the order of the splitted vector to have algo a t the end
+                                                   data.set.id <- x.rev[1]
+                                                   cross.valid.id <- x.rev[2]
+                                                   algo.id <- paste(rev(x.rev[3:length(x.rev)]), collapse = ".", sep = "")
+                                                   model.id <- paste(obj@sp.name,
+                                                                     data.set.id,
+                                                                     cross.valid.id,
+                                                                     algo.id, sep="_")
+                                                   return(model.id)
                                                  }))
                 return(mod.pred)
               } else{
                 if(pred@link != ''){
-                  #                   load(obj@models.prediction@link)
-                  #                   mod.pred <- as.data.frame(models.prediction)
-                  mod.pred <- as.data.frame(get(load(pred@link)))                  
+                  mod.pred <- as.data.frame(get(load(pred@link)))    
                   names(mod.pred) <- unlist(lapply(strsplit(names(mod.pred),".", fixed=TRUE), 
                                                    function(x){
-                                                     return(paste(obj@sp.name, x[3], x[2], x[1],sep="_"))
+                                                     x.rev <- rev(x) ## we reverse the order of the splitted vector to have algo a t the end
+                                                     data.set.id <- x.rev[1]
+                                                     cross.valid.id <- x.rev[2]
+                                                     algo.id <- paste(rev(x.rev[3:length(x.rev)]), collapse = ".", sep = "")
+                                                     model.id <- paste(obj@sp.name,
+                                                                       data.set.id,
+                                                                       cross.valid.id,
+                                                                       algo.id, sep="_")
+                                                     return(model.id)
                                                    }))
                   return(mod.pred)
                 } else{ return(NULL) }
@@ -1377,7 +1416,6 @@ setMethod("get_evaluations", "BIOMOD.models.out",
 setMethod("get_calib_lines", "BIOMOD.models.out",
    function(obj, as.data.frame = FALSE, ...){
      calib_lines <- load_stored_object(obj@calib.lines)
-     
      return(calib_lines)
    }
           
@@ -1527,8 +1565,7 @@ setMethod("get_predictions", "BIOMOD.projection.out",
           function(obj, as.data.frame=FALSE, full.name=NULL, model=NULL, run.eval=NULL, data.set=NULL){
             models_selected <- get_projected_models(obj)
             if(length(full.name)){
-              # models subselection according to model names
-              models_selected <- grep(pattern=paste(full.name,collapse="|"), models_selected, value=T)
+              models_selected <- intersect(full.name, models_selected)
             } else if(length(model) | length(run.eval) | length(data.set)){
               # models subselection according to model, run.eval and sata.set parameters
               if(length(model)) grep_model <- paste("(",paste(model,collapse="|"),")", sep="") else grep_model = "*"
@@ -1563,9 +1600,17 @@ setMethod("get_predictions", "BIOMOD.projection.out",
                 
                 if(obj@type == 'array' & sum(!(names(proj) %in% models_selected))>0 ){ ## from array & not valid names
                   names(proj) <- unlist(lapply(strsplit(names(proj),".", fixed=TRUE), 
-                                               function(x){
-                                                 return(paste(obj@sp.name, x[3], x[2], x[1],sep="_"))
-                                               }))
+                                                   function(x){
+                                                     x.rev <- rev(x) ## we reverse the order of the splitted vector to have algo a t the end
+                                                     data.set.id <- x.rev[1]
+                                                     cross.valid.id <- x.rev[2]
+                                                     algo.id <- paste(rev(x.rev[3:length(x.rev)]), collapse = ".", sep = "")
+                                                     model.id <- paste(obj@sp.name,
+                                                                       data.set.id,
+                                                                       cross.valid.id,
+                                                                       algo.id, sep="_")
+                                                     return(model.id)
+                                                   }))
                 }
                 
                 # reorder the data.frame
@@ -1595,7 +1640,7 @@ setMethod('plot', signature(x='BIOMOD.projection.out', y="missing"),
             
             
             if(class(x@proj) == "BIOMOD.stored.raster.stack"){
-              require(rasterVis)
+              requireNamespace("rasterVis")
               
               ## define the breaks of the color key
               my.at <- seq(0,1000,by=100)
@@ -1725,114 +1770,6 @@ setMethod('show', signature('BIOMOD.EnsembleModeling.out'),
             .bmCat()
           })
 
-# setClass("BIOMOD.EnsembleModeling.out",
-#          representation(sp.name = 'character',
-#                         expl.var.names = 'character',
-#                         models.out.obj = 'BIOMOD.stored.models.out',
-#                         eval.metric = 'character',
-#                         eval.metric.quality.threshold = 'numeric',
-#                         em.computed = 'character',
-#                         em.by = 'character',
-# #                         em.models.kept = 'list',
-# #                         em.prediction = 'BIOMOD.stored.array',
-# #                         em.evaluation = 'BIOMOD.stored.array',
-#                         em.res = 'list',
-#                         em.ci.alpha = 'numeric',
-#                         em.weight = 'list',
-#                         em.bin.tresh = 'list'),
-#          prototype( sp.name = '',
-#                     expl.var.names = '',
-#                     models.out.obj = new('BIOMOD.stored.models.out'),
-#                     eval.metric = '',
-#                     eval.metric.quality.threshold = NULL,
-# #                     em.computed = '',
-# #                     em.models.kept = NULL,
-# #                     em.prediction = NULL,
-# #                     em.evaluation = NULL,
-#                     em.res = list(),
-#                     em.ci.alpha = 0.05,
-#                     em.weight = list(),
-#                     em.bin.tresh = list()),
-#          validity = function(object){
-#            return(TRUE)
-#            })
-# 
-# 
-# setMethod('show', signature('BIOMOD.EnsembleModeling.out'),
-#           function(object){
-#             .bmCat("'BIOMOD.EnsembleModeling.out'")
-#             cat("\nsp.name :", object@sp.name, fill=.Options$width)
-#             cat("\nexpl.var.names :", object@expl.var.names, fill=.Options$width)
-#             cat("\n")
-#             cat("\nmodels computed:", toString(object@em.computed), fill=.Options$width)
-# 
-#             .bmCat()
-#           })
-
-# ######
-# setMethod('predict', signature(object = 'BIOMOD.EnsembleModeling.out'),
-#           function(object, newdata, subset=1, ...){
-#             
-#             args <- list(...)
-#             
-#             if(inherits(newdata, 'Raster')){            
-#               return(.predict.EM_biomod2_model.RasterStack(object, newdata, subset, ... ))
-#             } else if(inherits(newdata, 'data.frame') | inherits(newdata, 'matrix')){
-#               return(.predict.EM_biomod2_model.data.frame(object, newdata, subset, ... ))
-#             } else{ stop("invalid newdata input") }
-#             
-#           })
-# 
-# .predict.ANN_biomod2_model.RasterStack <- function(object, newdata, subset, ...){
-#   args <- list(...)
-#   filename <- args$filename
-#   overwrite <- args$overwrite
-#   on_0_1000 <- args$on_0_1000
-#   
-#   if (is.null(overwrite)) overwrite <- TRUE
-#   if (is.null(on_0_1000)) on_0_1000 <- FALSE
-#   
-#   set.seed(555)
-#   proj <- predict(newdata, get_formal_model(object), type="raw")
-#   
-#   if(length(getScalingModel(object))){
-#     names(proj) <- "pred"
-#     proj <- .testnull(object = getScalingModel(object), Prev = 0.5 , dat = proj)
-#   }
-#   
-#   if(on_0_1000) proj <- round(proj*1000)
-#   
-#   # save raster on hard drive ?
-#   if(!is.null(filename)){
-#     cat("\n\t\tWriting projection on hard drive...")
-#     writeRaster(proj, filename=filename, overwrite=overwrite)
-#     proj <- raster(filename, RAT=FALSE)
-#   }
-#   
-#   return(proj)
-# }
-# 
-# .predict.EM_biomod2_model.data.frame <- function(object, newdata, subset, ...){
-#   args <- list(...)
-#   on_0_1000 <- args$on_0_1000
-#   
-#   if (is.null(on_0_1000)) on_0_1000 <- FALSE
-#   
-#   set.seed(555)
-#   proj <- as.numeric( predict(get_formal_model(object), newdata, type="raw") )
-#   
-#   if(length(getScalingModel(object))){
-#     proj <- data.frame(pred = proj)
-#     proj <- .testnull(object = getScalingModel(object), Prev = 0.5 , dat = proj)
-#   }
-#   
-#   if(on_0_1000) proj <- round(proj*1000)
-#   
-#   return(proj)
-# }
-# ######
-
-
 setMethod("get_needed_models", "BIOMOD.EnsembleModeling.out",
           function(obj, subset='all', ...){
             add.args <- list(...)
@@ -1855,8 +1792,6 @@ setMethod("get_needed_models", "BIOMOD.EnsembleModeling.out",
 )
 
 
-
-
 setMethod("get_kept_models", "BIOMOD.EnsembleModeling.out",
           function(obj, model, ...){
             if(is.character(model) | is.numeric(model)){
@@ -1869,29 +1804,6 @@ setMethod("get_kept_models", "BIOMOD.EnsembleModeling.out",
             
           }
 )
-
-
-# setMethod("get_evaluations", "BIOMOD.EnsembleModeling.out",
-#           function(obj, model=NULL, met=NULL){
-#             if(is.null(model)){
-#               model <- obj@em.computed
-#             }
-#             if(is.character(model) | is.numeric(model)){
-#               lout <- list()
-#               for(mod in model){
-#                 if(is.null(met)){
-#                   lout[[mod]] <- obj@em.models[[mod]]@model_evaluation[,,drop=F]
-#                 } else if(!is.null(meth)){
-#                   lout[[mod]] <- (obj@em.rmodels[[mod]]@model_evaluation[met,,drop=F])
-#                 } 
-#               }
-#               return(lout)
-#             } else{
-#               return(NULL)
-#             }
-#             
-#           }
-# )
 
 setMethod("get_evaluations", "BIOMOD.EnsembleModeling.out",
           function(obj, ...){
@@ -1954,6 +1866,23 @@ setMethod("get_built_models", "BIOMOD.EnsembleModeling.out",
             return(obj@em.computed)
           })
 
+setMethod("get_predictions", "BIOMOD.EnsembleModeling.out",
+  function(obj, ...){
+    ## note: ensemble models predicitons are stored within the directory 
+    ##  <sp.name>/.BIOMOD_DATA/<modelling.id>/ensemble.models/ensemble.models.projections/
+    ##  This function is just a friendly way to load this data
+    
+    ## get the path to projections files we want to load
+    files.to.load <- file.path(obj@sp.name, ".BIOMOD_DATA", obj@modeling.id, "ensemble.models", 
+                              "ensemble.models.predictions", paste0(obj@em.computed, ".predictions"))
+    ## load and merge projection files within a data.frame
+    bm.pred <- do.call(cbind, lapply(files.to.load, function(ftl) get(load(ftl))))
+    colnames(bm.pred) <- obj@em.computed
+    return(bm.pred)
+  }
+)
+
+"/home/georgeda/Work/BIOMOD/RForge/tests/workdir/GuloGulo/.BIOMOD_DATA/test//GuloGulo_EMmeanByTSS_mergedAlgo_mergedRun_mergedData.predictions"
 ####################################################################################################
 ### BIOMOD Storing Ensemble Forecasting Objects ####################################################
 ####################################################################################################
@@ -1987,7 +1916,10 @@ setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data'),
                 calibLines <- matrix(rep(TRUE,length(data@data.species)),ncol=1)
                 colnames(calibLines) <- '_Full'
               } else {
-                calibLines <- .SampleMat(data@data.species, DataSplit, NbRunEval)                    
+                calibLines <- .SampleMat(data.sp = data@data.species, 
+                                         dataSplit = DataSplit, 
+                                         nbRun = NbRunEval, 
+                                         data.env = data@data.env.var)                    
                 if(do.full.models){
                   calibLines <- cbind(calibLines, rep(TRUE,length(data@data.species)))
                   colnames(calibLines)[NbRunEval+1] <- '_Full'
@@ -2051,7 +1983,10 @@ setMethod('.Models.prepare.data', signature(data='BIOMOD.formated.data.PA'),
                   colnames(calibLines) <- '_Full'
                 } else {
                   calibLines <- matrix(NA,nrow=length(data@data.species),ncol=NbRunEval)
-                  sampled.mat <- .SampleMat(data@data.species[data@PA[,pa]], DataSplit, NbRunEval)
+                  sampled.mat <- .SampleMat(data.sp = data@data.species[data@PA[,pa]],
+                                            dataSplit = DataSplit,
+                                            nbRun = NbRunEval,
+                                            data.env = data@data.env.var[data@PA[,pa], , drop = FALSE]) 
                   calibLines[data@PA[,pa],] <- sampled.mat
                   colnames(calibLines) <- colnames(sampled.mat)
                   if(do.full.models){

@@ -29,23 +29,23 @@
       file.copy(from=new.index,to=old.index,overwrite=TRUE)
     }
     
-    if(!file.exists(file.path(system.file("",package='biomod2'), "Meta", "vignette.rds"))){
-      cat("\ncustom vignettes files setting up...")
-      # get vignettes files
-      vignettes_R <- list.files(path=system.file("doc",package='biomod2'),pattern=".R",ignore.case=TRUE)
-      vignettes_PDF <- list.files(path=system.file("doc",package='biomod2'),pattern=".pdf",ignore.case=TRUE)
-      
-      # create the .Rnw & vignette.rds file
-      vignettes_Rnw <- union(gsub(".R","",vignettes_R), gsub(".pdf","",vignettes_PDF))
-      vignettes_Rnw <- paste(vignettes_Rnw,".Rnw", sep="")
-      invisible(file.create(file.path(system.file("doc",package='biomod2'), vignettes_Rnw), showWarnings=F))
-      
-      vignettes_rds <- file.path(system.file("doc",package='biomod2'),"html","vignettes_rds.csv")
-      if(file.exists(vignettes_rds)){
-        vignettes_rds <- read.csv(vignettes_rds, colClasses = "character")
-        saveRDS(vignettes_rds,file=file.path(system.file("Meta",package='biomod2'),"vignette.rds"))
-      }
-    }
+#     if(!file.exists(file.path(system.file("",package='biomod2'), "Meta", "vignette.rds"))){
+#       cat("\ncustom vignettes files setting up...")
+#       # get vignettes files
+#       vignettes_R <- list.files(path=system.file("doc",package='biomod2'),pattern=".R",ignore.case=TRUE)
+#       vignettes_PDF <- list.files(path=system.file("doc",package='biomod2'),pattern=".pdf",ignore.case=TRUE)
+#       
+#       # create the .Rnw & vignette.rds file
+#       vignettes_Rnw <- union(gsub(".R","",vignettes_R), gsub(".pdf","",vignettes_PDF))
+#       vignettes_Rnw <- paste(vignettes_Rnw,".Rnw", sep="")
+#       invisible(file.create(file.path(system.file("doc",package='biomod2'), vignettes_Rnw), showWarnings=F))
+#       
+#       vignettes_rds <- file.path(system.file("doc",package='biomod2'),"html","vignettes_rds.csv")
+#       if(file.exists(vignettes_rds)){
+#         vignettes_rds <- read.csv(vignettes_rds, colClasses = "character")
+#         saveRDS(vignettes_rds,file=file.path(system.file("Meta",package='biomod2'),"vignette.rds"))
+#       }
+#     }
     # create a file that will indicate that package customing has ever been done
     invisible(file.create(file.path(system.file("",package='biomod2'), "HasBeenCustom.txt"), showWarnings=F))
     return(TRUE)

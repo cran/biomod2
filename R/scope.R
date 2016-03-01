@@ -59,9 +59,6 @@ function(enviroTrain, formula, Smoother, degree)
   })
   
   names(step.list) <- attr(terms(formula),"term.labels")
-
-  cat("\n***")
-  print(step.list)
   
   return(step.list)
 }

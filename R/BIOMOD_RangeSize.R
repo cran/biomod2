@@ -54,11 +54,30 @@ setMethod('BIOMOD_RangeSize', signature(CurrentPred='array', FutureProj='array' 
                                                   return(paste( x[3], x[2], x[1],sep="_"))
                                                 }))
             
+            names(CurrentPred) <- unlist(lapply(strsplit(names(CurrentPred),".", fixed=TRUE), 
+                                             function(x){
+                                               x.rev <- rev(x) ## we reverse the order of the splitted vector to have algo a t the end
+                                               data.set.id <- x.rev[1]
+                                               cross.valid.id <- x.rev[2]
+                                               algo.id <- paste(rev(x.rev[3:length(x.rev)]), collapse = ".", sep = "")
+                                               model.id <- paste(data.set.id,
+                                                                 cross.valid.id,
+                                                                 algo.id, sep="_")
+                                               return(model.id)
+                                             }))
+            
             FutureProj <- as.data.frame(FutureProj)
             names(FutureProj) <- unlist(lapply(strsplit(names(FutureProj),".", fixed=TRUE), 
-                                               function(x){
-                                                 return(paste( x[3], x[2], x[1],sep="_"))
-                                               }))
+                                                function(x){
+                                                  x.rev <- rev(x) ## we reverse the order of the splitted vector to have algo a t the end
+                                                  data.set.id <- x.rev[1]
+                                                  cross.valid.id <- x.rev[2]
+                                                  algo.id <- paste(rev(x.rev[3:length(x.rev)]), collapse = ".", sep = "")
+                                                  model.id <- paste(data.set.id,
+                                                                    cross.valid.id,
+                                                                    algo.id, sep="_")
+                                                  return(model.id)
+                                                }))
             return(BIOMOD_RangeSize(CurrentPred, FutureProj,  SpChange.Save))
           })
 

@@ -115,19 +115,19 @@
   dir.create(file.path(EM.output@sp.name,paste("proj_", proj.name, sep="")), 
              showWarnings = FALSE, recursive = TRUE, mode = "777")
   
-  if(!do.stack){
-    rasterOptions(todisk=T)
-    indiv_proj_dir <- file.path(EM.output@sp.name,paste("proj_", proj.name, sep=""), "individual_projections")
+  indiv_proj_dir <- file.path(EM.output@sp.name,paste("proj_", proj.name, sep=""), "individual_projections")
+#   if(!do.stack){
+#     rasterOptions(todisk=T)
     dir.create(indiv_proj_dir, 
                showWarnings = FALSE, recursive = TRUE, mode = "777")
-  }
+#   }
   
   saved.files <- c()
                                                   
   
   ### get needed models prediction ###
   needed_predictions <- get_needed_models(EM.output, selected.models=selected.models)
-  
+
   if (length(projection.output)){
     formal_pred <- get_predictions(projection.output, full.name=needed_predictions, as.data.frame=ifelse(projection.output@type=='array',T,F) )
   } else{
@@ -153,18 +153,22 @@
   for( em.comp in EM.output@em.computed[which(EM.output@em.computed %in% selected.models)]){
     cat("\n\n\t> Projecting", em.comp, "...")
     model.tmp <- NULL
+    file_name_tmp <- file.path(indiv_proj_dir, paste0(em.comp,output.format))
     BIOMOD_LoadModels(EM.output, full.name=em.comp, as='model.tmp')
     if(inherits(formal_pred,'Raster')){
-      ef.tmp <- predict(model.tmp, formal_predictions = raster::subset(formal_pred, subset=model.tmp@model, drop=FALSE), on_0_1000 = on_0_1000)
+      ef.tmp <- predict(model.tmp, 
+                        formal_predictions = raster::subset(formal_pred, subset=model.tmp@model, drop=FALSE),
+                        on_0_1000 = on_0_1000, 
+                        filename = ifelse(output.format == '.RData', '', file_name_tmp))
     } else {
+      cat("\n*** here!!\n")
+      print(str(formal_pred))
+      cat("\n***\n")
+      cat(model.tmp@model)
+      cat("\n*** here!!\n")
       ef.tmp <- predict(model.tmp, formal_predictions = formal_pred[,model.tmp@model, drop=FALSE], on_0_1000 = on_0_1000)
     }
-    
-#     cat("\n***")
-#     plot(ef.tmp)
-#     writeRaster(ef.tmp, "ef_tmp1.img", overwrite=T)
-    
-    
+        
     if(inherits(ef.tmp,'Raster')){
       if(do.stack){
         if(length(ef.out)) ef.out <- stack(ef.out,ef.tmp) else ef.out <- raster::stack(ef.tmp)
@@ -172,16 +176,12 @@
         file_name_tmp <- file.path(indiv_proj_dir,paste(em.comp,output.format,sep=""))
         if(output.format== '.RData'){
           save(ef.tmp, file=file_name_tmp, compress=compress)
-        } else{
-          ## TODO : define the raster dataformat (depends if em.cv has been computed)
-          writeRaster(ef.tmp,filename=file_name_tmp, overwrite=TRUE)
-        }
+        } 
         saved.files <- c(saved.files, file_name_tmp)
       }
     } else{
       ef.out <- cbind(ef.out,ef.tmp)
-    }
-      
+    } 
   }
   
   proj_out@models.projected <- EM.output@em.computed[which(EM.output@em.computed %in% selected.models)]
