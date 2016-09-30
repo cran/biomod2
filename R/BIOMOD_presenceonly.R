@@ -15,22 +15,20 @@
 ##' 'em.by' of 'BIOMOD.EnsembleModeling' must be 'PA_dataset+repet' to have an 
 ##' ensemble for each RUN of the 'NbRunEval' argument (BIOMOD_Modeling funtion)
 ##' for evaluation.
-##' The Boyce index returns NA values for 'SRE' models because it is not possible
-##' to be calculated with binary predictions. This is also the reason why there 
-##' are sometimes NA values for 'GLM' models if they don not converge.
 ##' 
 ##' @return
 ##' data.frame containing evaluation scores for the evaluation metrics used for 
 ##' the BIOMOD_Modeling function and additional Boyce index and MPA
 ##' 
 ##' @references
-##' Engler, R., A. Guisan, and L. Rechsteiner. 2004. An improved approach for predicting the distribution of rare and endangered species from occurrence and pseudo-absence data. Journal of Applied Ecology.
+##' Engler, Robin, Antoine Guisan, and Luca Rechsteiner. "An improved approach for predicting the distribution of rare and endangered species from occurrence and pseudo‐absence data." Journal of Applied Ecology 41.2 (2004): 263-274.
+##' Hirzel, Alexandre H., et al. "Evaluating the ability of habitat suitability models to predict species presences." Ecological Modelling 199.2 (2006): 142-152.
 ##' 
 ##' @author
 ##' Frank Breiner
 ##' 
 ##' @seealso
-##' ecospat.boyce, ecospat.mpa, BIOMOD_Modeling, BIOMOD_EnsembleModeling 
+##' ecospat.boyce(), ecospat.mpa(), BIOMOD_Modeling(), BIOMOD_EnsembleModeling() 
 ##' 
 ##' @examples
 ##' \dontrun{
@@ -107,71 +105,9 @@
 ##' pres.only.eval$eval
 ##' }
 
-BIOMOD_presenceonly <- function(modeling.output = NULL, EM.output = NULL, save.output = T){
-  
-  ## note : this function need ecospat.mpa function not yet available in ecospat package
-  ## TODO(damien) remove this function and make the link with the ecospat.mpa package
-  ecospat.mpa <- function(Pred, Sp.occ.xy, perc = 0.9){
-    perc <- 1-perc
-    if(class(Pred)=="RasterLayer"){
-      Pred <- extract(Pred, Sp.occ.xy)}
-    round(quantile(Pred, probs = perc, na.rm = TRUE ), 3)}
-  
-  ecospat.boyce <- function (fit, obs, nclass = 0, window.w = "default", res = 100, PEplot = T){
-    boycei<-function(interval,obs,fit){
-      
-      fit.bin<-fit
-      obs.bin<-obs
-      fit.bin[fit[]>=interval[1]&fit[]<=interval[2]]<-"i";fit.bin[fit.bin!="i"]<-0
-      obs.bin[obs[]>=interval[1]&obs[]<=interval[2]]<-"i";obs.bin[obs.bin!="i"]<-0
-      
-      pi<-length(which(obs.bin=="i"))/length(obs)
-      ei<-length(which(fit.bin=="i"))/length(fit.bin)
-      fi<-pi/ei
-      
-      return(fi)
-    }
-    
-    if (window.w == "default") {
-      window.w <- (max(fit) - min(fit))/10
-    }
-    interval <- c(min(fit), max(fit))
-    mini <- interval[1]
-    maxi <- interval[2]
-    if (nclass == 0) {
-      vec.mov <- seq(from = mini, to = maxi - window.w, by = (maxi - 
-                                                                mini - window.w)/res)
-      vec.mov[res + 1] <- vec.mov[res + 1] + 1
-      interval <- cbind(vec.mov, vec.mov + window.w)
-    }
-    else if (length(nclass) > 1) {
-      vec.mov <- c(mini, nclass)
-      interval <- cbind(vec.mov, c(vec.mov[-1], maxi))
-    }
-    else if (nclass > 0 & length(nclass) < 2) {
-      vec.mov <- seq(from = mini, to = maxi, by = (maxi - mini)/nclass)
-    }
-    f <- apply(interval, 1, boycei, obs, fit)
-    if (length(f[which(f != "NaN")]) <= 2) {
-      b <- NA
-    }
-    else {
-      b <- cor(f[which(f != "NaN")], vec.mov[which(f != "NaN")], 
-               method = "spearman")
-    }
-    ID <- seq(1:(length(vec.mov)))
-    HS <- apply(interval, 1, sum)/2
-    if (PEplot == T) 
-      plot((apply(interval[which(f != "NaN"), ], 1, sum)/2), 
-           f[which(f != "NaN")], xlab = "Habitat suitability", 
-           ylab = "Predicted/Expected ratio")
-    results <- list(F.ratio = f, Spearman.cor = round(b, 3), 
-                    HS = HS, ID = ID)
-    return(results)
-  }
-  
-  
-  #   if(!require(PresenceAbsence)){stop("PresenceAbsence package required!")}
+BIOMOD.presenceonly <- function(modeling.output = NULL, EM.output = NULL, save.output = T){
+  if(!require(PresenceAbsence)){stop("PresenceAbsence package required!")}
+  myModelEval <- myBiomodProjFF <- NULL
   
   if(!is.null(modeling.output)){  
     myModelEval <- get_evaluations(modeling.output,as.data.frame=T)
@@ -192,26 +128,28 @@ BIOMOD_presenceonly <- function(modeling.output = NULL, EM.output = NULL, save.o
     if(!is.null(modeling.output)){
       myModelEval <- rbind(myModelEval, myModelEvalEF)
     }
-    # DOES NOT EXIST YET BUT IN NEXT BIOMOD2 VERSION:
-    #myModelPredEF <- get_predictions(EM.output,as.data.frame=T)    
-    ###### than this part gets redundand:
+    if(packageVersion("biomod2")>="3.3.9"){        
+      myBiomodProjFF <- get_predictions(EM.output,as.data.frame=T)  
+    }else{
     myBiomodProjFF <- BIOMOD_EnsembleForecasting(
       new.env = get(load(modeling.output@formated.input.data@link))@data.env.var,
       proj.name = paste(modeling.output@modeling.id,"cv_EF",sep="_"),   
-      EM.output = EM.output)
-    
+      EM.output = EM.output)    
     myBiomodProjFF <- as.data.frame(myBiomodProjFF@proj@val)
-    #colnames(myBiomodProjFF) <- gsub("AllAlgos_ROC_EMwmean","EF",  colnames(myBiomodProjFF))
+    }
     myModelPred <- cbind(myModelPred, myBiomodProjFF)
     ###### end of redundancy
     
     if(modeling.output@has.evaluation.data == T){
+      if(packageVersion("biomod2")>="3.3.9"){        
+        myBiomodProjFF.eval <- get_predictions(EM.output,as.data.frame=T,evaluation=T)  
+      }else{
       myBiomodProjFF.eval <- BIOMOD_EnsembleForecasting(
         new.env = get(load(modeling.output@formated.input.data@link))@eval.data.env.var,
         proj.name = paste(modeling.output@modeling.id,"cv_EF_eval",sep="_"),
-        EM.output = EM.output)
-      
+        EM.output = EM.output)      
       myBiomodProjFF.eval <- as.data.frame(myBiomodProjFF.eval@proj@val)
+      }
       #colnames(myBiomodProjFF.eval) <- gsub("AllAlgos_ROC_EMwmean","EF",  colnames(myBiomodProjFF.eval))
       myModelPred.eval <- cbind(myModelPred.eval, myBiomodProjFF.eval)      
     }  
@@ -222,19 +160,7 @@ BIOMOD_presenceonly <- function(modeling.output = NULL, EM.output = NULL, save.o
   mpa.eval$Eval.metric <- "mpa"
   boyce.eval[,3:7]<-mpa.eval[,3:7]<-NA
   
-
-  calib.lines <- get(load(modeling.output@calib.lines@link))
-#   ## keep the names of calib lines dimensions
-#   calib.lines.dimnames <- dimnames(calib.lines)
-#   ## extarct the first 2 dimensions
-#   calib.lines <- calib.lines[,,1, drop = FALSE]
-#   dimnames(calib.lines) <- calib.lines.dimnames[1:2]
-#   cat("\n*** start test \n")
-#   cat(modeling.output@calib.lines@link)
-#   print(dim(calib.lines))
-#   print(dimnames(calib.lines))
-#   cat("\n*** end test \n")
-
+  calib.lines<-get(load(modeling.output@calib.lines@link))[,,1]
   myResp <- get(load(modeling.output@formated.input.data@link))@data.species
   ###MPA & BOYCE     
   for(i in 1:nrow(boyce.eval)){
@@ -243,30 +169,40 @@ BIOMOD_presenceonly <- function(modeling.output = NULL, EM.output = NULL, save.o
     Model.name <- boyce.eval[i,1]
     run <- strsplit(Model.name,split="_")[[1]][c(grep("RUN",strsplit(Model.name,split="_")[[1]]),grep("Full",strsplit(Model.name,split="_")[[1]]))]
     
-    if(sum(!calib.lines[,paste("_",run, sep=""), 1])==0){      #this is the full model
-      test <- myResp[calib.lines[, paste("_",run, sep=""), 1]]      
-      Pred<-myModelPred[calib.lines[, paste("_",run, sep=""), 1],Model.name]                         
+    if(class(calib.lines)=="matrix"){
+    if(sum(!calib.lines[,paste("_",run, sep="")])==0){      #this is the full model
+      test <- myResp[calib.lines[,paste("_",run, sep="")]]      
+      Pred<-myModelPred[calib.lines[,paste("_",run, sep="")],Model.name]                         
     }else{
-      test <- myResp[!calib.lines[,paste("_",run, sep=""), 1]]
-      Pred<-myModelPred[!calib.lines[,paste("_",run, sep=""), 1],Model.name]                         
+      test <- myResp[!calib.lines[,paste("_",run, sep="")]]
+      Pred<-myModelPred[!calib.lines[,paste("_",run, sep="")],Model.name]                         
+    }
+    }else{
+      if(sum(!calib.lines)==0){      #this is the full model
+        test <- myResp[calib.lines]     
+        Pred<-myModelPred[calib.lines,Model.name]                         
+      }else{
+        test <- myResp[!calib.lines]
+        Pred<-myModelPred[!calib.lines,Model.name]                         
+      }      
     }
     
     if(sum(!is.na(Pred))>1){
-#       boy <- ecospat::ecospat.boyce(fit=Pred,obs=Pred[test==1], PEplot=F)
-      boy <- ecospat.boyce(fit=Pred,obs=Pred[test==1], PEplot=F)
-      boyce.eval[boyce.eval[,1] == Model.name, 3] <- boy$Spearman.cor
+      boy <- ecospat.boyce(fit=Pred,obs=Pred[test==1 & !is.na(test)], PEplot=F)
+      boyce.eval[boyce.eval[,1]==Model.name,3] <- boy$Spearman.cor
       if( sum(boy$F.ratio<1,na.rm=T)>0){
         boyce.eval[boyce.eval[,1]==Model.name,5] <-  round(boy$HS[max(which(boy$F.ratio<1))],0)
         DATA<-cbind(1:length(Pred), test, Pred/1000)
-        EVAL<- PresenceAbsence::presence.absence.accuracy(DATA, threshold=round(boy$HS[max(which(boy$F.ratio<1))],0)/1000) 
+        DATA[is.na(DATA[,2]),2] <- 0
+        EVAL<-presence.absence.accuracy(DATA, threshold=round(boy$HS[max(which(boy$F.ratio<1))],0)/1000) 
         boyce.eval[boyce.eval[,1]==Model.name,6] <-  EVAL$sensitivity 
         boyce.eval[boyce.eval[,1]==Model.name,7] <-  EVAL$specificity 
       }else{
         boyce.eval[boyce.eval[,1]==Model.name,7] <-  boyce.eval[boyce.eval[,1]==Model.name,6] <-  boyce.eval[boyce.eval[,1]==Model.name,5] <- NA 	
       }
       
-      mpa.eval[mpa.eval[,1]==Model.name,5] <- ecospat.mpa(Pred[test==1])
-      EVAL <- PresenceAbsence::presence.absence.accuracy(DATA, threshold=ecospat.mpa(Pred[test])/1000) 
+      mpa.eval[mpa.eval[,1]==Model.name,5] <- ecospat.mpa(Pred[test==1 & !is.na(test)])
+      EVAL<-presence.absence.accuracy(DATA, threshold=ecospat.mpa(Pred[test & !is.na(test)])/1000) 
       mpa.eval[mpa.eval[,1]==Model.name,6] <-  EVAL$sensitivity 
       mpa.eval[mpa.eval[,1]==Model.name,7] <-  EVAL$specificity  
     }
@@ -274,10 +210,10 @@ BIOMOD_presenceonly <- function(modeling.output = NULL, EM.output = NULL, save.o
     if(modeling.output@has.evaluation.data == T){
       myResp.eval <- get(load(modeling.output@formated.input.data@link))@eval.data.species
       Pred.eval<-myModelPred.eval[,Model.name]   
-      boy <- ecospat.boyce(fit=Pred.eval,obs=Pred.eval[myResp.eval==1], PEplot=F)
-      boyce.eval[boyce.eval[,1]==Model.name,"Evaluating.data"] <- boy$Pearson.cor
+      boy <- ecospat.boyce(fit=Pred.eval,obs=Pred.eval[myResp.eval==1 & !is.na(test)], PEplot=F)
+      boyce.eval[boyce.eval[,1]==Model.name,"Evaluating.data"] <- boy$Spearman.cor
       
-      mpa.eval[mpa.eval[,1]==Model.name,"Evaluating.data"] <- ecospat.mpa(Pred.eval[myResp.eval==1]) 
+      mpa.eval[mpa.eval[,1]==Model.name,"Evaluating.data"] <- ecospat.mpa(Pred.eval[myResp.eval==1 & !is.na(test)]) 
     }
   }
   myModelEval[,6:7] <- round(myModelEval[,6:7],1)
@@ -285,34 +221,32 @@ BIOMOD_presenceonly <- function(modeling.output = NULL, EM.output = NULL, save.o
   mpa.eval[,6:7] <- round(mpa.eval[,6:7]*100,1)  
   
   if(modeling.output@has.evaluation.data == T){
+    if(!is.null(EM.output)){
     output <- list(eval=rbind(myModelEval,boyce.eval,mpa.eval),myBiomodProjFF=myBiomodProjFF,myBiomodProjEF.eval=myBiomodProjFF.eval) 
+    }else{
+      output <- list(eval=rbind(myModelEval,boyce.eval,mpa.eval))      
+    }
     if(save.output){
       if(!is.null(modeling.output)){
-      sp <- modeling.output@sp.name
-      modeling.id <- modeling.output@modeling.id
-      }
+      sp<-modeling.output@sp.name}
       if(!is.null(EM.output)){
-        sp <- EM.output@sp.name
-        modeling.id <- EM.output@modeling.id
-      }      
-      save(output, paste(sp, "/.BIOMOD_DATA/", modeling.id, "/presenceonlyevaluation_",sp, sep=""))
+        sp<-EM.output@sp.name}      
+      save(output, paste(sp, "/.BIOMOD_DATA/",modeling.output@modeling.id,"/presenceonlyevaluation_",sp, sep=""))
     }
     return(output)
   }else{
+    if(!is.null(EM.output)){
     output <- list(eval=rbind(myModelEval,boyce.eval,mpa.eval),myBiomodProjFF=myBiomodProjFF)
+    }else{
+      output <- list(eval=rbind(myModelEval,boyce.eval,mpa.eval))      
+    }
     if(save.output){
       if(!is.null(modeling.output)){
-        sp <- modeling.output@sp.name
-        modeling.id <- modeling.output@modeling.id
-      }
+        sp<-modeling.output@sp.name}
       if(!is.null(EM.output)){
-        sp<-EM.output@sp.name
-        modeling.id <- EM.output@modeling.id
-      }      
-      save(output, file=paste(sp, "/.BIOMOD_DATA/", modeling.id,"/presenceonlyevaluation_",sp, sep=""))
+        sp<-EM.output@sp.name}      
+      save(output, file=paste(sp, "/.BIOMOD_DATA/",modeling.output@modeling.id,"/presenceonlyevaluation_",sp, sep=""))
       }
     return(output)
     }
 }
-
-
