@@ -341,32 +341,33 @@
     
     if(is.null(ctrl.MARS)){ctrl.MARS <- trControl}
     
-    if("degree" %in% names(models.options@MARS)){
+
     tune.grid <- expand.grid(.degree = 1:2, .nprune = 2:38)
     try(tune.MARS <-   train(data@data.env.var, resp, 
                              method = method.MARS,
                              tuneGrid = tune.grid,
                              trControl = ctrl.MARS))
-    
-    }else{
-      try(tune.MARS <-   train(data@data.env.var, resp, 
-                               method = method.MARS,
-                               tuneLength = tuneLength,
-                               trControl = ctrl.MARS))
-    }
+
     cat(paste("Finished tuning MARS\n","\n-=-=-=-=-=-=-=-=-=-=\n"))
     
     if(!is.null(tune.MARS)){
       if(metric == 'TSS'){
         if("degree" %in% names(myBiomodOption@MARS)){
           models.options@MARS$degree <- tune.MARS$results[which.max(apply(tune.MARS$results[,c("Sens","Spec")],1,sum)-1),"degree"]    
+        }else{
+          models.options@MARS$interaction.level <- tune.MARS$results[which.max(apply(tune.MARS$results[,c("Sens","Spec")],1,sum)-1),"degree"]-1    
         }
         models.options@MARS$nprune <- tune.MARS$results[which.max(apply(tune.MARS$results[,c("Sens","Spec")],1,sum)-1),"nprune"]    
       }else{
+      if("degree" %in% names(myBiomodOption@MARS)){
         models.options@MARS$degree <- tune.MARS$bestTune$degree
+      }else{
+        models.options@MARS$interaction.level <- tune.MARS$bestTune$degree-1    
+      }
         models.options@MARS$nprune <- tune.MARS$bestTune$nprune
       }}else{ if('MARS' %in% models){cat("Tuning MARS failed!"); tune.MARS <- "FAILED"}}
   }
+
 
 
     if('GLM' %in% models){
