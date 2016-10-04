@@ -200,7 +200,7 @@
                              .shrinkage = c(0.001, 0.01, 0.1),
                              .n.minobsinnode = 10)
     
-    try(tune.GBM <- train(data@data.env.var, resp,
+    try(tune.GBM <- caret::train(data@data.env.var, resp,
                       method = "gbm",
                       tuneGrid = tune.grid,
                       trControl = ctrl.GBM,
@@ -224,7 +224,7 @@
                              .shrinkage = c(tune.GBM$bestTune$shrinkage/2,tune.GBM$bestTune$shrinkage,tune.GBM$bestTune$shrinkage*5),
                              .n.minobsinnode = 10)
     tune.GBM <- NULL
-    try(tune.GBM <- train(data@data.env.var, resp,
+    try(tune.GBM <- caret::train(data@data.env.var, resp,
                       method = "gbm",
                       tuneGrid = tune.grid,
                       trControl = ctrl.GBM,
@@ -250,7 +250,7 @@
     
     if(is.null(ctrl.RF)){ctrl.RF <- trControl}
     ## give both mtry as bestTune
-    try(tune.RF <- train(data@data.env.var, resp,
+    try(tune.RF <- caret::train(data@data.env.var, resp,
                      method = method.RF,
                      tuneLength = tuneLength,
                      trControl = ctrl.RF,
@@ -290,7 +290,7 @@
                                 ## next chapter) instead of different random
                                 ## seeds.
                                 .bag = FALSE)
-    try(tune.ANN <- train(data@data.env.var, resp, 
+    try(tune.ANN <- caret::train(data@data.env.var, resp, 
                         method = method.ANN,
                         tuneGrid = tune.grid,
                         trControl = ctrl.ANN,
@@ -321,7 +321,7 @@
     
     if(is.null(ctrl.GAM)){ctrl.GAM <- trControl}
     
-    try(tune.GAM <-   train(data@data.env.var, resp, 
+    try(tune.GAM <-   caret::train(data@data.env.var, resp, 
                              method = method.GAM,
                              trControl = ctrl.GAM))
     cat(paste("Finished tuning GAM\n","\n-=-=-=-=-=-=-=-=-=-=\n"))
@@ -381,7 +381,7 @@
       for(type in type.GLM){
         for(IA in interaction.GLM){
           i<-i+1
-          try(tune.GLM <-   train( makeFormula("resp",data@data.env.var, type= type,interaction.level = IA),
+          try(tune.GLM <-   caret::train( makeFormula("resp",data@data.env.var, type= type,interaction.level = IA),
                                    data=cbind(data@data.env.var,resp=resp),
                                    method = method.GLM,
                                    trControl = ctrl.GLM))  
@@ -407,7 +407,7 @@
     if(is.null(ctrl.FDA)){ctrl.FDA <- trControl}
     
     tune.grid <- expand.grid(.degree = 1:2, .nprune = 2:38)
-    try(tune.FDA <- train(data@data.env.var, factor(resp), 
+    try(tune.FDA <- caret::train(data@data.env.var, factor(resp), 
                   method = "fda",
                   tuneGrid = tune.grid,                  
                   trControl = ctrl.FDA))
@@ -429,14 +429,14 @@
     if(is.null(ctrl.CTA)){ctrl.CTA <- trControl}    
     
     cat("Tuning Complexity Parameter")    
-    try(tune.CTA.rpart <- train(data@data.env.var, resp, 
+    try(tune.CTA.rpart <- caret::train(data@data.env.var, resp, 
                                 method = "rpart",
                                 tuneLength = tuneLength,
                                 trControl = ctrl.CTA,
                                 metric=metric))
     
     cat("Tuning Max Tree Depth")
-    try(tune.CTA.rpart2 <-  train(data@data.env.var, resp,
+    try(tune.CTA.rpart2 <-  caret::train(data@data.env.var, resp,
                                   method = "rpart2",
                                   tuneLength = tuneLength,
                                   trControl = ctrl.CTA,
