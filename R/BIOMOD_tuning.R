@@ -343,7 +343,7 @@
     
 
     tune.grid <- expand.grid(.degree = 1:2, .nprune = 2:38)
-    try(tune.MARS <-   train(data@data.env.var, resp, 
+    try(tune.MARS <-   caret::train(data@data.env.var, resp, 
                              method = method.MARS,
                              tuneGrid = tune.grid,
                              trControl = ctrl.MARS))
