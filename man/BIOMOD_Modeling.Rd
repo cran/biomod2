@@ -68,7 +68,7 @@ BIOMOD_Modeling( data,
       \item{MARS: Multiple Adaptive Regression Splines (\code{\link[earth]{earth}})}
       \item{RF: Random Forest (\code{\link[randomForest]{randomForest}})}
       \item{MAXENT.Phillips: Maximum Entropy (\url{http://www.cs.princeton.edu/~schapire/maxent/})}
-      \item{MAXENT.Tsuruoka: low-memory multinomial logistic regression (\code{\link[maxent]{maxent}})}
+      \item{MAXENT.Tsuruoka: low-memory multinomial logistic regression} % (\code{\link[maxent]{maxent}})}
     }
     
   }

@@ -220,7 +220,7 @@ NOTE: for method and parms, you can give a 'real' value as described in the rpar
   }
 }
 
-\section{=-=-= MAXENT.Tsuruoka -=-=-= (\code{\link[maxent]{maxent}})}{
+\section{=-=-= MAXENT.Tsuruoka -=-=-=}{ % (\code{\link[maxent]{maxent}})}{
 
   \itemize{
     \item{\code{l1_regularizer} (default \code{0.0}): An numeric turning on L1 regularization and setting the regularization parameter. A value of 0 will disable L1 regularization}

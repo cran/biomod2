@@ -1232,7 +1232,7 @@ setMethod('predict', signature(object = 'MAXENT.Tsuruoka_biomod2_model'),
     proj.out <- rep(NA, nrow(x))
     x.no.na <- na.omit(x)
     if(nrow(x.no.na)){
-      proj.not.na <- as.numeric(predict.maxent(get_formal_model(object), x.no.na)[, '1'])
+      proj.not.na <- as.numeric(maxent::predict.maxent(get_formal_model(object), x.no.na)[, '1'])
       proj.out[-attr(x.no.na, "na.action")] <- proj.not.na
     }
     return(proj.out)

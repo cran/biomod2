@@ -173,7 +173,7 @@
       gamStart <- eval(parse(text=paste("gam::gam(",colnames(Data)[1] ,"~1 ," ,
                                         " data = Data[calibLines,,drop=FALSE], family = ", Options@GAM$family$family,"(link = '",Options@GAM$family$link,"')",#eval(Options@GAM$family),
                                         ", weights = Yweights[calibLines])" ,sep="")))
-      model.sp <- try( gam::step.gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "gam::s", Options@GAM$k),
+      model.sp <- try( gam::step.Gam(gamStart, .scope(Data[1:3,-c(1,ncol(Data))], "gam::s", Options@GAM$k),
                                      data = Data[calibLines,,drop=FALSE],
       #                                keep = .functionkeep, 
                                      direction = "both",
@@ -635,7 +635,7 @@
   # end MAXENT.Phillips models creation -=-=-=-=-=-=-=-=-=-=-=-=-= #
 
   # MAXENT.Tsuruoka models creation -=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
-  if(Model == "MAXENT.Tsuruoka"){
+  if(Model == "MAXENT.Tsuruoka" && requireNamespace('maxent', quietly = TRUE)){
     model.sp <- try(maxent::maxent(feature_matrix = Data[calibLines, expl_var_names, drop = FALSE],
                                    code_vector = as.factor(Data[calibLines, 1]),
                                    l1_regularizer = Options@MAXENT.Tsuruoka$l1_regularizer,

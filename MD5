@@ -1,5 +1,5 @@
-2c5281bfc23da3b621c130bdf3382c19 *DESCRIPTION
-705f55bb8f75d7451cc95446c5e118d2 *NAMESPACE
+bfddde802a51a87821df976b2d514dc6 *DESCRIPTION
+d0fb1b609f2967a232c766654a9c48ac *NAMESPACE
 e1ae4a03bf5e6d07ffee6d5e5913e383 *NEWS
 8e095f21f59e3127397ae76dccef05ac *R/BIOMOD_ConvertOldRun.R
 ac7b3dc78cc5a7f1ef1e07f7f58929f5 *R/BIOMOD_EnsembleForecasting.R
@@ -14,7 +14,7 @@ a84df80d6fcad5004f0caa7949b5d1e6 *R/BIOMOD_cv.R
 5c2af3d0e79bcce7116d2e52304ee7d5 *R/BIOMOD_presenceonly.R
 bf3d0522da53571f350b67eaad1efb3d *R/BIOMOD_tuning.R
 88c8cc788dbd14cc6412942df7b1b265 *R/BinaryTransformation.R
-96c79bc797531ffedd99b23eece40d02 *R/Biomod.Models_RE.R
+6f9a88c0ac7424d0e875326e0c71ffda *R/Biomod.Models_RE.R
 71cacbe3786bb04f4029fb1d625ad63d *R/BiomodClass.R
 5fe25948634b1defea75c88188e13516 *R/CVnnet.R
 931a4ced2274672976b77d0efabaefad *R/CleverCut.R
@@ -26,7 +26,7 @@ b871ba116e5f0d833822d42178838c28 *R/Prepare.Maxent.WorkDir.R
 8471932cf5c43ad17b1baaeeef068b6e *R/Projection.R
 b7e99b558b670c66524c7e1a85587b1a *R/Rescaler4.R
 ba9bde272f57d3ae8f012601262cbef1 *R/SampleMat2.R
-e9f45ccd4622d15d5975630a2d1addc6 *R/biomod2_models-class.R
+da0d5083033a3ec0928f957493915195 *R/biomod2_models-class.R
 6ab8803bfcf0c5c05151223dc0388a80 *R/deprecated_functions.R
 3013c2a8098aca61fe3138714557819e *R/functionkeep.R
 763fefdb3d36409b42526b9ca14fcf3b *R/level.plot.R
@@ -106,8 +106,8 @@ ef978f2eac9b8ea26971a2baa1242be9 *man/BIOMOD_EnsembleForecasting.Rd
 60c95aa58e94043e16c0b59f6e3c50cc *man/BIOMOD_EnsembleModeling.Rd
 6d6f41bf272ab95ffab974c1a727d9f5 *man/BIOMOD_FormatingData.Rd
 f21cb5663b103b4b35994bae79bb8fa9 *man/BIOMOD_LoadModels.Rd
-e1322e50ce0655e79f6ac1164a5ef4f2 *man/BIOMOD_Modeling.Rd
-aae9bc8109eeb247643e0294023ae2d4 *man/BIOMOD_ModelingOptions.Rd
+af4e235edc39db49ca94a9bedf3ad2d4 *man/BIOMOD_Modeling.Rd
+718511a949b9ef42c13e16482bcb4a6a *man/BIOMOD_ModelingOptions.Rd
 3136b96066e10bdb61e3bae9b9ce5e7a *man/BIOMOD_Projection.Rd
 fc19bd47d2c42d9a2a56a02408541010 *man/BIOMOD_RangeSize.Rd
 d2c67ee342f1892ad9b5c19c6a058ee9 *man/BIOMOD_cv.Rd
