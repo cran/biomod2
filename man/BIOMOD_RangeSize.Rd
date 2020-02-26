@@ -12,7 +12,7 @@
 \title{ Analysis of the range size changes }
 \description{
   This function allows to estimate the proportion and relative number of pixels (or habitat) lost, gained
-and stable for the time slice considered in species-climate modelling under future scenarios.
+and stable for the time slice considered in species-climate modeling under future scenarios.
 }
 \usage{
 
@@ -29,8 +29,8 @@ and stable for the time slice considered in species-climate modelling under futu
 }
 
 \arguments{
-  \item{CurrentPred}{ a data.frame of n (number of models) columns OR an array formated as an output of \code{\link[biomod2]{BIOMOD_Projection}} function OR a \code{RasterStack} (a layer by model) giving the current state of the species in binary  }
-  \item{FutureProj}{ a data.frame of n (number of models) columns OR an array formated as an output of \code{\link[biomod2]{BIOMOD_Projection}} function OR a \code{RasterStack} (a layer by model) giving the future projections of the species in binary according to a future scenario}
+  \item{CurrentPred}{ a data.frame of n (number of models) columns OR an array formatted as an output of \code{\link[biomod2]{BIOMOD_Projection}} function OR a \code{RasterStack} (a layer by model) giving the current state of the species in binary  }
+  \item{FutureProj}{ a data.frame of n (number of models) columns OR an array formatted as an output of \code{\link[biomod2]{BIOMOD_Projection}} function OR a \code{RasterStack} (a layer by model) giving the future projections of the species in binary according to a future scenario}
   \item{SpChange.Save}{ the name given to the new object storing the results }
 }
 \details{
@@ -51,9 +51,9 @@ and stable for the time slice considered in species-climate modelling under futu
   For example, if the there are 30 sites currently occupied and 15 new sites are projected to be occupied in future, it makes PercGain=+50(\%).}
   \item{    SpeciesRangeChange}{ it is the overall projection outcome, equal to PercGain-PercLoss. It does not assess for any migration shifts as it
   strictly compares the range sizes between current and future states.}
-  \item{    CurrentRangeSize}{ represents the modelled current range size (number of pixels occupied) of the given species.}
-  \item{    FutureRangeSize0Disp}{ represents the future modelled range size assuming no migration of the given species.}
-  \item{    FutureRangeSize1Disp}{ represents the future modelled range size assuming migration of the given species (depending on the datasets given in input, if Migration has been used or not).}
+  \item{    CurrentRangeSize}{ represents the modeled current range size (number of pixels occupied) of the given species.}
+  \item{    FutureRangeSize0Disp}{ represents the future modeled range size assuming no migration of the given species.}
+  \item{    FutureRangeSize1Disp}{ represents the future modeled range size assuming migration of the given species (depending on the datasets given in input, if Migration has been used or not).}
   
   \item{Diff.By.Pixel}{ the summary of range change for each species (sorted by columns and with the pixel
   in rows). For each species, a pixel could have four different values :
@@ -86,7 +86,7 @@ myRespXY <- DataSpecies[,c("X_WGS84","Y_WGS84")]
 
 
 # Environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
-myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
+myExpl = raster::stack( system.file( "external/bioclim/current/bio3.grd", 
                              package="biomod2"),
                 system.file( "external/bioclim/current/bio4.grd", 
                              package="biomod2"), 
@@ -128,7 +128,7 @@ myBiomodProjection <- BIOMOD_Projection(modeling.output = myBiomodModelOut,
 
 # 4.2 Projection on future environemental conditions
 
-myExplFuture = stack(system.file("external/bioclim/future/bio3.grd",package="biomod2"),
+myExplFuture = raster::stack(system.file("external/bioclim/future/bio3.grd",package="biomod2"),
                      system.file("external/bioclim/future/bio4.grd",package="biomod2"),
                      system.file("external/bioclim/future/bio7.grd",package="biomod2"),
                      system.file("external/bioclim/future/bio11.grd",package="biomod2"),
@@ -146,8 +146,8 @@ myBiomodProjectionFuture <- BIOMOD_Projection(modeling.output = myBiomodModelOut
 
 # load binary projections
 # here is rasters objects ('.grd')
-currentPred <- stack("GuloGulo/proj_current/proj_current_GuloGulo_TSSbin.grd")
-futurePred <- stack("GuloGulo/proj_future/proj_future_GuloGulo_TSSbin.grd")
+currentPred <- raster::stack("GuloGulo/proj_current/proj_current_GuloGulo_TSSbin.grd")
+futurePred <- raster::stack("GuloGulo/proj_future/proj_future_GuloGulo_TSSbin.grd")
 
 
 # call the Range size function

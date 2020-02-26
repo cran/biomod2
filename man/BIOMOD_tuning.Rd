@@ -4,23 +4,49 @@
 \alias{BIOMOD_tuning}
 \title{Tune models parameters}
 \usage{
-BIOMOD_tuning(data, models = c("GLM", "GBM", "GAM", "CTA", "ANN", "FDA",
-  "MARS", "RF", "MAXENT.Phillips"), models.options = BIOMOD_ModelingOptions(),
-  method.ANN = "avNNet", method.RF = "rf", method.MARS = "earth",
-  method.GAM = "gam", method.GLM = "glmStepAIC", trControl = NULL,
-  metric = "ROC", ctrl.CTA = NULL, ctrl.RF = NULL, ctrl.ANN = NULL,
-  ctrl.MARS = NULL, ctrl.FDA = NULL, ctrl.GAM = NULL, ctrl.GBM = NULL,
-  ctrl.GLM = NULL, tuneLength = 30, decay.tune.ANN = c(0.001, 0.01, 0.05,
-  0.1), size.tune.ANN = c(2, 4, 6, 8), maxit.ANN = 500, MaxNWts.ANN = 10 *
-  (ncol(data@data.env.var) + 1) + 10 + 1, type.GLM = "simple",
-  cvmethod.ME = "randomkfold", overlap.ME = FALSE, bin.output.ME = TRUE,
-  kfolds.ME = 10, n.bg.ME = 10000, env.ME = NULL, metric.ME = "ROC",
-  clamp.ME = T)
+BIOMOD_tuning(
+  data,
+  models = c("GLM", "GBM", "GAM", "CTA", "ANN", "SRE", "FDA", "MARS", "RF",
+    "MAXENT.Phillips"),
+  models.options = BIOMOD_ModelingOptions(),
+  method.ANN = "avNNet",
+  method.RF = "rf",
+  method.MARS = "earth",
+  method.GAM = "gam",
+  method.GLM = "glmStepAIC",
+  trControl = NULL,
+  metric = "ROC",
+  ctrl.CTA = NULL,
+  ctrl.RF = NULL,
+  ctrl.ANN = NULL,
+  ctrl.MARS = NULL,
+  ctrl.FDA = NULL,
+  ctrl.GAM = NULL,
+  ctrl.GBM = NULL,
+  ctrl.GLM = NULL,
+  tuneLength = 30,
+  decay.tune.ANN = c(0.001, 0.01, 0.05, 0.1),
+  size.tune.ANN = c(2, 4, 6, 8),
+  maxit.ANN = 500,
+  MaxNWts.ANN = 10 * (ncol(data@data.env.var) + 1) + 10 + 1,
+  type.GLM = c("simple", "quadratic", "polynomial", "s_smoother"),
+  interaction.GLM = c(0, 1),
+  cvmethod.ME = "randomkfold",
+  overlap.ME = FALSE,
+  kfolds.ME = 10,
+  n.bg.ME = 10000,
+  env.ME = NULL,
+  metric.ME = "ROC",
+  clamp.ME = TRUE,
+  parallel.ME = FALSE,
+  numCores.ME = NULL,
+  Yweights = NULL
+)
 }
 \arguments{
 \item{data}{BIOMOD.formated.data object returned by BIOMOD_FormatingData}
 
-\item{models}{vector of models names choosen among 'GLM', 'GBM', 'GAM', 'CTA', 'ANN', 'FDA', 'MARS', 'RF' and 'MAXENT.Phillips'}
+\item{models}{vector of models names choosen among 'GLM', 'GBM', 'GAM', 'CTA', 'ANN', 'SRE', 'FDA', 'MARS', 'RF', 'MAXENT.Phillips'}
 
 \item{models.options}{BIOMOD.models.options object returned by BIOMOD_ModelingOptions. Default: BIOMOD_ModelingOptions()}
 
@@ -64,13 +90,13 @@ BIOMOD_tuning(data, models = c("GLM", "GBM", "GAM", "CTA", "ANN", "FDA",
 
 \item{MaxNWts.ANN}{The maximum allowable number of weights for ANN (default 10 * (ncol(myBiomodData'at'data.env.var) + 1) + 10 + 1).}
 
-\item{type.GLM}{either 'simple', 'quadratic', 'polynomial' or 's_smoother' defining the type of formula you want to build with GLM}
+\item{type.GLM}{vector of modeling types choosen among 'simple', 'quadratic', 'polynomial' or 's_smoother' (default c('simple','quadratic','polynomial','s_smoother'))}
+
+\item{interaction.GLM}{vector of interaction type choosen among 0, 1. Default c(0,1)}
 
 \item{cvmethod.ME}{method used for data partitioning for MAXENT.Phillips (default: 'randomkfold')}
 
 \item{overlap.ME}{logical; Calculates pairwise metric of niche overlap if TRUE (Default: FALSE). (see ?calc.niche.overlap)}
-
-\item{bin.output.ME}{logical; If TRUE, appends evaluations metrics for each evaluation bin to results table (i.e., in addition to the average values across bins).}
 
 \item{kfolds.ME}{number of bins to use for k-fold cross-validation used for MAXENT.Phillips (Default: 10).}
 
@@ -78,20 +104,21 @@ BIOMOD_tuning(data, models = c("GLM", "GBM", "GAM", "CTA", "ANN", "FDA",
 
 \item{env.ME}{RasterStack of model predictor variables}
 
-\item{metric.ME}{metric to select the optimal model for Maxent (Default: ROC). One out of Mean.AUC (or ROC), delta.AICc, Mean.AUC.DIFF. see ?ENMevaluate}
+\item{metric.ME}{metric to select the optimal model for MAXENT.Phillips (Default: ROC). One out of Mean.AUC (or ROC), Mean.AUC.DIFF, Mean.ORmin, Mean.OR10 and AICc. see ?ENMevaluate and Muscarella et al. 2014}
 
 \item{clamp.ME}{logical; If TRUE (Default) "Features are constrained to remain within the range of values in the training data" (Elith et al. 2011)}
+
+\item{parallel.ME}{logical. If TRUE, the parallel computing is enabled for MAXENT.Phillips}
+
+\item{numCores.ME}{number of cores used to train MAXENT.Phillips}
+
+\item{Yweights}{response points weights. This argument will only affect models that allow case weights.}
 }
 \value{
 BIOMOD.models.options object with optimized parameters
 }
 \description{
 Function to tune biomod single models parameters
-}
-\details{
-Tuning ANN: if no parameters are specified for ANN, they are tuned internally
-  in BIOMOD_Modelling using cross-validation. ANN parameters are therefore 
-  tuned in every case either within ecospat.BIOMOD.tunning or BIOMOD_Modelling
 }
 \examples{
 \dontrun{
@@ -131,7 +158,7 @@ myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
 ### on 3.4 GHz processor: approx. 45 min tuning all models in parallel
 ### (on 8 cores) using foreach loops runs much faster: approx. 14 min
 
-#library(doParallel);cl<-makeCluster(8);registerDoParallel(cl) 
+#library(doParallel);cl<-makeCluster(8);doParallel::registerDoParallel(cl) 
 
 
 time.seq<-system.time(Biomod.tuning <- BIOMOD_tuning(myBiomodData,
@@ -157,10 +184,14 @@ plot(Biomod.tuning$tune.CTA.rpart2)
 plot(Biomod.tuning$tune.RF)
 }
 }
-\author{
-Frank Breiner
+\references{
+Kuhn, Max. 2008. Building predictive models in R using the caret package. \emph{Journal of Statistical Software} \bold{28}, 1-26.
+Kuhn, Max, and Kjell Johnson. 2013. Applied predictive modeling. New York: Springer.
+Muscarella, Robert, et al. 2014. ENMeval: An R package for conducting spatially independent evaluations and estimating optimal model complexity for Maxent ecological niche models. \emph{Methods in Ecology and Evolution}, \bold{5}, 1198-1205.
 }
 \seealso{
-BIOMOD_ModelingOptions(), train
+\code{\link[biomod2]{BIOMOD_ModelingOptions}}, \code{\link[caret]{train}}, \code{\link[ENMeval]{ENMevaluate}},
 }
-
+\author{
+Frank Breiner \email{frank.breiner@wsl.ch}
+}

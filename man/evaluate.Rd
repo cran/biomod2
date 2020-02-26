@@ -20,7 +20,7 @@ evaluate(model, data, stat, as.array=FALSE)
 }
 
 \details{
-Given model predictive score is evaluated on the new data set. It is done comparing binary transformed model predictions (on data set) to species occurrences (first column of \code{data} arg). A list of available evaluation metrics is given in \code{\link[biomod2]{BIOMOD_Modeling}} help file. For metrics that compared binary/binary data, a set of threshold will be test to transform continuous model prediction within binary ones. The return scores are the ones obtained for the threshold optimising tested metric (best score).
+Given model predictive score is evaluated on the new data set. It is done comparing binary transformed model predictions (on data set) to species occurrences (first column of \code{data} arg). A list of available evaluation metrics is given in \code{\link[biomod2]{BIOMOD_Modeling}} help file. For metrics that compared binary/binary data, a set of threshold will be test to transform continuous model prediction within binary ones. The return scores are the ones obtained for the threshold optimizing tested metric (best score).
 }
 
 \value{
@@ -58,7 +58,7 @@ myRespXY <- DataSpecies[,c("X_WGS84","Y_WGS84")]
 
 
 # Environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
-myExpl = stack( system.file( "external/bioclim/current/bio3.grd", 
+myExpl = raster::stack( system.file( "external/bioclim/current/bio3.grd", 
                      package="biomod2"),
                 system.file( "external/bioclim/current/bio4.grd", 
                              package="biomod2"), 
@@ -107,4 +107,4 @@ evaluate(myBiomodModelOut, data=data, stat=c('ROC','TSS'))
 % R documentation directory.
 \keyword{ evaluation }
 \keyword{ models }
-\keyword{ score }% __ONLY ONE__ keyword per line
+\keyword{ score }

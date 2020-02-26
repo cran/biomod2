@@ -28,11 +28,14 @@
 ##' Stratification "block" was described in Muscarella et al. 2014. For bins of equal number are partitioned (bottom-left, bottom-right, top-left and top-right).
 ##' 
 ##' @references
-##' Muscarella, R., Galante, P.J., Soley-Guardia, M., Boria, R.A., Kass, J.M., Uriarte, M. & Anderson, R.P. (2014). ENMeval: An R package for conducting spatially independent evaluations and estimating optimal model complexity for Maxent ecological niche models. Methods in Ecology and Evolution, 5, 1198<80><93>1205.
-##' Wenger, S.J. & Olden, J.D. (2012). Assessing transferability of ecological models: an underappreciated aspect of statistical validation. Methods in Ecology and Evolution, 3, 260<80><93>267.
+##' Muscarella, R., Galante, P.J., Soley-Guardia, M., Boria, R.A., Kass, J.M., Uriarte, M. & Anderson, R.P. (2014). ENMeval: An R package for conducting spatially independent evaluations and estimating optimal model complexity for Maxent ecological niche models. \emph{Methods in Ecology and Evolution}, \bold{5}, 1198-1205.
+##' Wenger, S.J. & Olden, J.D. (2012). Assessing transferability of ecological models: an underappreciated aspect of statistical validation. \emph{Methods in Ecology and Evolution}, \bold{3}, 260-267.
 ##' 
-##' @author Frank Breiner
+##' @author Frank Breiner \email{frank.breiner@wsl.ch}
 ##' 
+##' @seealso
+##' \code{\link[ENMeval]{get.block}}
+##'
 ##' @examples
 ##' \dontrun{
 ##' # species occurrences
@@ -104,65 +107,105 @@
 ##' boxplot(eval$Testing.data~ eval$strat, ylab="ROC AUC")
 ##' }
 
-BIOMOD_cv <- function(data, k=5,repetition=5, do.full.models = TRUE, stratified.cv=FALSE, stratify="both", balance="pres"){
- 
-  DataSplitTable.y <-  DataSplitTable.x <-   DataSplitTable <- NULL
-  if(stratified.cv){
-    repetition <- 1
-    if(balance == "absences"){balance <- data@data.species==1| data@data.species==0
-    }else{balance <- data@data.species==1}
-  if(stratify == "x" | stratify == "both"){
-    DataSplitTable.x <- matrix(NA,nrow(data@coord),k)
-    bands <- quantile(data@coord[balance,1],  probs = seq(0,100,100/k)/100)
-    bands[1] <- bands[1]-1
-    bands[k+1] <- bands[k+1]+1
-    for(i in 1:k){
-    DataSplitTable.x[,i] <- data@coord[,1] >= bands[i] & data@coord[,1] < bands[i+1]
-  }
-    if(stratify == "x"){DataSplitTable <- DataSplitTable.x}
-  }
-  if(stratify == "y" | stratify == "both"){
-    DataSplitTable.y <- matrix(NA,nrow(data@coord),k)
-    bands <- quantile(data@coord[balance,2],  probs = seq(0,100,100/k)/100)
-    bands[1] <- bands[1]-1
-    bands[k+1] <- bands[k+1]+1
-    for(i in 1:k){
-      DataSplitTable.y[,i] <- data@coord[,2] >= bands[i] & data@coord[,2] < bands[i+1]
+
+BIOMOD_cv <-
+  function (data, k = 5, repetition = 5, do.full.models = TRUE, 
+            stratified.cv = FALSE, stratify = "both", balance = "pres") 
+  {
+    DataSplitTable.y <- DataSplitTable.x <- DataSplitTable <- NULL
+    if (stratified.cv) {
+      repetition <- 1
+      if (balance == "absences") {
+        balance <- data@data.species == 1 | data@data.species == 
+          0
+      }
+      else {
+        balance <- data@data.species == 1
+      }
+      if (stratify == "x" | stratify == "both") {
+        DataSplitTable.x <- matrix(NA, nrow(data@coord), 
+                                   k)
+        bands <- quantile(data@coord[balance, 1], probs = seq(0, 
+                                                              100, 100/k)/100)
+        bands[1] <- bands[1] - 1
+        bands[k + 1] <- bands[k + 1] + 1
+        for (i in 1:k) {
+          DataSplitTable.x[, i] <- data@coord[, 1] >= bands[i] & 
+            data@coord[, 1] < bands[i + 1]
+        }
+        if (stratify == "x") {
+          DataSplitTable <- DataSplitTable.x
+        }
+      }
+      if (stratify == "y" | stratify == "both") {
+        DataSplitTable.y <- matrix(NA, nrow(data@coord), 
+                                   k)
+        bands <- quantile(data@coord[balance, 2], probs = seq(0, 
+                                                              100, 100/k)/100)
+        bands[1] <- bands[1] - 1
+        bands[k + 1] <- bands[k + 1] + 1
+        for (i in 1:k) {
+          DataSplitTable.y[, i] <- data@coord[, 2] >= bands[i] & 
+            data@coord[, 2] < bands[i + 1]
+        }
+        if (stratify == "y") {
+          DataSplitTable <- DataSplitTable.y
+        }
+      }
+      if (stratify == "both") {
+        DataSplitTable <- cbind(DataSplitTable.x, DataSplitTable.y)
+      }
+    if (stratify == "block") {
+      DataSplitTable <- as.data.frame(matrix(NA, nrow(data@coord), 
+                                             4))
+
+      blocks<-ENMeval::get.block(data@coord[data@data.species==1,],
+                                 data@coord[data@data.species==0,])
+      
+      for(i in 1:4){
+        DataSplitTable[data@data.species == 1,i] <-  blocks[[1]]!=i     
+        DataSplitTable[data@data.species == 0,i] <-  blocks[[2]]!=i     
+      }
+    }      
+      if (stratify != "block" & stratify != "x" & stratify != 
+          "y" & stratify != "both") {
+        DataSplitTable2 <- as.data.frame(matrix(NA, nrow(data@coord), k))
+        bands <- quantile(data@data.env.var[balance, stratify], 
+                          probs = seq(0, 100, 100/k)/100)
+        bands[1] <- bands[1] - 1
+        bands[k + 1] <- bands[k + 1] + 1
+        for (i in 1:k) {
+          DataSplitTable2[, i] <- data@data.env.var[balance, 
+                                                    stratify] <= bands[i] | data@data.env.var[balance, 
+                                                                                              stratify] > bands[i + 1]
+        }
+      }
     }
-      if(stratify == "y"){DataSplitTable <- DataSplitTable.y}
-  }
-  if(stratify == "both"){
-    DataSplitTable  <- cbind(DataSplitTable.x, DataSplitTable.y)
-  }
-  if(stratify == "block"){
-    DataSplitTable <- matrix(NA,nrow(data@coord),4)
-    DataSplitTable[,1] <- data@coord[,1] < median(data@coord[balance,1]) & data@coord[,2] < median(data@coord[balance,2]) # bottom-left
-    DataSplitTable[,2] <- data@coord[,1] < median(data@coord[balance,1]) & data@coord[,2] > median(data@coord[balance,2]) # top-left
-    DataSplitTable[,3] <- data@coord[,1] > median(data@coord[balance,1]) & data@coord[,2] < median(data@coord[balance,2]) # bottom-right
-    DataSplitTable[,4] <- data@coord[,1] > median(data@coord[balance,1]) & data@coord[,2] > median(data@coord[balance,2]) # top-rigth
-  }
-  if(stratify != "block" & stratify != "x" & stratify != "y" & stratify != "both"){
-    DataSplitTable2 <- matrix(NA,nrow(data@coord),k)
-    bands <- quantile(data@data.env.var[balance,stratify],  probs = seq(0,100,100/k)/100)
-    bands[1] <- bands[1]-1
-    bands[k+1] <- bands[k+1]+1
-    for(i in 1:k){
-      DataSplitTable2[,i] <- data@data.env.var[balance,stratify] <= bands[i] | data@data.env.var[balance,stratify] > bands[i+1]
+    else {
+      for (rep in 1:repetition) {
+        fold <- dismo::kfold(data@data.species, by = data@data.species, 
+                             k = k)
+        for (i in 1:k) {
+          DataSplitTable <- cbind(DataSplitTable, fold != 
+                                    i)
+        }
+      }
     }
+    if(stratify != "block"){
+      colnames(DataSplitTable) <- paste("RUN", 1:(k * repetition), 
+                                        sep = "")
+      if (do.full.models == TRUE) {
+        DataSplitTable <- cbind(DataSplitTable, T)
+        colnames(DataSplitTable)[k * repetition + 1] <- "Full"
+      }
+    }else{
+      colnames(DataSplitTable) <- paste("RUN", 1:4, 
+                                        sep = "")    
+      if (do.full.models == TRUE) {
+        DataSplitTable <- cbind(DataSplitTable, T)
+        colnames(DataSplitTable)[5] <- "Full"
+      }
+    }
+    
+    return(DataSplitTable)
   }
-  }else{
-  for(rep in 1:repetition){ 
-   fold <- dismo::kfold(data@data.species,by=data@data.species,k=k) 
-  for(i in 1:k){
-    DataSplitTable <- cbind(DataSplitTable,fold!=i)
-  }
-  }
-  }
-  colnames(DataSplitTable) <- paste("RUN",1:(k*repetition),sep="")
-  if(do.full.models == TRUE){
-    DataSplitTable <- cbind(DataSplitTable,T)
-    colnames(DataSplitTable)[k*repetition+1] <- "Full"
-  }
-  return(DataSplitTable)  
-}
-  

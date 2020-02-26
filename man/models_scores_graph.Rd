@@ -64,8 +64,12 @@
 \seealso{ \code{\link{BIOMOD_Modeling}}, \code{\link{BIOMOD_EnsembleModeling}}}
 
 \examples{
+
 ## this example is based on BIOMOD_Modeling function example
 example(BIOMOD_Modeling)
+
+## we will need ggplot2 package to produce our custom version of the graphs
+require(ggplot2)
 
 ## plot evaluation models score graph
 

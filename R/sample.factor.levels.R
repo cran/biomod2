@@ -40,6 +40,7 @@
 ##'   
 ##' @examples
 ##' ## example with raster* object ---------- 
+##' library(raster)
 ##' ## create a factorial raster
 ##' r1 <- raster()
 ##' r1[] <- 1; r1[1] <- 2; r1[2:3] <- 3
@@ -89,19 +90,19 @@ sample.factor.levels <- function(x, mask.out = NULL, mask.in = NULL){
   fact.var <- which(is.factor(x))
   ## check if some factorial variables are in the input data
   if(any(fact.var)){ ## some factorial variables present
-    fact.level.cells <- as.numeric(sapply(fact.var, function(f){
+    fact.level.cells <- as.numeric(unlist(sapply(fact.var, function(f){
       ## initialize the list of cells that are selected
       selected.cells <- NULL
       ## get the levels of the factor on the full dataset
       fact.level.original <- unlist(raster::levels(subset(x, f)))
       fact.level <- fact.level.original
-      cat("\n> fact.level for",  names(x)[f], ":\t", paste(fact.level, names(fact.level), sep = ":", collapse = "\t"))
+      cat("\n\t> fact.level for",  names(x)[f], ":\t", paste(fact.level, names(fact.level), sep = ":", collapse = "\t"))
       if(!is.null(mask.out)){ ## mask containing points that have already been sampled
         ## check the levels of the fector that have been already sampled
         fact.levels.sampled <- unlist(levels(as.factor(mask(subset(x, f), mask.out))))
         ## update levels names (lost during mask conversion)
         attr(fact.levels.sampled, "names") <- attr(fact.level.original, "names")[fact.levels.sampled]
-        cat("\n - according to mask.out levels", fact.levels.sampled, "have already been sampled")
+        cat("\n\t - according to mask.out levels", fact.levels.sampled, "have already been sampled")
         ## update the list of factor levels to sample
         fact.level <- fact.level[!is.element(fact.level, fact.levels.sampled)]
       }
@@ -119,7 +120,7 @@ sample.factor.levels <- function(x, mask.out = NULL, mask.in = NULL){
               ## get the list of levels that coulb be sampled in this mask
               fact.levels.in.m.in <- fact.level[is.element(fact.level, x.f.levels)]
               if(length(fact.levels.in.m.in)){
-                cat("\n - levels", fact.levels.in.m.in, "will be sampled in mask.out", mask.in.id)
+                cat("\n\t - levels", fact.levels.in.m.in, "will be sampled in mask.out", mask.in.id)
                 selected.cells <- c(selected.cells, sapply(fact.levels.in.m.in, function(fl){
                   sample(which(x.f.masked[] == fl), 1)
                 }))
@@ -134,14 +135,13 @@ sample.factor.levels <- function(x, mask.out = NULL, mask.in = NULL){
         ## because the value will be picked out of mask.in but is necessary to 
         ## ensure that models will run smoothly
         if(length(fact.level)){
-          cat("\n - levels", fact.level, "will be sampled in the original raster")
+          cat("\n\t - levels", fact.level, "will be sampled in the original raster")
           selected.cells <- c(selected.cells, sapply(fact.level, function(fl){
-            sample(which(subset(x, f)[] == fl), 1)
-          }))
+            sample(which(subset(x, f)[] == fl), 1)}))
         }
       }
-      return(selected.cells)
-    }))
+      return(unlist(selected.cells))
+    })))
     return(fact.level.cells)
   } else { ## no factorial variable
     return(NULL)

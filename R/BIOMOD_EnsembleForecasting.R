@@ -161,11 +161,6 @@
                         on_0_1000 = on_0_1000, 
                         filename = ifelse(output.format == '.RData', '', file_name_tmp))
     } else {
-      cat("\n*** here!!\n")
-      print(str(formal_pred))
-      cat("\n***\n")
-      cat(model.tmp@model)
-      cat("\n*** here!!\n")
       ef.tmp <- predict(model.tmp, formal_predictions = formal_pred[,model.tmp@model, drop=FALSE], on_0_1000 = on_0_1000)
     }
         
