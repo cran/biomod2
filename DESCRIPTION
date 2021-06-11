@@ -1,15 +1,17 @@
 Package: biomod2
 Type: Package
 Title: Ensemble Platform for Species Distribution Modeling
-Version: 3.4.6
-Date: 2020-02-24
+Version: 3.5.1
+Date: 2021-06-11
 Author: Wilfried Thuiller [aut, cre],
     Damien Georges [aut, cre],
+    Maya Gueguen [aut],
     Robin Engler [aut],
     Frank Breiner [aut]
 Maintainer: Damien Georges <damien.georges2@gmail.com>
 Contact: Wilfried Thuiller <wilfried.thuiller@ujf-grenoble.fr>, Damien
-        Georges <damien.georges2@gmail.com>
+        Georges <damien.georges2@gmail.com>, Maya Gueguen
+        <maya.gueguen@univ-grenoble-alpes.fr>
 BugReports: https://r-forge.r-project.org/forum/forum.php?eforum_id=995&group_id=302
 Description: Functions for species distribution modeling, calibration and evaluation, 
   ensemble of models, ensemble forecasting and visualization. The package permits to run
@@ -23,8 +25,8 @@ Imports: stats, utils, lattice, sp, raster, parallel, reshape, ggplot2,
         caret, ENMeval, doParallel, foreach, earth, dplyr, tidyr,
         checkmate, maxnet, purrr, rlang
 Suggests: ade4, foreign, Hmisc, mgcv, gam, testthat, ecospat
-License: GPL-2
-RoxygenNote: 7.0.2
+License: GPL-3
+RoxygenNote: 7.1.1
 Collate: 'BIOMOD_ConvertOldRun.R' 'BIOMOD_EnsembleForecasting.R'
         'BIOMOD_EnsembleModeling.R' 'BIOMOD_FormatingData.R'
         'BIOMOD_LoadModels.R' 'BIOMOD_Modeling.R'
@@ -40,8 +42,8 @@ Collate: 'BIOMOD_ConvertOldRun.R' 'BIOMOD_EnsembleForecasting.R'
         'pseudo.abs.R' 'response.plot.R' 'sample.factor.levels.R'
         'scope.R' 'scopeExpSyst.R' 'sre.R' 'testnull.R'
         'transform.outputs.R' 'update_objects.R'
-        'variables_importance.R'
+        'variables_importance.R' 'zzz.R'
 NeedsCompilation: no
-Packaged: 2020-02-24 11:07:04 UTC; georgesd
+Packaged: 2021-06-11 15:15:10 UTC; georgesd
 Repository: CRAN
-Date/Publication: 2020-02-26 18:20:05 UTC
+Date/Publication: 2021-06-11 16:10:05 UTC

@@ -859,7 +859,7 @@ setClass('MARS_biomod2_model',
          prototype = list(model_class = 'MARS'),
          validity = function(object){
            # check model class
-           if(!inherits(object@model, "MARS")) return(FALSE)
+           if(!inherits(object@model, c('earth', 'MARS', 'mars'))) return(FALSE)
            return(TRUE)
          })
 
@@ -1048,7 +1048,12 @@ setMethod('predict', signature(object = 'MAXENT.Phillips_biomod2_model'),
   if(!silent) cat("\n\t\tReading Maxent outputs...")
 
   ## get the list of projections part by part
-  proj.list <- lapply(file.path(unlist(MWD$m_workdir),"projMaxent.asc"), raster, RAT = FALSE, crs=projection(newdata))
+  # check crs is not NA
+  if(!is.na(projection(newdata))){
+    proj.list <- lapply(file.path(unlist(MWD$m_workdir),"projMaxent.asc"), raster, RAT = FALSE, crs=projection(newdata))
+  } else {
+    proj.list <- lapply(file.path(unlist(MWD$m_workdir),"projMaxent.asc"), raster, RAT = FALSE)
+  }
   ## merge all parts in a single raster
   if(length(proj.list) > 1){
     proj <- do.call(raster::merge, proj.list)
@@ -1219,7 +1224,7 @@ setMethod(
 .predict.MAXENT.Phillips.2_biomod2_model.RasterStack <- function(object, newdata, ...){
   newdata.df <- 
     newdata %>%
-    as.matrix()
+    raster::as.matrix()
   
   args <- list(...)
   filename <- args$filename
@@ -1238,8 +1243,8 @@ setMethod(
     )[, 1]
   
   if(length(get_scaling_model(object))){
-    names(proj) <- "pred"
-    proj <- .testnull(object = get_scaling_model(object), Prev = 0.5 , dat = proj)
+    proj.to.scale <- data.frame(pred = proj)
+    proj <- .testnull(object = get_scaling_model(object), Prev = 0.5 , dat = proj.to.scale)
   }
   
   if(on_0_1000) proj <- round(proj*1000)

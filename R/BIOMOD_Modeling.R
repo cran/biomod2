@@ -83,7 +83,7 @@
 ##' .. - RF: Random Forest (\code{\link[randomForest]{randomForest}})
 ##' 
 ##' .. - MAXENT.Phillips: Maximum Entropy (
-##' \url{https://biodiversityinformatics.amnh.org/open_source/maxent})
+##' \url{https://biodiversityinformatics.amnh.org/open_source/maxent/})
 ##' 
 ##' .. - MAXENT.Phillips.2: Maximum Entropy 
 ##' (\code{\link[maxnet]{maxnet}})
@@ -140,7 +140,7 @@
 ##' Some of them are scaled to have all an optimum at 1. You can choose
 ##' one of more (vector) evaluation metric. By Default, only 'KAPPA',
 ##' 'TSS' and 'ROC' evaluation are done. Please refer to the CAWRC
-##' website (\url{http://www.cawcr.gov.au/projects/verification/##'Methods_for_dichotomous_forecasts}) 
+##' website (\url{https://www.cawcr.gov.au/projects/verification/}) 
 ##' to get detailed description of each metric.
 ##' 
 ##' 6. \bold{SaveObj}
