@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title><i class="fas fa-address-card"></i> Definition</title>
+
+<script type="text/javascript">
+window.onload = function() {
+  var imgs = document.getElementsByTagName('img'), i, img;
+  for (i = 0; i < imgs.length; i++) {
+    img = imgs[i];
+    // center an image if it is the only element of its parent
+    if (img.parentElement.childElementCount === 1)
+      img.parentElement.style.textAlign = 'center';
+  }
+};
+</script>
+
+
+
+
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 13px;
+}
+
+body {
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 20px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 {
+   font-size:2.2em;
+}
+
+h2 {
+   font-size:1.8em;
+}
+
+h3 {
+   font-size:1.4em;
+}
+
+h4 {
+   font-size:1.0em;
+}
+
+h5 {
+   font-size:0.9em;
+}
+
+h6 {
+   font-size:0.8em;
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre, img {
+  max-width: 100%;
+}
+pre {
+  overflow-x: auto;
+}
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code {
+  font-size: 92%;
+  border: 1px solid #ccc;
+}
+
+code[class] {
+  background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * {
+      background: transparent !important;
+      color: black !important;
+      filter:none !important;
+      -ms-filter: none !important;
+   }
+
+   body {
+      font-size:12pt;
+      max-width:100%;
+   }
+
+   a, a:visited {
+      text-decoration: underline;
+   }
+
+   hr {
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote {
+      padding-right: 1em;
+      page-break-inside: avoid;
+   }
+
+   tr, img {
+      page-break-inside: avoid;
+   }
+
+   img {
+      max-width: 100% !important;
+   }
+
+   @page :left {
+      margin: 15mm 20mm 15mm 10mm;
+   }
+
+   @page :right {
+      margin: 15mm 10mm 15mm 20mm;
+   }
+
+   p, h2, h3 {
+      orphans: 3; widows: 3;
+   }
+
+   h2, h3 {
+      page-break-after: avoid;
+   }
+}
+</style>
+
+
+
+</head>
+
+<body>
+<p><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous"></p>
+
+<h3><i class="fas fa-address-card"></i> Definition</h3>
+
+<p>When modelling species distribution, there is most of the time an <strong>uncertainty</strong> of what is actually modelled :</p>
+
+<ul>
+<li>the <em>fundamental niche</em> is most of the time unknown</li>
+<li>and there might be an uncertainty in the <em>realized niche</em>, except in the case of an exhaustive sampling.</li>
+</ul>
+
+<p>What can be evaluated is how much the modelisation results are <strong>consistent</strong> with what is known and observed, and how much <strong>variability</strong> is present in the results in function of modelling choices.</p>
+
+<p></br></p>
+
+<h3><i class="fas fa-chart-bar"></i> Variability - within the evaluation / importance of variables</h3>
+
+<p>Single and ensemble models can be evaluated by several available evaluation metrics, and the importance of variables can be calculated through several repetitions (see <code>metric.eval</code> and <code>var.import</code> parameters in <a href="../reference/BIOMOD_Modeling.html"><code>BIOMOD_Modeling</code></a> and <a href="../reference/BIOMOD_EnsembleModeling.html"><code>BIOMOD_EnsembleModeling</code></a>).</p>
+
+<p>Variability in evaluation and importance values can come from the parametrisation of different elements of the modelling :</p>
+
+<ul>
+<li><strong>observed dataset</strong>, 
+
+<ul>
+<li>through the number of repetitions of calibration / validation splitting, </li>
+<li><em>illustrating the robustness of the computed model based on the data</em></li>
+</ul></li>
+<li><strong>pseudo-absence dataset</strong>, 
+
+<ul>
+<li>through the number of repetitions of PA sampling, </li>
+<li><em>to check the choice of the pseudo-absence strategy</em> </li>
+</ul></li>
+<li><strong>modelling technique</strong>, 
+
+<ul>
+<li>through the models selected, among 10 models available, </li>
+<li><em>to spot the most adapted modelling methods</em></li>
+</ul></li>
+</ul>
+
+<p></br></p>
+
+<h3><i class="fas fa-map"></i> Variability - within the predictions</h3>
+
+<p>Making projections, either for single or ensemble models, can produce two additional sources of variability in results that can be explored through two parameters :</p>
+
+<ul>
+<li><p><strong>For single models</strong>, <code>build.clamping.mask</code> in <a href="../reference/BIOMOD_Projection.html"><code>BIOMOD_Projection</code> function</a> : </p>
+
+<ul>
+<li>it produces a map of the studied area with, in each pixel, the number of variables whose value is outside the range of values used to calibrate the models.</li>
+<li><em>It identifies potential extrapolation areas.</em></li>
+</ul></li>
+<li><p><strong>For ensemble models</strong>, <code>prob.cv</code> in <a href="../reference/BIOMOD_EnsembleForecasting.html"><code>BIOMOD_EnsembleForecasting</code> function</a> : </p>
+
+<ul>
+<li>it calculates the coefficient of variation between models&#39; projection, </li>
+<li><em>identifying areas of disagreement in predictions</em>.</li>
+</ul></li>
+</ul>
+
+</body>
+
+</html>

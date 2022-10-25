@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title><i class="fas fa-code"></i> Development updates</title>
+
+<script type="text/javascript">
+window.onload = function() {
+  var imgs = document.getElementsByTagName('img'), i, img;
+  for (i = 0; i < imgs.length; i++) {
+    img = imgs[i];
+    // center an image if it is the only element of its parent
+    if (img.parentElement.childElementCount === 1)
+      img.parentElement.style.textAlign = 'center';
+  }
+};
+</script>
+
+
+
+
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 13px;
+}
+
+body {
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 20px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 {
+   font-size:2.2em;
+}
+
+h2 {
+   font-size:1.8em;
+}
+
+h3 {
+   font-size:1.4em;
+}
+
+h4 {
+   font-size:1.0em;
+}
+
+h5 {
+   font-size:0.9em;
+}
+
+h6 {
+   font-size:0.8em;
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre, img {
+  max-width: 100%;
+}
+pre {
+  overflow-x: auto;
+}
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code {
+  font-size: 92%;
+  border: 1px solid #ccc;
+}
+
+code[class] {
+  background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * {
+      background: transparent !important;
+      color: black !important;
+      filter:none !important;
+      -ms-filter: none !important;
+   }
+
+   body {
+      font-size:12pt;
+      max-width:100%;
+   }
+
+   a, a:visited {
+      text-decoration: underline;
+   }
+
+   hr {
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote {
+      padding-right: 1em;
+      page-break-inside: avoid;
+   }
+
+   tr, img {
+      page-break-inside: avoid;
+   }
+
+   img {
+      max-width: 100% !important;
+   }
+
+   @page :left {
+      margin: 15mm 20mm 15mm 10mm;
+   }
+
+   @page :right {
+      margin: 15mm 10mm 15mm 20mm;
+   }
+
+   p, h2, h3 {
+      orphans: 3; widows: 3;
+   }
+
+   h2, h3 {
+      page-break-after: avoid;
+   }
+}
+</style>
+
+
+
+</head>
+
+<body>
+<p><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous"></p>
+
+<h2><i class="fas fa-code"></i> Development updates</h2>
+
+<h3><i class="fas fa-chess-pawn"></i> 2022</h3>
+
+<h4>4.1-2 (2022-09-29)</h4>
+
+<h5>Major changes</h5>
+
+<ul>
+<li><code>dir.name</code> can now be provided as project argument so that results may be saved in a custom folder.</li>
+<li>predict with <code>CTA</code> algorithm and categorical variables on raster is now possible.</li>
+<li>Changed evaluation for EM models merging PA datasets  (<code>em.by = &quot;algo&quot;</code> or <code>em.by = &quot;all&quot;</code>) so that evaluation uses the union of PA data sets instead of the whole environmental space supplied.</li>
+</ul>
+
+<h5>Minor changes</h5>
+
+<ul>
+<li>Individual EM models projected as raster are now saved with <code>INT2S</code> data format when <code>on_0_1000</code> is set to <code>TRUE</code>.</li>
+<li>Homogenize the use of load functions (<em>use</em> <code>get_[...]</code><em>,</em> <code>load_stored_object</code> <em>and</em> <code>BIOMOD_LoadModels</code><em>, instead of</em> <code>get(load(...))</code>) and the workflow within <code>get_[...]</code> functions (<em>use</em> <code>load_stored_object</code> <em>and similar arguments such as</em> <code>as.data.frame</code><em>,</em> <code>full.name</code><em>, &hellip;</em>).</li>
+<li>Adapting predict workflow to properly use S4 class.</li>
+<li>Homogenize <code>BIOMOD.ensemble.models.out</code> and <code>BIOMOD.models.out</code> objects
+
+<ul>
+<li>Add slots in <code>BIOMOD.ensemble.models.out</code> object for evaluations, variables importance and predictions.</li>
+<li>Moved <code>.Models.save.objects</code> in <code>BIOMOD_modeling</code> to <code>.fill_BIOMOD.models.out</code> in <code>biomod2_internal.R</code>.</li>
+<li>Save slots within <code>BIOMOD.ensemble.models.out</code> and use <code>load_stored_object</code> to directly get them within <code>get_[...]</code> functions.</li>
+</ul></li>
+</ul>
+
+<h5>Bug Fix</h5>
+
+<ul>
+<li>Validation data can now be properly combined with Pseudo-Absence in <code>BIOMOD_FormatingData</code>, instead of throwing an error linked to <code>data.mask</code>.</li>
+<li>Argument <code>on_0_1000</code> can now be passed without errors so that projection may either be on a range from 0 to 1 or from 0 to 1000. The latter option being more effective memory-wise.</li>
+<li>Completed argument check for function <code>BIOMOD_EnsembleModeling</code> so that <code>em.by</code> can not be of <code>length &gt; 1</code>.</li>
+<li>Corrected function <code>.get_models_assembling</code> so that it did not confound <code>MAXENT.Phillips2</code> with <code>MAXENT.Phillips</code> when grouping models by algorithm in <code>BIOMOD_EnsembleModeling</code>.</li>
+<li>get_prediction method for <code>BIOMOD.ensemble.models.out</code> now accepts an <code>evaluation</code> arg. Evaluation values, variables&#39; importance and Calibration/Evaluation predictions for ensemble models are now properly saved by <code>BIOMOD_EnsembleModeling()</code>.</li>
+<li>evaluation metrics are no longer calculated for models <code>prob.ci.inf</code> et <code>prob.ci.sup</code>.</li>
+<li>Package now properly pass R CMD check.</li>
+<li><code>BIOMOD_PresenceOnly</code> now properly manage <code>NA</code>.</li>
+<li>Corrected bm_PlotResponseCurves to only plot show.variables.</li>
+<li><code>get_predictions.BIOMOD.projection.out</code> now properly works when asked for a subset of model.</li>
+</ul>
+
+<h5>Miscellaneous</h5>
+
+<ul>
+<li>Using models with a single predictor requires updating <code>gbm</code> package to its development version at rpatin/gbm can be used. (see issue <em><a href="https://github.com/biomodhub/biomod2/issues/102">https://github.com/biomodhub/biomod2/issues/102</a></em>)</li>
+</ul>
+
+<h4>4.1-1 (2022-08-30)</h4>
+
+<ul>
+<li>add <code>do.progress</code> parameter (to render or not progress bar) and <code>dir.name</code> parameter in <code>BIOMOD_FormatingData</code> and <code>biomod2</code> objects (<strong>Mathieu B. request</strong>)</li>
+<li>fix <code>BIOMOD_PresenceOnly</code> function by removing <code>ecospat</code> dependency</li>
+</ul>
+
+<h4>4.1 (2022-07-12)</h4>
+
+<ul>
+<li>fix bugs following major release 4.0</li>
+</ul>
+
+<h4>4.0 (2022-03-01)</h4>
+
+<ul>
+<li>MAJOR RELEASE</li>
+<li>clean all functions, reorganize files, remove old / unused functions</li>
+<li>standardize function names and parameter names</li>
+<li>update <code>roxygen2</code> documentation for all functions, including examples</li>
+<li>create github website to host documentation, examples, vignettes, news</li>
+</ul>
+
+<h3><i class="fas fa-charging-station"></i> 2021</h3>
+
+<h4>3.5-3 (2021-11-02)</h4>
+
+<ul>
+<li>clean BIOMOD classes definitions and functions (<code>biomod2_classes</code> files)</li>
+<li>clean <code>BIOMOD_FormatingData</code> function</li>
+<li>clean <code>BIOMOD_ModelingOptions</code> function</li>
+<li>fix <code>BIOMOD_FormatingData</code> : test class condition only a first element (to deal with <code>matrix</code> / <code>array</code> objects)</li>
+<li>fix <code>BIOMOD_EnsembleForecasting</code> for <code>EMcv</code> model when only one single model was kept</li>
+</ul>
+
+<h4>3.5-2 (2021-10-18)</h4>
+
+<ul>
+<li>fix <code>BIOMOD_PresenceOnly</code> function (previously <code>BIOMOD_presenceonly</code>)</li>
+<li>fix <code>BIOMOD_CrossValidation</code> function (previously <code>BIOMOD_cv</code>)</li>
+<li>fix internal function to find <code>MinMax</code> values, when factor included : should get clamping mask to work</li>
+</ul>
+
+<h3><i class="fas fa-battery-full"></i> 2018-2019</h3>
+
+<h4>3.3-20 (2019-03-05)</h4>
+
+<ul>
+<li>Remove maxent Tsurukoa because not maintained anymore (required by CRAN team)</li>
+</ul>
+
+<h4>3.3-18 (2018-07-04)</h4>
+
+<ul>
+<li>fix the gbm multicore issue</li>
+</ul>
+
+<h4>3.3-17 (2018-04-23)</h4>
+
+<ul>
+<li>correct the single presence pseudo-absences generation bug (<strong>Matthias G.</strong>)</li>
+</ul>
+
+<h3><i class="fas fa-battery-three-quarters"></i> 2016</h3>
+
+<h4>3.3-6 (2016-01-14)</h4>
+
+<ul>
+<li>add <code>get_predictions</code> function for ensemble models</li>
+</ul>
+
+<h4>3.3-5 (2016-01-04)</h4>
+
+<ul>
+<li>MARS models are now computed throw <code>earth</code> package (was <code>mda</code> in previous versions)</li>
+<li>MARS now supports factorial explanatory variables</li>
+<li>MARS now supports <code>formula</code> </li>
+</ul>
+
+<h3><i class="fas fa-battery-half"></i> 2015</h3>
+
+<h4>3.3-4 (2015-11-04)</h4>
+
+<ul>
+<li>update <code>BIOMOD_tuning</code> function (<strong>Frank B.</strong>)</li>
+</ul>
+
+<h4>3.3-3 (2015-10-27)</h4>
+
+<ul>
+<li>force sampling of each level of factorial variables</li>
+<li>add <code>betamultiplier</code> parameter to tune MAXENT.Phillips (<strong>Frank B. request</strong>)</li>
+</ul>
+
+<h4>3.3-00 (2015-10-05)</h4>
+
+<ul>
+<li>MAJOR RELEASE</li>
+<li>optimize the memory consumption of projections and ensemble projections procedure</li>
+<li>add the possibility to run <code>MAXENT.Phillips</code> with proper background data</li>
+<li>classical version of <code>MAXENT</code> has been renamed <code>MAXENT.Phillips</code></li>
+<li>add a new version of MAXENT <code>MAXENT.Tsuruoka</code></li>
+</ul>
+
+<h4>3.2-00 (2015-07-28)</h4>
+
+<ul>
+<li>add 3 new functions in <code>biomod2</code> (<strong>Frank B. contribution</strong>)</li>
+<li><code>BIOMOD_cv</code> to control models cross validation procedure</li>
+<li><code>BIOMOD_presenceonly</code> to evaluate biomod models using boyce and mpa indices</li>
+<li><code>BIOMOD_tuning</code> to automatically tune <code>BIOMOD_ModelingOptions</code> parameters</li>
+</ul>
+
+<h3><i class="fas fa-battery-quarter"></i> 2014</h3>
+
+<h4>3.1-59 (2014-10-23)</h4>
+
+<ul>
+<li>add model evaluation scores plotting function</li>
+<li>dependence to <code>ggplot2</code></li>
+</ul>
+
+<h4>3.1-53 (2014-08-06)</h4>
+
+<ul>
+<li>new ensemble models names to be more coherent with formal models names</li>
+</ul>
+
+<h4>3.1-44 (2014-05-20)</h4>
+
+<ul>
+<li>possibility to use user defined function to influence the way models are weighted in weighted mean ensemble models (<strong>thanks to Frank B.</strong>)</li>
+</ul>
+
+<h4>3.1-43 (2014-05-20)</h4>
+
+<ul>
+<li>add of <code>as.data.frame</code> argument for <code>get_evaluations()</code> function to enable formal and ensemble models evaluation scores merging</li>
+</ul>
+
+<h4>3.1-42 (2014-05-19)</h4>
+
+<ul>
+<li>enable ensemble forecasting models selection (<strong>thanks to Robin E.</strong>) </li>
+</ul>
+
+<h3><i class="fas fa-battery-empty"></i> 2013</h3>
+
+<h4>3.1-17 (2013-10-23)</h4>
+
+<ul>
+<li>add parameter to control amount of memory reserved for <code>MAXENT</code> calculations (via java) (<strong>thanks to Burke G.</strong>)</li>
+<li>optimization of memory consumption in models projections when <code>do.stack</code> argument is set to <code>FALSE</code></li>
+<li>binary and filtering projections output re-activated </li>
+</ul>
+
+<h4>3.1-1 (2013-09-04)</h4>
+
+<ul>
+<li>limitation of package dependencies</li>
+<li>fairely definition of package namespace</li>
+<li>add functions to update <code>biomod2</code> objects from a version to the current one</li>
+</ul>
+
+<h4>3.0.2 (2013-07-23)</h4>
+
+<ul>
+<li>new functions to evaluate a-posteriori models quality</li>
+<li>remove weights for models scaling and set it <code>FALSE</code> by default</li>
+</ul>
+
+<h4>3.0.0 (2013-07-01)</h4>
+
+<ul>
+<li>MAJOR RELEASES</li>
+<li>ensemble models are now <code>biomod2</code> models objects (should be predicted, evaluated, and you can do variables importance) the same way than all formal <code>biomod2</code> models</li>
+<li>possibility to produce ensemble models response plot</li>
+<li>ensemble forecasting output is now a <code>biomod2_projection</code> object: should be plotted&hellip;</li>
+<li>ensemble forecasting is now doable without doing previous projections (even if it is still advised). Can work with raw explanatory variables</li>
+<li>getter and setter function have been renamed</li>
+<li>new <code>variable_importance</code> function</li>
+<li>&hellip;</li>
+</ul>
+
+<h4>2.1.37 (2013-06-12)</h4>
+
+<ul>
+<li>change (temporally?) gam default package from <code>mgcv</code> to <code>gam</code> to deal with memory (cache) over-consuming (<strong>thanks to Burke G.</strong>)</li>
+<li>update of <code>response.plot2</code> function (optimization + deal with factorial variables)</li>
+</ul>
+
+<h4>2.1.32 (2013-05-30)</h4>
+
+<ul>
+<li>weights for user defined pseudo-absences are now supported (<strong>thanks to Rui F.</strong>)</li>
+<li>deal with unknown factors predictions (<strong>thanks to Denis M.</strong>)</li>
+</ul>
+
+<h4>2.1.13 (2013-03-06)</h4>
+
+<ul>
+<li>Add <code>ProbDensFunc()</code> function to package to produce nice plots that show inter-models variability</li>
+</ul>
+
+<h4>2.1.12 (2013-03-04)</h4>
+
+<ul>
+<li>add <code>rasterVis</code> dependency for nicer <code>biomod2</code> plots</li>
+<li><code>PA.dist.min</code> and <code>PA.dist.max</code> are now defined in meters when you work with unprojected rasters in disk pseudo absences selection</li>
+</ul>
+
+<h4>2.1.9 (2013-02-28)</h4>
+
+<ul>
+<li>possibility to indicate manually which data should be used for calibration (resp. for validation) of models within <code>BIOMOD_Modeling</code></li>
+</ul>
+
+<h4>2.1.9 (2013-02-27)</h4>
+
+<ul>
+<li>one var modeling supported (<strong>thanks Anne O.</strong>)</li>
+<li>new options for response curves plotting (<code>col</code>, <code>lty</code>, <code>data_species</code>&hellip;)</li>
+</ul>
+
+<h4>2.1.8 (2013-02-25)</h4>
+
+<ul>
+<li>response plot supports now formal models</li>
+</ul>
+
+<h4>2.1.0 (2013-02-21)</h4>
+
+<ul>
+<li>MAJOR RELEASE</li>
+<li>CRAN SUBMISION</li>
+<li>add of a <code>modeling.id</code> arg (<code>BIOMOD_Modeling</code>) for prevent from no wanted models overwriting and facilitate models tests and comparisons (<strong>thanks Frank B.</strong>)</li>
+<li>change of <code>biomod2</code> dataset</li>
+<li>vignettes and help files update (<strong>thanks Sam P. &amp; Signe N.</strong>)</li>
+<li>save link between modeling and projection objects</li>
+<li>add <code>pROC</code> package dependency</li>
+<li>add a modeling cleaner that remove modeling objects from both memory and hard drive: <code>RemoveProperly()</code></li>
+</ul>
+
+<h4>2.0.11 (2013-02-18)</h4>
+
+<ul>
+<li>possibility to consider a user.defined pseudo absences selection (<strong>thanks to Signe N.</strong>)</li>
+<li>possibility to switch off stepwise glm selection (<em>**thanks Frank B.</em>*)</li>
+</ul>
+
+<h4>2.0.9 (2013-02-15)</h4>
+
+<ul>
+<li>automatic save on hard drive of <code>BIOMOD_Projection</code> outputs</li>
+</ul>
+
+<h4>2.0.8 (2013-02-14)</h4>
+
+<ul>
+<li><code>BIOMOD_LoadModels</code> supports multiple models input</li>
+<li>deal with <code>NA</code> in evaluation table issue (<em>**thanks Frank B.</em>*)</li>
+</ul>
+
+<h4>2.0.7 (2013-02-12)</h4>
+
+<ul>
+<li>bug on weights corrected (<strong>thanks to Lugi M.</strong>)</li>
+</ul>
+
+<h4>2.0.3 (2013-01-18)</h4>
+
+<ul>
+<li>deal with <code>MAXENT</code> categorical variables and categorical raster input</li>
+</ul>
+
+<h4>2.0.0 (2013-01-17)</h4>
+
+<ul>
+<li>MAJOR RELEASE</li>
+<li>CRAN SUBMISION</li>
+<li>models built within <code>biomod2</code> are now defined as &ldquo;biomod2 models objects&rdquo; (own scaling models, own predict function, &hellip;)</li>
+<li>full paths are replaced by relative paths to favor portability</li>
+<li>harmonization of names of objects that are saved on hard drive (more coherence between functions)</li>
+<li>possibility to save projections directly in raster format (<code>.grd</code> or <code>.img</code>)</li>
+</ul>
+
+<h3><i class="fas fa-bahai"></i> Year 0</h3>
+
+<h4>1.x.x</h4>
+
+<ul>
+<li>development phase</li>
+</ul>
+
+</body>
+
+</html>
