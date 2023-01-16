@@ -3,14 +3,22 @@
 \name{load_stored_object}
 \alias{load_stored_object}
 \alias{load_stored_object,BIOMOD.stored.data-method}
+\alias{load_stored_object,BIOMOD.stored.SpatRaster-method}
 \title{Functions to load \code{\link{BIOMOD.stored.data}} objects}
 \usage{
-load_stored_object(obj)
+load_stored_object(obj, ...)
 
-\S4method{load_stored_object}{BIOMOD.stored.data}(obj)
+\S4method{load_stored_object}{BIOMOD.stored.data}(obj, layer = 1)
+
+\S4method{load_stored_object}{BIOMOD.stored.SpatRaster}(obj, layer = 1)
 }
 \arguments{
 \item{obj}{a \code{\link{BIOMOD.stored.data}} object}
+
+\item{...}{additional arguments}
+
+\item{layer}{an \code{integer} corresponding to the layer ID to be extracted
+when multilayer object considered}
 }
 \description{
 This functions allow the user to load \code{\link{BIOMOD.stored.data}} objects 

@@ -13,17 +13,26 @@ bm_SRE(
 )
 }
 \arguments{
-\item{resp.var}{a \code{vector}, \code{\link[sp]{SpatialPoints}} or 
-\code{\link[sp]{SpatialPointsDataFrame}} object containing binary data (\code{0} : absence, 
-\code{1} : presence, \code{NA} : indeterminate) for a single species}
+\item{resp.var}{a \code{vector}, a \code{\link[terra:vect]{SpatVector}}
+without associated data (\emph{if presence-only}), 
+or a \code{\link[terra:vect]{SpatVector}} object containing binary data  
+(\code{0} : absence, \code{1} : presence, \code{NA} : indeterminate) 
+for a single species that will be used to build the species distribution model(s)
+\cr \emph{Note that old format from \pkg{sp} are still supported such as
+ \code{SpatialPoints}  (if presence-only) or \code{SpatialPointsDataFrame}
+ object containing binary data.}}
 
-\item{expl.var}{a \code{matrix}, \code{data.frame}, \code{\link[sp]{SpatialPointsDataFrame}} 
-or \code{\link[raster:stack]{RasterStack}} object containing the explanatory variables (in 
-columns or layers) that will be used to build the SRE model}
+\item{expl.var}{a \code{matrix}, \code{data.frame}, \code{\link[terra:vect]{SpatVector}}
+or \code{\link[terra:rast]{SpatRaster}} object containing the explanatory variables (in 
+columns or layers) that will be used to build the SRE model
+\cr \emph{Note that old format from \pkg{raster} and \pkg{sp} are still supported such as 
+\code{RasterStack} and \code{SpatialPointsDataFrame} objects. }}
 
-\item{new.env}{a \code{matrix}, \code{data.frame}, \code{\link[sp]{SpatialPointsDataFrame}} 
-or \code{\link[raster:stack]{RasterStack}} object containing the explanatory variables (in 
-columns or layers) that will be used to predict the SRE model}
+\item{new.env}{a \code{matrix}, \code{data.frame}, \code{\link[terra:vect]{SpatVector}}
+or \code{\link[terra:rast]{SpatRaster}} object containing the explanatory variables (in 
+columns or layers) that will be used to predict the SRE model
+\cr \emph{Note that old format from \pkg{raster} and \pkg{sp} are still supported such as 
+\code{RasterStack} and \code{SpatialPointsDataFrame} objects. }}
 
 \item{quant}{a \code{numeric} between \code{0} and \code{0.5} defining the half-quantile 
 corresponding to the most extreme value for each variable not to be taken into account for 
@@ -34,15 +43,14 @@ A \code{logical} value defining whether a \code{matrix} containing extreme condi
 supported should be returned or not}
 }
 \value{
-A \code{vector} or a \code{\link[raster:raster]{raster}} object, containing binary (\code{0} 
-or \code{1}) values.
+A \code{vector} or a \code{\link[terra:rast]{SpatRaster}} object, containing binary 
+(\code{0} or \code{1}) values.
 }
 \description{
 This internal \pkg{biomod2} function allows the user to run a rectilinear surface 
 range envelop (SRE) (equivalent to 
 \href{https://caws.org.nz/PPQ567/PPQ\%2006-1\%20pp008-9\%20Busby.pdf}{BIOCLIM}) 
-using the extreme percentiles (as recommended by Nix or Busby, see 
-\href{https://biomodhub.github.io/biomod2/reference/bm_SRE.html#references}{References} and Details).
+using the extreme percentiles (as recommended by Nix or Busby, see References and Details).
 }
 \details{
 \emph{Please refer to References to get more information about surface range envelop models.}
@@ -64,17 +72,18 @@ that a total of \code{10\%} of the data will not be considered.
 }
 \examples{
 
+library(terra)
 ## Load real data
-myFile <- system.file('external/species/mammals_table.csv', package = 'biomod2')
-DataSpecies <- read.csv(myFile, row.names = 1)
+data(DataSpecies)
 myResp.r <- as.numeric(DataSpecies[, 'GuloGulo'])
 
-myFiles <- paste0('external/bioclim/current/bio', c(3, 4, 7, 11, 12), '.grd')
-myExpl.r <- raster::stack(system.file(myFiles, package = 'biomod2'))
+data(bioclim_current)
+myExpl.r <- rast(bioclim_current)
 
 myRespXY <- DataSpecies[which(myResp.r == 1), c('X_WGS84', 'Y_WGS84')]
-myResp.v <- raster::reclassify(raster::subset(myExpl.r, 1, drop = TRUE), c(-Inf, Inf, 0))
-myResp.v[raster::cellFromXY(myResp.v, myRespXY)] <- 1
+myResp.v <- classify(subset(myExpl.r, 1), 
+                     matrix(c(-Inf, Inf, 0), ncol = 3, byrow = TRUE))
+myResp.v[cellFromXY(myResp.v, myRespXY)] <- 1
 
 ## Compute SRE for several quantile values
 sre.100 <- bm_SRE(resp.var = myResp.v,
@@ -91,10 +100,10 @@ sre.090 <- bm_SRE(resp.var = myResp.v,
                   quant = 0.05)
 
 ## Visualize results
-res <- raster::stack(myResp.v, sre.100, sre.095, sre.090)
+res <- c(myResp.v, sre.100, sre.095, sre.090)
 names(res) <- c("Original distribution", "Full data calibration"
                 , "Over 95 percent", "Over 90 percent")
-plot(res, zlim = c(0, 1))
+plot(res)
 
 
 }

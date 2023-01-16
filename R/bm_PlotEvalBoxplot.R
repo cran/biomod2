@@ -14,8 +14,14 @@
 ##' @param bm.out a \code{\link{BIOMOD.models.out}} or \code{\link{BIOMOD.ensemble.models.out}} 
 ##' object that can be obtained with the \code{\link{BIOMOD_Modeling}} or 
 ##' \code{\link{BIOMOD_EnsembleModeling}} functions
+##' @param dataset a \code{character} corresponding to the dataset upon which evaluation metrics 
+##' have been calculated and that is to be represented, must be among \code{calibration}, 
+##' \code{validation}, \code{evaluation}
 ##' @param group.by a 2-length \code{vector} containing the way kept models will be represented,
-##' must be among \code{model}, \code{algo}, \code{run}, \code{dataset}
+##' must be among \code{full.name}, \code{PA}, \code{run}, \code{algo} (if \code{bm.out} is a 
+##' \code{\link{BIOMOD.models.out}} object), or \code{full.name}, \code{merged.by.PA}, 
+##' \code{merged.by.run}, \code{merged.by.algo} (if \code{bm.out} is a 
+##' \code{\link{BIOMOD.ensemble.models.out}} object)
 ##' @param do.plot (\emph{optional, default} \code{TRUE}) \cr 
 ##' A \code{logical} value defining whether the plot is to be rendered or not
 ##' @param \ldots some additional arguments (see Details)
@@ -50,10 +56,10 @@
 ##' 
 ##' 
 ##' @examples
+##' library(terra)
 ##' 
 ##' # Load species occurrences (6 species available)
-##' myFile <- system.file('external/species/mammals_table.csv', package = 'biomod2')
-##' DataSpecies <- read.csv(myFile, row.names = 1)
+##' data(DataSpecies)
 ##' head(DataSpecies)
 ##' 
 ##' # Select the name of the studied species
@@ -66,12 +72,12 @@
 ##' myRespXY <- DataSpecies[, c('X_WGS84', 'Y_WGS84')]
 ##' 
 ##' # Load environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
-##' myFiles <- paste0('external/bioclim/current/bio', c(3, 4, 7, 11, 12), '.grd')
-##' myExpl <- raster::stack(system.file(myFiles, package = 'biomod2'))
+##' data(bioclim_current)
+##' myExpl <- terra::rast(bioclim_current)
 ##' 
 ##' \dontshow{
-##' myExtent <- raster::extent(0,30,45,70)
-##' myExpl <- raster::stack(raster::crop(myExpl, myExtent))
+##' myExtent <- terra::ext(0,30,45,70)
+##' myExpl <- terra::crop(myExpl, myExtent)
 ##' }
 ##' 
 ##' # ---------------------------------------------------------------
@@ -120,39 +126,31 @@
 ###################################################################################################
 
 
-bm_PlotEvalBoxplot <- function(bm.out, group.by = c('algo', 'run'), do.plot = TRUE, ...)
+bm_PlotEvalBoxplot <- function(bm.out, dataset = 'calibration', group.by = c('algo', 'run'), do.plot = TRUE, ...)
 {
   ## 0. Check arguments ---------------------------------------------------------------------------
-  args <- .bm_PlotEvalBoxplot.check.args(bm.out, group.by, ...)
+  args <- .bm_PlotEvalBoxplot.check.args(bm.out, dataset, group.by, ...)
   for (argi in names(args)) { assign(x = argi, value = args[[argi]]) }
   rm(args)
   
   
-  for (i in 1:length(group.by)) {
-    tmp = strsplit(group.by[i], '')[[1]]
-    group.by[i] <- paste0(toupper(tmp[1]), paste0(tmp[2:length(tmp)], collapse = ''))
-  }
-  
   ## 1. Get data for graphic ----------------------------------------------------------------------
   ## Get evaluation values
-  scores <- get_evaluations(bm.out, as.data.frame = TRUE)
-  
-  ## Choose which dataset (calibration or validation) should be used
-  eval.data <- ifelse(all(is.na(scores$Evaluating.data)), "Testing.data", "Evaluating.data")
+  scores <- get_evaluations(bm.out)
   
   ## Prepare data table for graphic
   ggdat = scores
   
   ## 2. PLOT graphic ------------------------------------------------------------------------------
-  gg <- ggplot(ggdat, aes_string(x = group.by[1], y = eval.data, fill = group.by[2])) +
+  gg <- ggplot(ggdat, aes_string(x = group.by[1], y = dataset, fill = group.by[2])) +
     geom_boxplot() + ## add boxplot
-    facet_wrap("Eval.metric", scales = scales) +
+    facet_wrap("metric.eval", scales = scales) +
     xlab("") +
     theme(legend.title = element_blank()
           , legend.key = element_rect(fill = "white")
           , axis.text.x = element_text(angle = 45, hjust = 1))
   
-  if (length(main)) { ## add title
+  if (length(main) > 0) { ## add title
     gg <- gg + labs(title = main)
   }
   
@@ -163,18 +161,27 @@ bm_PlotEvalBoxplot <- function(bm.out, group.by = c('algo', 'run'), do.plot = TR
 
 ###################################################################################################
 
-.bm_PlotEvalBoxplot.check.args <- function(bm.out, group.by = 'Algo', ...)
+.bm_PlotEvalBoxplot.check.args <- function(bm.out, dataset, group.by, ...)
 {
   args <- list(...)
   
   ## 1. Check bm.out argument -------------------------------------------------
   .fun_testIfInherits(TRUE, "bm.out", bm.out, c("BIOMOD.models.out", "BIOMOD.ensemble.models.out"))
   
+  ## 2. Check dataset argument ------------------------------------------------
+  .fun_testIfIn(TRUE, "dataset", dataset, c("calibration", "validation", "evaluation"))
+  
   ## 3. Check group.by argument -----------------------------------------------
   if (length(group.by) != 2) { stop("2 group values needed") }
-  for (i in 1:length(group.by)) {
-    .fun_testIfIn(TRUE, paste0("group.by[", i, "]"), group.by[i], c('model', 'algo', 'run', 'dataset'))
-  }
+  if (inherits(bm.out, "BIOMOD.models.out")) {
+    for (i in 1:length(group.by)) {
+      .fun_testIfIn(TRUE, paste0("group.by[", i, "]"), group.by[i], c("full.name", "PA", "run", "algo"))
+    }
+  } else if (inherits(bm.out, "BIOMOD.ensemble.models.out")) {
+    for (i in 1:length(group.by)) {
+      .fun_testIfIn(TRUE, paste0("group.by[", i, "]"), group.by[i], c("full.name", "merged.by.PA", "merged.by.run", "algo"))
+    }
+  } 
   
   ## 4. Check extra args argument ---------------------------------------------
   .fun_testIfIn(TRUE, "names(args)", names(args), c('main', 'scales'))

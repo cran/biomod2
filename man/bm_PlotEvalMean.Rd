@@ -7,6 +7,7 @@
 bm_PlotEvalMean(
   bm.out,
   metric.eval = NULL,
+  dataset = "calibration",
   group.by = "algo",
   do.plot = TRUE,
   ...
@@ -22,9 +23,15 @@ be among \code{ROC}, \code{TSS}, \code{KAPPA}, \code{ACCURACY}, \code{BIAS}, \co
 \code{FAR}, \code{POFD}, \code{SR}, \code{CSI}, \code{ETS}, \code{HK}, \code{HSS}, \code{OR}, 
 \code{ORSS}}
 
+\item{dataset}{a \code{character} corresponding to the dataset upon which evaluation metrics 
+have been calculated and that is to be represented, must be among \code{calibration}, 
+\code{validation}, \code{evaluation}}
+
 \item{group.by}{a \code{character} corresponding to the way kept models will be combined to 
-compute mean and sd evaluation scores, must be among \code{model}, \code{algo}, \code{run}, 
-\code{dataset}}
+compute mean and sd evaluation scores, must be among \code{full.name}, \code{PA}, \code{run}, 
+\code{algo} (if \code{bm.out} is a \code{\link{BIOMOD.models.out}} object), or 
+\code{full.name}, \code{merged.by.PA}, \code{merged.by.run}, \code{merged.by.algo} 
+(if \code{bm.out} is a \code{\link{BIOMOD.ensemble.models.out}} object)}
 
 \item{do.plot}{(\emph{optional, default} \code{TRUE}) \cr 
 A \code{logical} value defining whether the plot is to be rendered or not}
@@ -55,10 +62,10 @@ represented according to 2 different evaluation methods, and models can be group
 }
 }
 \examples{
+library(terra)
 
 # Load species occurrences (6 species available)
-myFile <- system.file('external/species/mammals_table.csv', package = 'biomod2')
-DataSpecies <- read.csv(myFile, row.names = 1)
+data(DataSpecies)
 head(DataSpecies)
 
 # Select the name of the studied species
@@ -71,12 +78,12 @@ myResp <- as.numeric(DataSpecies[, myRespName])
 myRespXY <- DataSpecies[, c('X_WGS84', 'Y_WGS84')]
 
 # Load environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
-myFiles <- paste0('external/bioclim/current/bio', c(3, 4, 7, 11, 12), '.grd')
-myExpl <- raster::stack(system.file(myFiles, package = 'biomod2'))
+data(bioclim_current)
+myExpl <- terra::rast(bioclim_current)
 
 \dontshow{
-myExtent <- raster::extent(0,30,45,70)
-myExpl <- raster::stack(raster::crop(myExpl, myExtent))
+myExtent <- terra::ext(0,30,45,70)
+myExpl <- terra::crop(myExpl, myExtent)
 }
 
 # ---------------------------------------------------------------

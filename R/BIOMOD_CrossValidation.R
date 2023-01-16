@@ -4,9 +4,9 @@
 ##' 
 ##' @title Custom models cross-validation procedure
 ##' 
-##' @description This function creates a \code{DataSplitTable} that can be given as parameter to 
-##' the \code{\link{BIOMOD_Modeling}} function to evaluate models with repeated k-fold or 
-##' stratified cross-validation (CV) instead of repeated split samples.
+##' @description This function creates a \code{matrix} or \code{data.frame} that can be given to 
+##' \code{data.split.table} parameter of \code{\link{BIOMOD_Modeling}} function to evaluate 
+##' models with repeated k-fold or stratified cross-validation (CV) instead of repeated split samples.
 ##' 
 ##' 
 ##' @param bm.format a \code{\link{BIOMOD.formated.data-class}} or \code{\link{BIOMOD.formated.data.PA-class}} 
@@ -27,9 +27,9 @@
 ##' 
 ##' @return 
 ##' 
-##' A \code{DataSplitTable} {matrix} with \code{k * nb.rep} (\emph{+ 1 if 
-##' \code{do.full.models = TRUE}}) columns that can be given as parameter to the 
-##' \code{\link{BIOMOD_Modeling}} function.
+##' A \code{matrix} or \code{data.frame} with \code{k * nb.rep} (\emph{+ 1 if 
+##' \code{do.full.models = TRUE}}) columns that can be given to \code{data.split.table} 
+##' parameter of \code{\link{BIOMOD_Modeling}} function.
 ##' 
 ##' 
 ##' @details
@@ -78,9 +78,9 @@
 ##'
 ##' @examples
 ##' 
+##' library(terra)
 ##' # Load species occurrences (6 species available)
-##' myFile <- system.file('external/species/mammals_table.csv', package = 'biomod2')
-##' DataSpecies <- read.csv(myFile, row.names = 1)
+##' data(DataSpecies)
 ##' head(DataSpecies)
 ##' 
 ##' # Select the name of the studied species
@@ -93,12 +93,12 @@
 ##' myRespXY <- DataSpecies[, c('X_WGS84', 'Y_WGS84')]
 ##' 
 ##' # Load environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
-##' myFiles <- paste0('external/bioclim/current/bio', c(3, 4, 7, 11, 12), '.grd')
-##' myExpl <- raster::stack(system.file(myFiles, package = 'biomod2'))
+##' data(bioclim_current)
+##' myExpl <- terra::rast(bioclim_current)
 ##' 
 ##' \dontshow{
-##' myExtent <- raster::extent(0,30,45,70)
-##' myExpl <- raster::stack(raster::crop(myExpl, myExtent))
+##' myExtent <- terra::ext(0,30,45,70)
+##' myExpl <- terra::crop(myExpl, myExtent)
 ##' }
 ##' 
 ##' # ---------------------------------------------------------------
@@ -133,25 +133,27 @@
 ##' # Model single models
 ##' myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
 ##'                                     modeling.id = 'mod.CV',
-##'                                     models = c('RF', 'GLM'),
+##'                                     models = c('RF'),
 ##'                                     bm.options = myBiomodOptions,
 ##'                                     nb.rep = 2,
 ##'                                     data.split.table = myBiomodCV,
 ##'                                     metric.eval = c('TSS','ROC'),
-##'                                     var.import = 3,
+##'                                     var.import = 0,
 ##'                                     do.full.models = FALSE,
 ##'                                     seed.val = 42)
 ##' 
 ##' # Get evaluation scores & variables importance
-##' myEval <- get_evaluations(myBiomodModelOut, as.data.frame = TRUE)
+##' myEval <- get_evaluations(myBiomodModelOut)
 ##' myEval$CV.strategy <- "Random"
-##' myEval$CV.strategy[grepl("13", myEval$Model.name)] <- "Full"
-##' myEval$CV.strategy[grepl("11|12", myEval$Model.name)] <- "Stratified"
+##' myEval$CV.strategy[grepl("13", myEval$full.name)] <- "Full"
+##' myEval$CV.strategy[grepl("11|12", myEval$full.name)] <- "Stratified"
 ##' head(myEval)
 ##' 
-##' boxplot(myEval$Testing.data ~ interaction(myEval$Algo, myEval$CV.strategy),
+##' boxplot(myEval$calibration ~ interaction(myEval$algo, myEval$CV.strategy),
 ##'         xlab = "", ylab = "ROC AUC", col = rep(c("brown", "cadetblue"), 3))
-##' 
+##' boxplot(myEval$validation ~ interaction(myEval$algo, myEval$CV.strategy),
+##'         xlab = "", ylab = "ROC AUC", col = rep(c("brown", "cadetblue"), 3))
+##'          
 ##' 
 ## @importFrom ENMeval get.block
 ## @importFrom dismo kfold
@@ -169,11 +171,23 @@ BIOMOD_CrossValidation <- function(bm.format,
                                    method = "both",
                                    balance = "presences",
                                    do.full.models = TRUE) {
+  
+  args <- .BIOMOD_CrossValidation.check.args(bm.format,
+                                             k = k,
+                                             nb.rep = nb.rep,
+                                             do.stratification = do.stratification,
+                                             method = method,
+                                             balance = balance,
+                                             do.full.models = do.full.models)
+  
+  for (argi in names(args)) { assign(x = argi, value = args[[argi]]) }
+  rm(args)
+  
   .bm_cat("Build Cross-Validation Table")
   DataSplitTable.y <- DataSplitTable.x <- DataSplitTable <- NULL
-  ind.NA = which(is.na(bm.format@data.species))
-  tmp = bm.format@data.species
-  tmp[ind.NA] = 2
+  ind.NA  <- which(is.na(bm.format@data.species))
+  tmp  <- bm.format@data.species
+  tmp[ind.NA] <- 0 # was 2 before
   
   ## STRATIFIED (X, Y, BOTH) / BLOCK / ENVIRONMENTAL CROSS VALIDATION -----------------------------
   if (do.stratification) {
@@ -210,7 +224,9 @@ BIOMOD_CrossValidation <- function(bm.format,
     
     ## BLOCK STRATIFIED CROSS VALIDATION --------------------------------------
     if (method == "block") {
-      if (!isNamespaceLoaded("ENMeval")) { requireNamespace("ENMeval", quietly = TRUE) }
+      if (!isNamespaceLoaded("ENMeval")) { 
+        if(!requireNamespace('ENMeval', quietly = TRUE)) stop("Package 'ENMeval' not found")
+      }
       DataSplitTable <- as.data.frame(matrix(NA, nrow(bm.format@coord), 4))
       blocks <- ENMeval::get.block(bm.format@coord[tmp == 1, ]
                                    , bm.format@coord[tmp == 0, ])
@@ -218,6 +234,7 @@ BIOMOD_CrossValidation <- function(bm.format,
         DataSplitTable[tmp == 1, i] <- blocks[[1]] != i
         DataSplitTable[tmp == 0, i] <- blocks[[2]] != i     
       }
+      DataSplitTable <- as.matrix(DataSplitTable)
     }
     
     ## ENVIRONMENTAL STRATIFIED CROSS VALIDATION ------------------------------
@@ -233,7 +250,9 @@ BIOMOD_CrossValidation <- function(bm.format,
     }
   } else {
     ## K-FOLD CROSS VALIDATION --------------------------------------------------------------------
-    if (!isNamespaceLoaded("dismo")) { requireNamespace("dismo", quietly = TRUE) }
+    if (!isNamespaceLoaded("dismo")) { 
+      if(!requireNamespace('dismo', quietly = TRUE)) stop("Package 'dismo' not found")
+    }
     for (rep in 1:nb.rep) {
       fold <- dismo::kfold(tmp, by = tmp, k = k)
       for (i in 1:k) {
@@ -244,12 +263,65 @@ BIOMOD_CrossValidation <- function(bm.format,
   
   ## CLEAN FINAL TABLE ----------------------------------------------------------------------------
   colnames(DataSplitTable) <- paste0("RUN", 1:ncol(DataSplitTable))
-
+  
   if (isTRUE(do.full.models)) {
     DataSplitTable <- cbind(DataSplitTable, TRUE)
-    colnames(DataSplitTable)[ncol(DataSplitTable)] <- "Full"
+    colnames(DataSplitTable)[ncol(DataSplitTable)] <- "allRun"
   }
   
   .bm_cat("Done")
   return(DataSplitTable)
+}
+
+
+
+# Argument check ----------------------------------------------------------
+
+.BIOMOD_CrossValidation.check.args <- function(bm.format,
+                                               k,
+                                               nb.rep,
+                                               do.stratification,
+                                               method,
+                                               balance,
+                                               do.full.models) {
+  cat('\n\nChecking Cross-Validation arguments...\n')
+
+  ## 0. Check bm.format ----------------------------------
+  .fun_testIfInherits(TRUE, "bm.format", bm.format, "BIOMOD.formated.data")
+  
+  ## 1. Check k ----------------------------------
+  if(k < 2 | k %% 1 != 0) {
+    stop("k must be an integer >= 2")
+  }
+  ## 2. Check nb.rep ----------------------------------
+  if(nb.rep < 1 | nb.rep %% 1 != 0) {
+    stop("nb.rep must be an integer >= 1")
+  }
+  ## 3. Check do.stratification ----------------------------------
+  
+  if(!is.logical(do.stratification)){
+    stop("do.stratification must be TRUE or FALSE")
+  }
+  
+  ## 4. Check method ----------------------------------
+  method.options <- c("x","y","both","block")
+  .fun_testIfIn(TRUE, "method", method, method.options)
+  
+  ## 5. Check balance ----------------------------------
+  balance.options <- c("presences","absences")
+  .fun_testIfIn(TRUE, "balance", balance, balance.options)
+  
+  ## 6. Check do.full.models ----------------------------------
+  
+  if(!is.logical(do.full.models)){
+    stop("do.full.models must be TRUE or FALSE")
+  }
+  
+  return(list(bm.format = bm.format,
+              k = k,
+              nb.rep = nb.rep,
+              do.stratification = do.stratification,
+              method = method,
+              balance = balance,
+              do.full.models = do.full.models))
 }

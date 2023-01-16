@@ -13,10 +13,143 @@ vignette: >
 
 ## <i class="fas fa-code"></i> Development updates
 
+### <i class="fas fa-feather"></i> 2023 
+
+#### 4.2-2 Improvement patch (2023-01-13)
+
+##### Major Changes
+
+* '.tif' is available as an output format for raster projection
+* '.tif' is the new default output format for raster projection
+* Improved `plot` and `summary` methods for `BIOMOD_FormatingData` output. These method now support the use of `calib.lines` to explore how the cross-validation dataset are structured.
+* Updated `plot` methods for `BIOMOD.projection.out` objects so that it uses `ggplot2` for nicer plots.
+* Binary and Filtered transformation are now properly stored in `BIOMOD.projection.out` objects. They can be loaded from the disk with `get_predictions` or represented through `BIOMOD.projection.out` plot method.
+* `get_predictions` now return a proper `data.frame` (unless projection on spatial data) with many additional information available. Old behavior can be reproduced by using `get_predictions(x, model.as.col = TRUE)`.
+* `get_evaluations` now return a cleaner `data.frame` with more consistent information available.
+
+##### Minor Changes
+
+* Simplified maxent model names:  'MAXENT.Phillips' -> 'MAXENT' (based on `maxent.jar`); 'MAXENT.Phillips.2' -> 'MAXNET' (based on `maxnet` package).
+* `BIOMOD_FormatingData` now gives warning when several input data points are located in the same raster cells
+* Added options `filter.raster` in `BIOMOD_FormatingData` to filter data points so that none are located in the same raster cells.
+* `BIOMOD_EnsembleModeling` now have an argument `em.algo` to select the ensemble algorithm to be computed. Separate arguments are now deprecated (prob.mean, prob.median, prob.cv, prob.ci, committee.averaging, prob.mean.weight). Building all possible ensemble models can now be done with `em.algo = c('EMmean','EMmedian','EMcv','EMci','EMca','EMwmean')`.
+* Some possible values for `em.by` have slightly changed: 'PA_dataset' -> 'PA', 'PA_dataset+repet' -> 'PA+run' and 'PA_dataset+algo' -> 'PA+algo'
+* Added an appropriate message when all models fail for `BIOMOD_Modeling` and `BIOMOD_EnsembleModeling`.
+
+##### Bugfix
+
+* Fixed `MAXENT.Phillips.2` and single variable models.
+* Fixed ensemble models when several filtering metrics were asked and some combination of ensemble/metrics had no models
+* Bugfix for projection for ensemble models to ensure that the proper set of models was selected
+* Bugfix for BIOMOD_CrossValidation for block-stratified sampling
+* Bugfix for BIOMOD_CrossValidation for pseudo-absences 
+
+##### Internal Changes
+
+* Array have disappeared from most internal functions
+* Removed `rasterVis` from `Suggests`
+* Added `tidyterra` and `ggtext` to `Suggests`
+* Added checks to `get_evaluation` when models have no evaluations.
 
 ### <i class="fas fa-chess-pawn"></i> 2022
 
-#### 4.1-2 (2022-09-29)
+#### 4.2-1 Bugfix patch
+
+##### Major Changes
+
+* Package `sp` is back into `Imports` due to the need to use `sp::read.asciigrid`
+* Added control for `terra` version number (>= 1.6-33) as `terra` 1.6-41 was released on CRAN.
+* With `do.stack = TRUE`, only stacked projection are now saved to the disk.
+
+##### Minor Changes
+
+* Added `initial_heap_size` and `max_heap_size` in `MAXENT.Phillips` modeling options
+* Improved projection efficiency for raster with `MAXENT.Phillips`.
+
+##### Bugfix
+
+* Fixed `MAXENT.Phillips` predict method for large dataset (require `sp::read.asciigrid`). 
+* fixed ensemble models using a single PA dataset with em.by = 'all' or 'algo'.
+* models using repetition dataset cannot be merged anymore with models using Full dataset in `BIOMOD_EnsembleModeling`.
+* Fixed error in `BIOMOD_EnsembleForecasting` when a single evaluation metric was available and binary/filtered transformation were asked for.
+* Bugfix for plot method for `BIOMOD.formated.data.PA` object.
+* Fixed `MAXENT.Phillips` for Windows.
+* Fixed using `do.stack = FALSE` with `BIOMOD_Projection`.
+* Fixed `EMcv` ensemble modeling for `data.frame` by removing dependency to `raster::cv`.
+* Fixed `free` method with `PackedSpatRaster`
+* Fixed `BIOMOD_FormatingData` in case where no coordinates are given
+
+##### Internal
+
+* Updated github workflow : removed obsolete ubuntu 18.04 ; added test on r-devel ; added cache for R packages.
+* Updated `MAXENT.Phillips` `predict2` method for `SpatRaster` so that it saves environmental data as `.asc` and do not use the `data.frame` method.
+* fixed some automatic boolean conversion
+* Cleaned up `BIOMOD.formated.data@data.mask` slot. `data.mask` can now be safely saved and re-opened ; `data.mask` can now store a different extent for evaluation dataset
+
+####  4.2-0 Terra Update
+
+##### Major Changes
+
+* Package now rely only on `terra` (`> 1.6.33`) and do not automatically import `raster` and `sp`.
+* Moved `raster` and `sp` package into `SUGGESTS` rather than `DEPENDS`.
+* `raster` and `sp` input data type are still supported.
+* Package dataset now are now documented and loaded with `data()` .
+
+##### Minor Changes
+
+* `bm_BinaryTransformation` now always returns `0`/`1` and never `TRUE`/`FALSE`
+* Added a check to `bm_PlotResponseCurves` for `new.env` possible data types.
+* `BIOMOD_Projection` and `BIOMOD_EnsembleForecasting` now properly support matrix as `new.env`
+* `get_prediction` on `biomod.projection.out` generated from `BIOMOD_Projection` based on `SpatRaster` with arg `as.data.frame = TRUE` are now possible.
+* `bm_BinaryTransformation` now return same type of object as its input
+* Improved communcation for `BIOMOD_RangeSize`, indicating how comparison are done depending on the number of models in current vs future.
+* added argument check for BIOMOD_CrossValidation
+
+##### Bugfix
+
+* MAXENT.Phillips models can now properly fail
+* bugfix for `bm_BinaryTransformation` with `data.frame`/`matrix` and `do.filtering = TRUE`
+* Removed obsolete warning about CTA and categorical variables when using raster
+* `bm_PlotResponseCurves` now work with factors in univariate representation
+* `bm_PlotResponseCurves` properly handles `SpatRaster` and `Raster` as `new.env`
+* Bugfix for predictions with `MAXENT.Phillips` and a single environmental variable
+* Bugfix for `BIOMOD_EnsembleForecasting` so that it properly accounts for `new.env.xy` when projecting on `matrix` or `data.frame`.
+* `BIOMOD_EnsembleModeling` now works when called for a single ensemble model
+* Improved argument check for `BIOMOD_RangeSize`. Comparisons with non-binary values throw errors.
+* bugfix for `BIOMOD_RangeSize` and data.frame method
+* `BIOMOD_RangeSize` `data.frame` method now handles 1 current vs n future projection
+* bugfix for `BIOMOD_PresenceOnly` that can now work when evaluation data are provided
+* bugfix for `BIOMOD_PresenceOnly` that can now work when only the EM have been provided
+* expanded support for `BIOMOD_PresenceOnly` to `SpatRaster` and `SpatVector`.
+* `build_clamping_mask` now support categorical variables
+* fixed ensemble model EMcv based on a single environmental variable
+
+##### Internal Changes
+
+* New internal function `.categorical2numeric` to transform categorical variables into numeric within a `data.frame`.
+* New internal function `.get_categorical_names` to retrieve categorical variable names from a `data.frame`.
+* Split `load_stored_object` method into a method for `BIOMOD.stored.SpatRaster` and a method for all other `BIOMOD.stored.data`.
+* `BIOMOD.stored.SpatRaster` stores `PackedSpatraster` and not `SpatRaster`.
+* New internal function `.CompteurSp` based on old function CompteurSp that was defined within a function.
+* Removed obsolete function `check_data_range()`.
+
+#### 4.1-3
+
+##### Bugfix
+
+* Ensemble models that fails (e.g. EMcv with only one models) will not crash the full ensemble run. Instead a warning is generally displayed at the beginning and the resulting object will list failed models.
+* Fixed CTA raster prediction for categorical variables.
+* fixed binary transformation in `BIOMOD_EnsembleForecasting`.
+
+#### Internal Changes
+
+* New internal function .get_kept_models to generate list of models kept by ensemble modeling depending on metric.select.
+
+* Improved checks for BIOMOD_EnsembleModel to generate warnings when ensemble models are expected to be run with <= 1 models.
+
+* repaired support for cross-validation table given as data.frame instead of matrix.
+
+#### 4.1-2 (2022-09-29 - Current CRAN Version)
 
 ##### Major changes
 

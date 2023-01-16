@@ -163,67 +163,56 @@ hr {
 </head>
 
 <body>
-<p><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous"></p>
-
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
 <h3><i class="fas fa-address-card"></i> Definition</h3>
-
 <p>When modelling species distribution, there is most of the time an <strong>uncertainty</strong> of what is actually modelled :</p>
-
 <ul>
 <li>the <em>fundamental niche</em> is most of the time unknown</li>
 <li>and there might be an uncertainty in the <em>realized niche</em>, except in the case of an exhaustive sampling.</li>
 </ul>
-
 <p>What can be evaluated is how much the modelisation results are <strong>consistent</strong> with what is known and observed, and how much <strong>variability</strong> is present in the results in function of modelling choices.</p>
-
-<p></br></p>
-
+</br>
 <h3><i class="fas fa-chart-bar"></i> Variability - within the evaluation / importance of variables</h3>
-
 <p>Single and ensemble models can be evaluated by several available evaluation metrics, and the importance of variables can be calculated through several repetitions (see <code>metric.eval</code> and <code>var.import</code> parameters in <a href="../reference/BIOMOD_Modeling.html"><code>BIOMOD_Modeling</code></a> and <a href="../reference/BIOMOD_EnsembleModeling.html"><code>BIOMOD_EnsembleModeling</code></a>).</p>
-
 <p>Variability in evaluation and importance values can come from the parametrisation of different elements of the modelling :</p>
-
 <ul>
-<li><strong>observed dataset</strong>, 
-
+<li><strong>observed dataset</strong>,
 <ul>
-<li>through the number of repetitions of calibration / validation splitting, </li>
+<li>through the number of repetitions of calibration / validation splitting,</li>
 <li><em>illustrating the robustness of the computed model based on the data</em></li>
-</ul></li>
-<li><strong>pseudo-absence dataset</strong>, 
-
-<ul>
-<li>through the number of repetitions of PA sampling, </li>
-<li><em>to check the choice of the pseudo-absence strategy</em> </li>
-</ul></li>
-<li><strong>modelling technique</strong>, 
-
-<ul>
-<li>through the models selected, among 10 models available, </li>
-<li><em>to spot the most adapted modelling methods</em></li>
-</ul></li>
 </ul>
-
-<p></br></p>
-
-<h3><i class="fas fa-map"></i> Variability - within the predictions</h3>
-
-<p>Making projections, either for single or ensemble models, can produce two additional sources of variability in results that can be explored through two parameters :</p>
-
+</li>
+<li><strong>pseudo-absence dataset</strong>,
 <ul>
-<li><p><strong>For single models</strong>, <code>build.clamping.mask</code> in <a href="../reference/BIOMOD_Projection.html"><code>BIOMOD_Projection</code> function</a> : </p>
-
+<li>through the number of repetitions of PA sampling,</li>
+<li><em>to check the choice of the pseudo-absence strategy</em></li>
+</ul>
+</li>
+<li><strong>modelling technique</strong>,
+<ul>
+<li>through the models selected, among 10 models available,</li>
+<li><em>to spot the most adapted modelling methods</em></li>
+</ul>
+</li>
+</ul>
+</br>
+<h3><i class="fas fa-map"></i> Variability - within the predictions</h3>
+<p>Making projections, either for single or ensemble models, can produce two additional sources of variability in results that can be explored through two parameters :</p>
+<ul>
+<li>
+<p><strong>For single models</strong>, <code>build.clamping.mask</code> in <a href="../reference/BIOMOD_Projection.html"><code>BIOMOD_Projection</code> function</a> :</p>
 <ul>
 <li>it produces a map of the studied area with, in each pixel, the number of variables whose value is outside the range of values used to calibrate the models.</li>
 <li><em>It identifies potential extrapolation areas.</em></li>
-</ul></li>
-<li><p><strong>For ensemble models</strong>, <code>prob.cv</code> in <a href="../reference/BIOMOD_EnsembleForecasting.html"><code>BIOMOD_EnsembleForecasting</code> function</a> : </p>
-
+</ul>
+</li>
+<li>
+<p><strong>For ensemble models</strong>, <code>prob.cv</code> in <a href="../reference/BIOMOD_EnsembleForecasting.html"><code>BIOMOD_EnsembleForecasting</code> function</a> :</p>
 <ul>
-<li>it calculates the coefficient of variation between models&#39; projection, </li>
+<li>it calculates the coefficient of variation between models’ projection,</li>
 <li><em>identifying areas of disagreement in predictions</em>.</li>
-</ul></li>
+</ul>
+</li>
 </ul>
 
 </body>

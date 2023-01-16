@@ -1,4 +1,4 @@
-###################################################################################################
+# BIOMOD_ModelingOptions documentation -----------------------------------------
 ##' @name BIOMOD_ModelingOptions
 ##' @aliases BIOMOD_ModelingOptions
 ##' @aliases bm_DefaultModelingOptions
@@ -18,8 +18,8 @@
 ##' @param FDA (\emph{optional, default} \code{NULL}) \cr A \code{list} containing FDA options
 ##' @param MARS (\emph{optional, default} \code{NULL}) \cr A \code{list} containing MARS options
 ##' @param RF (\emph{optional, default} \code{NULL}) \cr A \code{list} containing RF options
-##' @param MAXENT.Phillips (\emph{optional, default} \code{NULL}) \cr A \code{list} 
-##' containing MAXENT.Phillips options
+##' @param MAXENT (\emph{optional, default} \code{NULL}) \cr A \code{list} 
+##' containing MAXENT options
 ##'
 ##'
 ##' @return 
@@ -218,53 +218,95 @@
 ##'   \item{\code{maxnodes = NULL}}
 ##' }
 ##'
-##' @section MAXENT.Phillips : (\url{https://biodiversityinformatics.amnh.org/open_source/maxent/})
+##' @section MAXENT : (\url{https://biodiversityinformatics.amnh.org/open_source/maxent/})
 ##' \itemize{
-##'   \item{\code{path_to_maxent.jar = getwd()}}{ : a \code{character} corresponding to 
-##'   \pkg{maxent.jar} file link}
-##'   \item{\code{memory_allocated = 512}}{ : an \code{integer} corresponding to the amount of 
-##'   memory (in Mo) reserved for \code{java} to run \code{MAXENT.Phillips}, must be \code{64}, 
-##'   \code{128}, \code{256}, \code{512}, \code{1024}... or \code{NULL} to use default \code{java} 
+##'   \item{\code{path_to_maxent.jar = getwd()}}{ : a \code{character}
+##'   corresponding to \pkg{maxent.jar} file link} 
+##'   
+##'   \item{\code{memory_allocated = 512}}{ : an \code{integer} corresponding to
+##'   the amount of memory (in Mo) reserved for \code{java} to run
+##'   \code{MAXENT}, must be \code{64}, \code{128}, \code{256},
+##'   \code{512}, \code{1024}... or \code{NULL} to use default \code{java}
 ##'   memory limitation parameter}
-##'   \item{\code{background_data_dir}}{ : a \code{character} corresponding to directory path 
-##'   where explanatory variables are stored as \code{ASCII} files (raster format). If specified, 
-##'   \code{MAXENT.Phillips} will generate its own background data from explanatory 
-##'   variables rasters (as usually done in \code{MAXENT} studies). Otherwise \pkg{biomod2} 
-##'   pseudo-absences will be used (see \code{\link{BIOMOD_FormatingData}})}
-##'   \item{\code{maximumbackground}}{ : an \code{integer} corresponding to the maximum number of 
-##'   background data to sample if the \code{background_data_dir} parameter has been set}
-##'   \item{\code{maximumiterations = 200}}{ : an \code{integer} corresponding to the maximum 
-##'   number of iterations to do}
-##'   \item{\code{visible = FALSE}}{ : a \code{logical} to make the \code{MAXENT} user interface 
-##'   available}
-##'   \item{\code{linear = TRUE}}{ : a \code{logical} to allow linear features to be used}
-##'   \item{\code{quadratic = TRUE}}{ : a \code{logical} to allow quadratic features to be used}
-##'   \item{\code{product = TRUE}}{ : a \code{logical} to allow product features to be used}
-##'   \item{\code{threshold = TRUE}}{ : a \code{logical} to allow threshold features to be used}
-##'   \item{\code{hinge = TRUE}}{ : a \code{logical} to allow hinge features to be used}
-##'   \item{\code{lq2lqptthreshold = 80}}{ : an \code{integer} corresponding to the number of 
-##'   samples at which product and threshold features start being used}
-##'   \item{\code{l2lqthreshold = 10}}{ : an \code{integer} corresponding to the number of samples 
-##'   at which quadratic features start being used}
-##'   \item{\code{hingethreshold = 15}}{ : an \code{integer} corresponding to the number of 
-##'   samples at which hinge features start being used}
-##'   \item{\code{beta_threshold = -1.0}}{ : a \code{numeric} corresponding to the regularization 
-##'   parameter to be applied to all threshold features 
+##'   
+##'   \item{\code{initial_heap_size = NULL}}{ : a \code{character} initial heap
+##'   space (shared memory space) allocated to java. Argument transmitted to
+##'   \code{-Xms} when calling java. Used in \code{\link{BIOMOD_Projection}} but
+##'   not in \code{\link{BIOMOD_Modeling}}. Values can be \code{1024K},
+##'   \code{4096M}, \code{10G} ... or \code{NULL} to use default \code{java}
+##'   parameter}
+##'   
+##'   \item{\code{max_heap_size = NULL}}{ : a \code{character} initial heap
+##'   space (shared memory space) allocated to java. Argument transmitted to
+##'   \code{-Xmx} when calling java. Used in \code{\link{BIOMOD_Projection}} but
+##'   not in \code{\link{BIOMOD_Modeling}}. Must be larger than
+##'   \code{initial_heap_size}. Values can be \code{1024K}, \code{4096M},
+##'   \code{10G} ... or \code{NULL} to use default \code{java} parameter}
+##'   
+##'   \item{\code{background_data_dir}}{ : a \code{character} corresponding to
+##'   directory path where explanatory variables are stored as \code{ASCII}
+##'   files (raster format). If specified, \code{MAXENT} will generate
+##'   its own background data from explanatory variables rasters (as usually
+##'   done in \code{MAXENT} studies). Otherwise \pkg{biomod2} pseudo-absences
+##'   will be used (see \code{\link{BIOMOD_FormatingData}})}
+##'   
+##'   \item{\code{maximumbackground}}{ : an \code{integer} corresponding to the
+##'   maximum number of background data to sample if the
+##'   \code{background_data_dir} parameter has been set}
+##'   
+##'   \item{\code{maximumiterations = 200}}{ : an \code{integer} corresponding
+##'   to the maximum number of iterations to do} 
+##'   
+##'   \item{\code{visible = FALSE}}{ : a \code{logical} to make the
+##'   \code{MAXENT} user interface available}
+##'   
+##'   \item{\code{linear = TRUE}}{ : a \code{logical} to allow linear features
+##'   to be used} \item{\code{quadratic = TRUE}}{ : a \code{logical} to allow
+##'   quadratic features to be used} 
+##'   
+##'   \item{\code{product = TRUE}}{ : a \code{logical} to allow product features
+##'   to be used}
+##'   
+##'   \item{\code{threshold = TRUE}}{ : a \code{logical} to allow threshold
+##'   features to be used}
+##'   
+##'   \item{\code{hinge = TRUE}}{ : a \code{logical} to allow hinge features to
+##'   be used} \item{\code{lq2lqptthreshold = 80}}{ : an \code{integer}
+##'   corresponding to the number of samples at which product and threshold
+##'   features start being used} 
+##'   
+##'   \item{\code{l2lqthreshold = 10}}{ : an
+##'   \code{integer} corresponding to the number of samples at which quadratic
+##'   features start being used} 
+##'   
+##'   \item{\code{hingethreshold = 15}}{ : an
+##'   \code{integer} corresponding to the number of samples at which hinge
+##'   features start being used}
+##'   
+##'   \item{\code{beta_threshold = -1.0}}{ : a
+##'   \code{numeric} corresponding to the regularization parameter to be applied
+##'   to all threshold features (\emph{negative value enables automatic
+##'   setting})} 
+##'   
+##'   \item{\code{beta_categorical = -1.0}}{ : a \code{numeric}
+##'   corresponding to the regularization parameter to be applied to all
+##'   categorical features (\emph{negative value enables automatic setting})}
+##'   
+##'   \item{\code{beta_lqp = -1.0}}{ : a \code{numeric} corresponding to the
+##'   regularization parameter to be applied to all linear, quadratic and
+##'   product features (\emph{negative value enables automatic setting})}
+##'   
+##'   \item{\code{beta_hinge = -1.0}}{ : a \code{numeric} corresponding to the
+##'   regularization parameter to be applied to all hinge features
 ##'   (\emph{negative value enables automatic setting})}
-##'   \item{\code{beta_categorical = -1.0}}{ : a \code{numeric} corresponding to the 
-##'   regularization parameter to be applied to all categorical features 
-##'   (\emph{negative value enables automatic setting})}
-##'   \item{\code{beta_lqp = -1.0}}{ : a \code{numeric} corresponding to the regularization 
-##'   parameter to be applied to all linear, quadratic and product features 
-##'   (\emph{negative value enables automatic setting})}
-##'   \item{\code{beta_hinge = -1.0}}{ : a \code{numeric} corresponding to the regularization 
-##'   parameter to be applied to all hinge features 
-##'   (\emph{negative value enables automatic setting})}
-##'   \item{\code{betamultiplier = 1}}{ : a \code{numeric} to multiply all automatic 
-##'   regularization parameters \cr 
-##'   (\emph{higher number gives a more spread-out distribution})}
-##'   \item{\code{defaultprevalence = 0.5}}{ : a \code{numeric} corresponding to the default 
-##'   prevalence of the species \cr (\emph{probability of presence at ordinary occurrence points})}
+##'   
+##'   \item{\code{betamultiplier = 1}}{ : a \code{numeric} to multiply all
+##'   automatic regularization parameters \cr (\emph{higher number gives a more
+##'   spread-out distribution})} 
+##'   
+##'   \item{\code{defaultprevalence = 0.5}}{ : a
+##'   \code{numeric} corresponding to the default prevalence of the species \cr
+##'   (\emph{probability of presence at ordinary occurrence points})}
 ##' }
 ##'
 ##' % @section \bold{MAXENT.Tsuruoka (\code{\link[maxent]{maxent}})} :
@@ -290,10 +332,10 @@
 ##' 
 ##' 
 ##' @examples
+##' library(terra)
 ##' 
 ##' # Load species occurrences (6 species available)
-##' myFile <- system.file('external/species/mammals_table.csv', package = 'biomod2')
-##' DataSpecies <- read.csv(myFile, row.names = 1)
+##' data(DataSpecies)
 ##' head(DataSpecies)
 ##' 
 ##' # Select the name of the studied species
@@ -306,15 +348,15 @@
 ##' myRespXY <- DataSpecies[, c('X_WGS84', 'Y_WGS84')]
 ##' 
 ##' # Load environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
-##' myFiles <- paste0('external/bioclim/current/bio', c(3, 4, 7, 11, 12), '.grd')
-##' myExpl <- raster::stack(system.file(myFiles, package = 'biomod2'))
+##' data(bioclim_current)
+##' myExpl <- terra::rast(bioclim_current)
 ##' 
 ##' \dontshow{
-##' myExtent <- raster::extent(0,30,45,70)
-##' myExpl <- raster::stack(raster::crop(myExpl, myExtent))
+##' myExtent <- terra::ext(0,30,45,70)
+##' myExpl <- terra::crop(myExpl, myExtent)
 ##' }
 ##' 
-##' # ---------------------------------------------------------------
+##' # ---------------------------------------------------------------#
 ##' # Format Data with true absences
 ##' myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
 ##'                                      expl.var = myExpl,
@@ -322,7 +364,7 @@
 ##'                                      resp.name = myRespName)
 ##' 
 ##' 
-##' # ---------------------------------------------------------------
+##' # ---------------------------------------------------------------#
 ##' # Print default modeling options
 ##' bm_DefaultModelingOptions()
 ##' 
@@ -357,7 +399,7 @@
 ##' @export
 ##'
 ##'
-###################################################################################################
+## -------------------------------------------------------------------------- ##
 
 BIOMOD_ModelingOptions <- function(GLM = NULL,
                                    GBM = NULL,
@@ -368,7 +410,7 @@ BIOMOD_ModelingOptions <- function(GLM = NULL,
                                    FDA = NULL,
                                    MARS = NULL,
                                    RF = NULL,
-                                   MAXENT.Phillips = NULL)
+                                   MAXENT = NULL)
 {
   # .bm_cat("Build Modeling Options")
   
@@ -455,19 +497,19 @@ BIOMOD_ModelingOptions <- function(GLM = NULL,
     
     if (is.null(GAM$control)) {
       if (opt@GAM$algo == 'GAM_gam') {
-        requireNamespace('gam', quietly = TRUE)
+        if(!requireNamespace('gam', quietly = TRUE)) stop("Package 'gam' not found")
         opt@GAM$control <- gam::gam.control()
       } else {
-        requireNamespace('mgcv', quietly = TRUE)
+        if(!requireNamespace('mgcv', quietly = TRUE)) stop("Package 'mgcv' not found")
         opt@GAM$control <- mgcv::gam.control()
       }
     } else {
       user.control.list <- GAM$control
       if (opt@GAM$algo == 'GAM_gam') {
-        requireNamespace('gam', quietly = TRUE)
+        if(!requireNamespace('gam', quietly = TRUE)) stop("Package 'gam' not found")
         default.control.list <- gam::gam.control()
       } else {
-        requireNamespace('mgcv', quietly = TRUE)
+        if(!requireNamespace('mgcv', quietly = TRUE)) stop("Package 'mgcv' not found")
         default.control.list <- mgcv::gam.control()
       }
       control.list <- lapply(names(default.control.list), function(x) {
@@ -546,32 +588,78 @@ BIOMOD_ModelingOptions <- function(GLM = NULL,
     if (!is.null(RF$maxnodes)) { opt@RF$maxnodes <- RF$maxnodes }
   }
   
-  ## 2.10 MAXENT.Phillips -----------------------------------------------------
-  if (!is.null(MAXENT.Phillips)) {
-    if (!is.null(MAXENT.Phillips$path_to_maxent.jar)) {
-      opt@MAXENT.Phillips$path_to_maxent.jar <- normalizePath(sub("maxent.jar", "", MAXENT.Phillips$path_to_maxent.jar)) # ensure path format validity
-    } else { opt@MAXENT.Phillips$path_to_maxent.jar <- getwd() }
-    if (!is.null(MAXENT.Phillips$memory_allocated)) { opt@MAXENT.Phillips$memory_allocated <- MAXENT.Phillips$memory_allocated }
-    if (!is.null(MAXENT.Phillips$background_data_dir)) { opt@MAXENT.Phillips$background_data_dir <- MAXENT.Phillips$background_data_dir }
-    if (!is.null(MAXENT.Phillips$maximumbackground)) { opt@MAXENT.Phillips$maximumbackground <- MAXENT.Phillips$maximumbackground }
-    if (!is.null(MAXENT.Phillips$maximumiterations)) { opt@MAXENT.Phillips$maximumiterations <- MAXENT.Phillips$maximumiterations }
-    if (!is.null(MAXENT.Phillips$visible)) { opt@MAXENT.Phillips$visible <- MAXENT.Phillips$visible }
-    if (!is.null(MAXENT.Phillips$linear)) { opt@MAXENT.Phillips$linear <- MAXENT.Phillips$linear }
-    if (!is.null(MAXENT.Phillips$quadratic)) { opt@MAXENT.Phillips$quadratic <- MAXENT.Phillips$quadratic }
-    if (!is.null(MAXENT.Phillips$product)) { opt@MAXENT.Phillips$product <- MAXENT.Phillips$product }
-    if (!is.null(MAXENT.Phillips$threshold)) { opt@MAXENT.Phillips$threshold <- MAXENT.Phillips$threshold }
-    if (!is.null(MAXENT.Phillips$hinge)) { opt@MAXENT.Phillips$hinge <- MAXENT.Phillips$hinge }
-    if (!is.null(MAXENT.Phillips$lq2lqptthreshold)) { opt@MAXENT.Phillips$lq2lqptthreshold <- MAXENT.Phillips$lq2lqptthreshold }
-    if (!is.null(MAXENT.Phillips$l2lqthreshold)) { opt@MAXENT.Phillips$l2lqthreshold <- MAXENT.Phillips$l2lqthreshold }
-    if (!is.null(MAXENT.Phillips$hingethreshold)) { opt@MAXENT.Phillips$hingethreshold <- MAXENT.Phillips$hingethreshold }
-    if (!is.null(MAXENT.Phillips$beta_threshold)) { opt@MAXENT.Phillips$beta_threshold <- MAXENT.Phillips$beta_threshold }
-    if (!is.null(MAXENT.Phillips$beta_categorical)) { opt@MAXENT.Phillips$beta_categorical <- MAXENT.Phillips$beta_categorical }
-    if (!is.null(MAXENT.Phillips$beta_lqp)) { opt@MAXENT.Phillips$beta_lqp <- MAXENT.Phillips$beta_lqp }
-    if (!is.null(MAXENT.Phillips$beta_hinge)) { opt@MAXENT.Phillips$beta_hinge <- MAXENT.Phillips$beta_hinge }
-    if (!is.null(MAXENT.Phillips$betamultiplier)) { opt@MAXENT.Phillips$betamultiplier <- MAXENT.Phillips$betamultiplier }
-    if (!is.null(MAXENT.Phillips$defaultprevalence)) { opt@MAXENT.Phillips$defaultprevalence <- MAXENT.Phillips$defaultprevalence }
+  ## 2.10 MAXENT -----------------------------------------------------
+  if (!is.null(MAXENT)) {
+    if (!is.null(MAXENT$path_to_maxent.jar)) {
+      opt@MAXENT$path_to_maxent.jar <- normalizePath(sub("maxent.jar", "", MAXENT$path_to_maxent.jar)) # ensure path format validity
+    } else {
+      opt@MAXENT$path_to_maxent.jar <- getwd()
+    }
+    if (!is.null(MAXENT$memory_allocated)) {
+      opt@MAXENT$memory_allocated <- MAXENT$memory_allocated
+    }
+    if (!is.null(MAXENT$initial_heap_size)) {
+      opt@MAXENT$initial_heap_size <- MAXENT$initial_heap_size
+    }
+    if (!is.null(MAXENT$max_heap_size)) {
+      opt@MAXENT$max_heap_size <- MAXENT$max_heap_size
+    }
+    if (!is.null(MAXENT$background_data_dir)) {
+      opt@MAXENT$background_data_dir <- MAXENT$background_data_dir
+    }
+    if (!is.null(MAXENT$maximumbackground)) {
+      opt@MAXENT$maximumbackground <- MAXENT$maximumbackground
+    }
+    if (!is.null(MAXENT$maximumiterations)) {
+      opt@MAXENT$maximumiterations <- MAXENT$maximumiterations
+    }
+    if (!is.null(MAXENT$visible)) {
+      opt@MAXENT$visible <- MAXENT$visible
+    }
+    if (!is.null(MAXENT$linear)) {
+      opt@MAXENT$linear <- MAXENT$linear
+    }
+    if (!is.null(MAXENT$quadratic)) {
+      opt@MAXENT$quadratic <- MAXENT$quadratic
+    }
+    if (!is.null(MAXENT$product)) {
+      opt@MAXENT$product <- MAXENT$product
+    }
+    if (!is.null(MAXENT$threshold)) {
+      opt@MAXENT$threshold <- MAXENT$threshold
+    }
+    if (!is.null(MAXENT$hinge)) {
+      opt@MAXENT$hinge <- MAXENT$hinge
+    }
+    if (!is.null(MAXENT$lq2lqptthreshold)) {
+      opt@MAXENT$lq2lqptthreshold <- MAXENT$lq2lqptthreshold
+    }
+    if (!is.null(MAXENT$l2lqthreshold)) {
+      opt@MAXENT$l2lqthreshold <- MAXENT$l2lqthreshold
+    }
+    if (!is.null(MAXENT$hingethreshold)) {
+      opt@MAXENT$hingethreshold <- MAXENT$hingethreshold
+    }
+    if (!is.null(MAXENT$beta_threshold)) {
+      opt@MAXENT$beta_threshold <- MAXENT$beta_threshold
+    }
+    if (!is.null(MAXENT$beta_categorical)) {
+      opt@MAXENT$beta_categorical <- MAXENT$beta_categorical
+    }
+    if (!is.null(MAXENT$beta_lqp)) {
+      opt@MAXENT$beta_lqp <- MAXENT$beta_lqp
+    }
+    if (!is.null(MAXENT$beta_hinge)) {
+      opt@MAXENT$beta_hinge <- MAXENT$beta_hinge
+    }
+    if (!is.null(MAXENT$betamultiplier)) {
+      opt@MAXENT$betamultiplier <- MAXENT$betamultiplier
+    }
+    if (!is.null(MAXENT$defaultprevalence)) {
+      opt@MAXENT$defaultprevalence <- MAXENT$defaultprevalence
+    }
   } else {
-    opt@MAXENT.Phillips$path_to_maxent.jar <- getwd()
+    opt@MAXENT$path_to_maxent.jar <- getwd()
   }
   
   # if (!is.null(MAXENT.Tsuruoka)) {
@@ -593,7 +681,6 @@ BIOMOD_ModelingOptions <- function(GLM = NULL,
   return(opt)
 }
 
-###################################################################################################
 
 ##'
 ##' @rdname BIOMOD_ModelingOptions

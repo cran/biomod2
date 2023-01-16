@@ -17,7 +17,10 @@ object that can be obtained with the \code{\link{BIOMOD_Modeling}} or
 \code{\link{BIOMOD_EnsembleModeling}} functions}
 
 \item{group.by}{a 3-length \code{vector} containing the way kept models will be represented,
-must be among \code{model}, \code{algo}, \code{run}, \code{dataset}, \code{expl.var}}
+must be among \code{full.name}, \code{PA}, \code{run}, \code{algo}, \code{expl.var} (if 
+\code{bm.out} is a \code{\link{BIOMOD.models.out}} object), or \code{full.name}, 
+\code{merged.by.PA}, \code{merged.by.run}, \code{merged.by.algo}, \code{expl.var} 
+(if \code{bm.out} is a \code{\link{BIOMOD.ensemble.models.out}} object)}
 
 \item{do.plot}{(\emph{optional, default} \code{TRUE}) \cr 
 A \code{logical} value defining whether the plot is to be rendered or not}
@@ -43,10 +46,10 @@ grouping methods (see Details).
 }
 }
 \examples{
+library(terra)
 
 # Load species occurrences (6 species available)
-myFile <- system.file('external/species/mammals_table.csv', package = 'biomod2')
-DataSpecies <- read.csv(myFile, row.names = 1)
+data(DataSpecies)
 head(DataSpecies)
 
 # Select the name of the studied species
@@ -59,12 +62,12 @@ myResp <- as.numeric(DataSpecies[, myRespName])
 myRespXY <- DataSpecies[, c('X_WGS84', 'Y_WGS84')]
 
 # Load environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
-myFiles <- paste0('external/bioclim/current/bio', c(3, 4, 7, 11, 12), '.grd')
-myExpl <- raster::stack(system.file(myFiles, package = 'biomod2'))
+data(bioclim_current)
+myExpl <- terra::rast(bioclim_current)
 
 \dontshow{
-myExtent <- raster::extent(0,30,45,70)
-myExpl <- raster::stack(raster::crop(myExpl, myExtent))
+myExtent <- terra::ext(0,30,45,70)
+myExpl <- terra::crop(myExpl, myExtent)
 }
 
 # ---------------------------------------------------------------
@@ -98,12 +101,12 @@ if (file.exists(file.out)) {
 
 # ---------------------------------------------------------------
 # Get variables importance
-get_variables_importance(myBiomodModelOut, as.data.frame = TRUE)
+get_variables_importance(myBiomodModelOut)
 
 # Represent variables importance
 bm_PlotVarImpBoxplot(bm.out = myBiomodModelOut, group.by = c('expl.var', 'algo', 'algo'))
-bm_PlotVarImpBoxplot(bm.out = myBiomodModelOut, group.by = c('expl.var', 'algo', 'dataset'))
-bm_PlotVarImpBoxplot(bm.out = myBiomodModelOut, group.by = c('algo', 'expl.var', 'dataset'))
+bm_PlotVarImpBoxplot(bm.out = myBiomodModelOut, group.by = c('expl.var', 'algo', 'PA'))
+bm_PlotVarImpBoxplot(bm.out = myBiomodModelOut, group.by = c('algo', 'expl.var', 'PA'))
 
 
 }

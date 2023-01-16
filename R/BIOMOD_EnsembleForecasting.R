@@ -18,11 +18,14 @@
 ##' projection set (\emph{a new folder will be created within the simulation folder with this 
 ##' name})
 ##' @param new.env (\emph{optional, default} \code{NULL}) \cr 
-##' If \code{bm.proj = NULL}, a \code{matrix}, \code{data.frame} or 
-##' \code{\link[raster:stack]{RasterStack}} object containing the new explanatory variables (in 
-##' columns or layers, with names matching the variables names given to the 
-##' \code{\link{BIOMOD_FormatingData}} function to build \code{bm.em}) that will be used to 
-##' project the ensemble species distribution model(s)
+##' If \code{bm.proj = NULL}, a \code{matrix}, \code{data.frame} or
+##'  \code{\link[terra:rast]{SpatRaster}} object containing the new 
+##' explanatory variables (in columns or layers, with names matching the
+##'  variables names given to the \code{\link{BIOMOD_FormatingData}} function to build 
+##' \code{bm.mod}) that will be used to project the species distribution model(s)
+##' \cr \emph{Note that old format from \pkg{raster} are still supported such as 
+##' \code{RasterStack} objects. }
+##' 
 ##' @param new.env.xy (\emph{optional, default} \code{NULL}) \cr 
 ##' If \code{new.env} is a \code{matrix} or a \code{data.frame}, a 2-columns \code{matrix} or 
 ##' \code{data.frame} containing the corresponding \code{X} and \code{Y} coordinates that will 
@@ -48,7 +51,7 @@
 ##' 
 ##' @param compress (\emph{optional, default} \code{TRUE}) \cr 
 ##' A \code{logical} or a \code{character} value defining whether and how objects should be 
-##' compressed when saved on hard drive. Must be either \code{TRUE}, \code{FALSE}, \code{xz} or 
+##' compressed when saved on hard drive, must be either \code{TRUE}, \code{FALSE}, \code{xz} or 
 ##' \code{gzip} (see Details)
 ##' @param nb.cpu (\emph{optional, default} \code{1}) \cr 
 ##' An \code{integer} value corresponding to the number of computing resources to be used to 
@@ -63,24 +66,25 @@
 ##' outputs. \cr Models projections are stored out of \R (for memory storage reasons) in 
 ##' \code{proj.name} folder created in the current working directory :
 ##' \enumerate{
-##'   \item the output is a 4-dimensional array if \code{new.env} is a \code{matrix} or a 
+##'   \item the output is a \code{data.frame} if \code{new.env} is a \code{matrix} or a 
 ##'   \code{data.frame}
-##'   \item it is a \code{rasterStack} if \code{new.env} is a \code{rasterStack} (or several 
-##'   \code{rasterLayer} objects, if \code{new.env} is too large)
-##'   \item raw projections, as well as binary and filtered projections (if asked), are saved in 
-##'   the \code{proj.name} folder
+##'   \item it is a \code{\link[terra:rast]{SpatRaster}} if \code{new.env} 
+##'   is a \code{\link[terra:rast]{SpatRaster}} (or several
+##'   \code{\link[terra:rast]{SpatRaster}} objects, if \code{new.env} is too large)
+##'   \item raw projections, as well as binary and filtered projections (if asked),
+##'    are saved in the \code{proj.name} folder
 ##' }
 ##' 
 ##' 
 ##' @details 
 ##' 
-##' If \code{models.chosen = 'all'}, projections are done for all evaluation and pseudo absences 
+##' If \code{models.chosen = 'all'}, projections are done for all calibration and pseudo absences 
 ##' runs if applicable. \cr These projections may be used later by the 
 ##' \code{\link{BIOMOD_EnsembleForecasting}} function. \cr \cr
 ##' 
 ##' If \code{build.clamping.mask = TRUE}, a raster file will be saved within the projection 
 ##' folder. This mask values will correspond to the number of variables in each pixel that are out 
-##' of their calibration / training range, identifying locations where predictions are uncertain. 
+##' of their calibration / validation range, identifying locations where predictions are uncertain. 
 ##' \cr \cr
 ##' 
 ##' \code{...} can take the following values :
@@ -88,12 +92,12 @@
 ##'   \item{\code{on_0_1000} : }{a \code{logical} value defining whether \code{0 - 1} 
 ##'   probabilities are to be converted to \code{0 - 1000} scale to save memory on backup}
 ##'   \item{\code{do.stack} : }{a \code{logical} value defining whether all projections are to be 
-##'   saved as one \code{RasterStack} object or several \code{RasterLayer} files (\emph{the 
+##'   saved as one \code{SpatRaster} object or several \code{SpatRaster} files (\emph{the 
 ##'   default if projections are too heavy to be all loaded at once in memory})}
 ##'   \item{\code{keep.in.memory} : }{a \code{logical} value defining whether all projections are 
 ##'   to be kept loaded at once in memory, or only links pointing to hard drive are to be returned}
 ##'   \item{\code{output.format} : }{a \code{character} value corresponding to the projections 
-##'   saving format on hard drive, must be either \code{.grd}, \code{.img} or \code{.RData} (the 
+##'   saving format on hard drive, must be either \code{.grd}, \code{.img}, \code{.tif} or \code{.RData} (the 
 ##'   default if \code{new.env} is given as \code{matrix} or \code{data.frame})}
 ##' }
 ##' 
@@ -109,9 +113,9 @@
 ##'   
 ##' @examples
 ##' 
+##' library(terra)
 ##' # Load species occurrences (6 species available)
-##' myFile <- system.file('external/species/mammals_table.csv', package = 'biomod2')
-##' DataSpecies <- read.csv(myFile, row.names = 1)
+##' data(DataSpecies)
 ##' head(DataSpecies)
 ##' 
 ##' # Select the name of the studied species
@@ -124,16 +128,16 @@
 ##' myRespXY <- DataSpecies[, c('X_WGS84', 'Y_WGS84')]
 ##' 
 ##' # Load environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
-##' myFiles <- paste0('external/bioclim/current/bio', c(3, 4, 7, 11, 12), '.grd')
-##' myExpl <- raster::stack(system.file(myFiles, package = 'biomod2'))
+##' data(bioclim_current)
+##' myExpl <- terra::rast(bioclim_current)
 ##' 
 ##' \dontshow{
-##' myExtent <- raster::extent(0,30,45,70)
-##' myExpl <- raster::stack(raster::crop(myExpl, myExtent))
+##' myExtent <- terra::ext(0,30,45,70)
+##' myExpl <- terra::crop(myExpl, myExtent)
 ##' }
 ##' 
 ##'  
-##' # ---------------------------------------------------------------
+##' # --------------------------------------------------------------- #
 ##' file.out <- paste0(myRespName, "/", myRespName, ".AllModels.models.out")
 ##' if (file.exists(file.out)) {
 ##'   myBiomodModelOut <- get(load(file.out))
@@ -172,8 +176,6 @@
 ##'                                     proj.name = 'Current',
 ##'                                     new.env = myExpl,
 ##'                                     models.chosen = 'all',
-##'                                     metric.binary = 'all',
-##'                                     metric.filter = 'all',
 ##'                                     build.clamping.mask = TRUE)
 ##' }
 ##' 
@@ -187,23 +189,16 @@
 ##'   myBiomodEM <- BIOMOD_EnsembleModeling(bm.mod = myBiomodModelOut,
 ##'                                         models.chosen = 'all',
 ##'                                         em.by = 'all',
+##'                                         em.algo = c('EMmean', 'EMca'),
 ##'                                         metric.select = c('TSS'),
 ##'                                         metric.select.thresh = c(0.7),
 ##'                                         metric.eval = c('TSS', 'ROC'),
 ##'                                         var.import = 3,
-##'                                         prob.mean = TRUE,
-##'                                         prob.median = FALSE,
-##'                                         prob.cv = FALSE,
-##'                                         prob.ci = FALSE,
-##'                                         prob.ci.alpha = 0.05,
-##'                                         committee.averaging = TRUE,
-##'                                         prob.mean.weight = FALSE,
-##'                                         prob.mean.weight.decay = 'proportional',
 ##'                                         seed.val = 42)
 ##' }
 ##' 
 ##' 
-##' # ---------------------------------------------------------------
+##' # --------------------------------------------------------------- #
 ##' # Project ensemble models (from single projections)
 ##' myBiomodEMProj <- BIOMOD_EnsembleForecasting(bm.em = myBiomodEM, 
 ##'                                              bm.proj = myBiomodProj,
@@ -222,13 +217,13 @@
 ##' plot(myBiomodEMProj)
 ##' 
 ##' 
-##' @importFrom raster stack subset predict writeRaster
+##' @importFrom terra rast `add<-` wrap writeRaster
+##' 
 ##' 
 ##' @export
 ##' 
 ##' 
 ###################################################################################################
-
 
 BIOMOD_EnsembleForecasting <- function(bm.em,
                                        bm.proj = NULL,
@@ -245,11 +240,10 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
   .bm_cat("Do Ensemble Models Projection")
   
   ## 0. Check arguments ---------------------------------------------------------------------------
-  args <- .BIOMOD_EnsembleForecasting.check.args(bm.em, bm.proj, proj.name, new.env,
+  args <- .BIOMOD_EnsembleForecasting.check.args(bm.em, bm.proj, proj.name, new.env, new.env.xy,
                                                  models.chosen, metric.binary, metric.filter, ...)
   for (argi in names(args)) { assign(x = argi, value = args[[argi]]) }
   rm(args)
-  
   
   ## 1. Create output object ----------------------------------------------------------------------
   proj_out <- new('BIOMOD.projection.out',
@@ -263,13 +257,13 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
   proj_out@models.out@link = bm.em@link
   
   proj_is_raster <- FALSE
-  if (inherits(new.env, 'Raster') || (length(bm.proj) && inherits(bm.proj@proj.out, 'BIOMOD.stored.raster.stack'))) {
+  if (inherits(new.env, 'SpatRaster') || (length(bm.proj) && inherits(bm.proj@proj.out, 'BIOMOD.stored.SpatRaster'))) {
     proj_is_raster <- TRUE
   }
   if (proj_is_raster) {
-    proj_out@proj.out <- new('BIOMOD.stored.raster.stack')
-  } else{
-    proj_out@proj.out <- new('BIOMOD.stored.array')
+    proj_out@proj.out <- new('BIOMOD.stored.SpatRaster')
+  } else {
+    proj_out@proj.out <- new('BIOMOD.stored.data.frame')
     do.stack = TRUE
   }
   
@@ -281,13 +275,10 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
                                                                 , sp.name = bm.em@sp.name
                                                                 , proj.folder = nameProj)
   
-  
   ## 3. Get needed projections --------------------------------------------------------------------
-  needed_predictions <- get_needed_models(bm.em, models.chosen = models.chosen)
-  if (length(bm.proj)) {
-    formal_pred <- get_predictions(bm.proj,
-                                   full.name = needed_predictions,
-                                   as.data.frame = ifelse(bm.proj@type == 'array', TRUE, FALSE))
+  models.needed <- get_kept_models(bm.em)
+  if (!is.null(bm.proj)) {
+    formal_pred <- get_predictions(bm.proj, full.name = models.needed)
   } else {
     # make prediction according to given environment
     tmp_dir <- paste0('Tmp', format(Sys.time(), "%s"))
@@ -295,171 +286,231 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
                                      new.env = new.env,
                                      proj.name = tmp_dir,
                                      new.env.xy = NULL,
-                                     models.chosen = needed_predictions,
+                                     models.chosen = models.needed,
                                      compress = TRUE,
                                      build.clamping.mask = FALSE,
                                      do.stack = TRUE,
                                      on_0_1000 = on_0_1000,
                                      nb.cpu = nb.cpu)
-    # getting the results
-    formal_pred <- get_predictions(formal_pred,
-                                   full.name = needed_predictions,
-                                   as.data.frame = ifelse(inherits(new.env, 'Raster'), FALSE, TRUE))
+    formal_pred <- get_predictions(formal_pred, full.name = models.needed)
+
     # remove tmp directory
     unlink(file.path(bm.em@dir.name, bm.em@sp.name, paste0("proj_", tmp_dir))
            , recursive = TRUE, force = TRUE)
   }
+  if (!proj_is_raster) {
+    formal_pred <- tapply(X = formal_pred$pred, INDEX = list(formal_pred$points, formal_pred$full.name), FUN = mean)
+    formal_pred <- as.data.frame(formal_pred[, models.needed])
+  }
+  
   
   ## 4. MAKING PROJECTIONS ------------------------------------------------------------------------
-  ef.out <- NULL
-  saved.files <- proj_names <- vector()
-  for (em.comp in bm.em@em.computed[which(bm.em@em.computed %in% models.chosen)]) {
-    cat("\n\t> Projecting", em.comp, "...")
-    file_name_tmp <- file.path(indiv_proj_dir, paste0(em.comp,output.format))
-    
-    model.tmp <- NULL
-    BIOMOD_LoadModels(bm.out = bm.em, full.name = em.comp, as = 'model.tmp')
-    if (inherits(formal_pred, 'Raster')) {
-      ef.tmp <- predict(model.tmp,
-                        newdata = subset(formal_pred, subset = model.tmp@model, drop = FALSE),
-                        data_as_formal_predictions = TRUE,
-                        on_0_1000 = on_0_1000,
-                        filename = ifelse(output.format == '.RData', '', file_name_tmp))
+  proj.em <- foreach(em.name = models.chosen) %dopar%
+    {
+      cat("\n\t> Projecting", em.name, "...")
+      if(do.stack){
+        filename <- NULL
+      } else {
+        # filename <- file.path(namePath, "individual_projections",
+        #                       paste0(nameProj, "_", mod.name, 
+        #                              ifelse(output.format == ".RData"
+        #                                     , ".tif", output.format)))
+        filename <- file.path(indiv_proj_dir, paste0(em.name, output.format))
+      }
+      
+      mod <- get(BIOMOD_LoadModels(bm.out = bm.em, full.name = em.name))
+      ef.tmp <- predict(mod
+                        , newdata = formal_pred
+                        , on_0_1000 = on_0_1000
+                        , data_as_formal_predictions = TRUE
+                        , filename = filename)
+      
+      if(do.stack){
+        if(proj_is_raster){
+          return(wrap(ef.tmp)) 
+        } else {
+          return(ef.tmp)
+        }
+      } else {
+        return(filename)
+      }
+    }
+  proj_out@models.projected <- models.chosen
+  
+  ## Putting predictions into the right format
+  if (do.stack) {
+    if (proj_is_raster) {
+      proj.em <- rast(lapply(proj.em, rast)) # SpatRaster needs to be wrapped before saving
+      names(proj.em) <- models.chosen
+      proj.em <- wrap(proj.em)
+      proj.trans <- proj.em
     } else {
-      ef.tmp <- predict(model.tmp,
-                        newdata = formal_pred[, model.tmp@model, drop = FALSE],
-                        data_as_formal_predictions = TRUE,
-                        on_0_1000 = on_0_1000)
+      proj.em <- as.data.frame(proj.em)
+      names(proj.em) <- models.chosen
+      proj.trans <- proj.em
+      proj.em <- .format_proj.df(proj.em, obj.type = "em")
     }
     
-    if (!is.null(ef.tmp)) {
-      proj_names <- c(proj_names, em.comp)
-      if (inherits(ef.tmp, 'Raster')) {
-        if (do.stack) {
-          if (length(ef.out)) {
-            ef.out <- stack(ef.out, ef.tmp)
-          } else {
-            ef.out <- stack(ef.tmp)
-          }
-        } else {
-          file_name_tmp <- file.path(indiv_proj_dir, paste0(em.comp, output.format))
-          if (output.format == '.RData') {
-            save(ef.tmp, file = file_name_tmp, compress = compress)
-          }
-          saved.files <- c(saved.files, file_name_tmp)
-        }
-      } else if (!is.null(ef.tmp)) {
-        # if (!is.null(ef.out) && length(ef.tmp) != nrow(ef.out)) {
-        #   proj_names = proj_names[-length(proj_names)]
-        #   warning(paste0("Predictions for ", em.comp, " do not match initial number of points (", length(ef.tmp), " instead of ", nrow(ef.out), ")"))
-        # } else {
-          ef.out <- cbind(ef.out, matrix(ef.tmp, ncol = 1))
-        # }
-      }
+    if (keep.in.memory) {
+      proj_out@proj.out@val <- proj.em
+      proj_out@proj.out@inMemory <- TRUE
     }
   }
   
-  # proj_out@models.projected <- bm.em@em.computed[which(bm.em@em.computed %in% models.chosen)]
-  proj_out@models.projected <- proj_names
-  
-  if(do.stack) {
-    if (inherits(ef.out, "Raster")) {
-      names(ef.out) <- proj_out@models.projected
-    } else {
-      colnames(ef.out) <- proj_out@models.projected
-    }
-    # save object
-    file_name_tmp <- file.path(namePath, paste0(nameProjSp, output.format))
+  ## save projections
+  proj_out@type <- class(new.env)
+  if (!do.stack){
+    saved.files = unlist(proj.em)
+  } else {
+    assign(x = nameProjSp, value = proj.em)
+    saved.files <- file.path(namePath, paste0(nameProjSp, output.format))
     if (output.format == '.RData') {
-      save(ef.out, file = file_name_tmp, compress = compress)
-    } else if (inherits(ef.out, "Raster")) {
-      ## TODO : define the raster dataformat (depends if em.cv has been computed)
-      writeRaster(ef.out, filename = file_name_tmp, overwrite = TRUE)
+      save(list = nameProjSp, file = saved.files, compress = compress)
+    } else {
+      writeRaster(x = rast(get(nameProjSp)), filename = saved.files,
+                  overwrite = TRUE, NAflag = -9999)#, datatype = ifelse(on_0_1000, "INT2S", "FLT4S")
     }
-    saved.files <- c(saved.files, file_name_tmp)
-  } 
-  proj_out@proj.out@link <- saved.files #bm.em@em.computed
+  }
+  proj_out@proj.out@link <- saved.files
   
-  if (!is.null(ef.out)) {
-    proj_out@proj.out@val <- ef.out
-    proj_out@proj.out@inMemory <- TRUE
+  # now that proj have been saved, it can be unwrapped if it is a SpatRaster
+  if (proj_is_raster && do.stack) {
+    proj.trans <- rast(proj.trans) 
   }
   
   
   ## 5. Compute binary and/or filtered transformation ---------------------------------------------
-  if (length(metric.binary) | length(metric.filter))
+  if (length(metric.binary) > 0 | length(metric.filter) > 0)
   {
     cat("\n")
-    eval.meth <- unique(c(metric.binary, metric.filter))
+    saved.files.binary <- NULL
+    saved.files.filtered <- NULL
+    to.rm <- grepl("EMcv|EMci", models.chosen)
+    if(any(to.rm)){
+      cat("\n! Binary/Filtered transformation automatically deactivated for ensemble models with coefficient of variation or confidence intervals")
+      models.chosen <- models.chosen[!to.rm]
+    }
     
-    ## Get all evaluation thresholds
-    thresholds <- sapply(models.chosen, function(x) {
-      get_evaluations(bm.em)[[x]][eval.meth, "Cutoff"]
-    })
-    if (!on_0_1000) { thresholds <- thresholds / 1000 }
-    
-    ## TODO : define the raster dataformat (depends if em.cv has been computed)
-    ## Do binary transformation
-    for (eval.meth in metric.binary) {
-      cat("\n\t> Building", eval.meth, "binaries")
-      if (!do.stack) {
-        for (i in 1:length(proj_out@proj.out@link)) {
-          file.tmp <- proj_out@proj.out@link[i]
-          writeRaster(x = bm_BinaryTransformation(raster(file.tmp, RAT = FALSE), thresholds[i]),
-                      filename = sub(output.format,
-                                     paste0("_", eval.meth, "bin", output.format),
-                                     file.tmp),
-                      overwrite = TRUE)
-        }
-      } else {
-        nameBin = paste0(nameProjSp, "_", eval.meth, "bin")
-        assign(x = nameBin, value = bm_BinaryTransformation(ef.out, thresholds))
+    if (length(models.chosen) > 0) {
+      thresholds <- get_evaluations(bm.em, full.name = models.chosen)
+      if (!on_0_1000) { thresholds[, "cutoff"]  <- thresholds[, "cutoff"] / 1000 }
+      
+      ## Do binary/filtering transformation
+      for (eval.meth in unique(c(metric.binary, metric.filter))) {
+        thres.tmp <- thresholds[which(thresholds$metric.eval == eval.meth), ]
+        rownames(thres.tmp) <- thres.tmp$full.name
+        thres.tmp <- thres.tmp[models.chosen, "cutoff"]
         
-        if (output.format == '.RData') {
-          save(list = nameBin,
-               file = file.path(namePath, paste0(nameBin, output.format)),
-               compress = compress)
+        cat("\n\t> Building", eval.meth, "binaries / filtered")
+        if (!do.stack) {
+          for (i in 1:length(proj_out@proj.out@link)) {
+            file.tmp <- proj_out@proj.out@link[i]
+            if (grepl(pattern = paste0(models.chosen, collapse = "|"),
+                      x = file.tmp)) {
+              if (eval.meth %in% metric.binary) {
+                file.tmp.binary <- sub(output.format,
+                                       paste0("_", eval.meth, "bin", output.format),
+                                       file.tmp)
+                saved.files.binary <- c(saved.files.binary, file.tmp.binary)
+                writeRaster(x = bm_BinaryTransformation(rast(file.tmp), thres.tmp[i]),
+                            filename = file.tmp.binary,
+                            overwrite = TRUE,
+                            # datatype = "INT2S",
+                            NAflag = -9999)
+              }
+              
+              if (eval.meth %in% metric.filter) {
+                file.tmp.filtered <- sub(output.format,
+                                         paste0("_", eval.meth, "filt", output.format),
+                                         file.tmp)
+                saved.files.filtered <- c(saved.files.filtered, file.tmp.filtered)
+                writeRaster(x = bm_BinaryTransformation(rast(file.tmp), thres.tmp[i], do.filtering = TRUE),
+                            filename = file.tmp.filtered,
+                            overwrite = TRUE,
+                            # datatype = ifelse(on_0_1000, "INT2S", "FLT4S"),
+                            NAflag = -9999)
+              }
+            }
+          }
         } else {
-          writeRaster(x = get(nameBin),
-                      filename = file.path(namePath, paste0(nameBin, output.format)),
-                      overwrite = TRUE,)
+          
+          # subset to remove EMcv/EMci models
+          if(proj_is_raster){
+            proj.trans <- subset(proj.trans, models.chosen)
+          } else {
+            proj.trans <- proj.trans[,models.chosen]
+          }
+          
+          if (eval.meth %in% metric.binary) {
+            nameBin <- paste0(nameProjSp, "_", eval.meth, "bin")
+            
+            
+            assign(x = nameBin, value = bm_BinaryTransformation(proj.trans, thres.tmp))
+            
+            file.tmp.binary <- file.path(namePath, paste0(nameBin, output.format))
+            saved.files.binary <- c(saved.files.binary, file.tmp.binary)
+            if (output.format == '.RData') {
+              if (!proj_is_raster) {
+                assign(x = nameBin, value = .format_proj.df((get(nameBin)), obj.type = "em"))
+              }
+              save(list = nameBin,
+                   file = file.tmp.binary,
+                   compress = compress)
+            } else {
+              writeRaster(x = get(nameBin),
+                          filename = file.tmp.binary,
+                          overwrite = TRUE,
+                          # datatype = "INT2S",
+                          NAflag = -9999)
+            }
+          }
+          
+          if (eval.meth %in% metric.filter) {
+            nameFilt <- paste0(nameProjSp, "_", eval.meth, "filt")
+            # assign(x = nameFilt, value = bm_BinaryTransformation(proj, thres.tmp, do.filtering = TRUE))
+            assign(x = nameFilt, value = bm_BinaryTransformation(proj.trans, thres.tmp, do.filtering = TRUE))
+            file.tmp.filtered <- file.path(namePath, paste0(nameFilt, output.format))
+            saved.files.filtered <- c(saved.files.filtered, file.tmp.filtered)
+            
+            if (output.format == '.RData') {
+              if (!proj_is_raster) {
+                assign(x = nameFilt, value = .format_proj.df((get(nameFilt)), obj.type = "em"))
+              }
+              save(list = nameFilt,
+                   file = file.tmp.filtered,
+                   compress = compress)
+            } else {
+              writeRaster(x = get(nameFilt),
+                          filename = file.tmp.filtered,
+                          overwrite = TRUE ,
+                          # datatype = ifelse(on_0_1000, "INT2S", "FLT4S"),
+                          NAflag = -9999)
+            }
+          }
         }
       }
+      cat("\n")
+    } else {
+      metric.binary <- NULL
+      metric.filter <- NULL
+      cat("\n! no models left for binary/filtered transformation")
     }
-    
-    ## Do filtered transformation
-    for (eval.meth in metric.filter) {
-      cat("\n\t> Building", eval.meth, "filtered")
-      if (!do.stack) {
-        for (i in 1:length(proj_out@proj.out@link)) {
-          file.tmp <- proj_out@proj.out@link[i]
-          writeRaster(x = bm_BinaryTransformation(raster(file.tmp, RAT = FALSE), thresholds[i], do.filtering = TRUE),
-                      filename = sub(output.format,
-                                     paste0("_", eval.meth, "filt", output.format),
-                                     file.tmp),
-                      overwrite = TRUE)
-        }
-      } else {
-        nameFilt = paste0(nameProjSp, "_", eval.meth, "filt")
-        assign(x = nameFilt, value = bm_BinaryTransformation(ef.out, thresholds, do.filtering = TRUE))
-        if (output.format == '.RData') {
-          save(list = nameFilt,
-               file = file.path(namePath, paste0(nameFilt, output.format)),
-               compress = compress)
-        } else {
-          writeRaster(x = get(nameFilt),
-                      filename = file.path(namePath, paste0(nameFilt, output.format)),
-                      overwrite = TRUE)
-        }
-      }
-    }
-    cat("\n")
   }
   
-  ## 6. SAVE MODEL OBJECT ON HARD DRIVE -----------------------------------------------------------
+  ### save binary/filtered file link into proj_out ----------------------------
+  if (!is.null(metric.binary)) {
+    proj_out@proj.out@link <- c(proj_out@proj.out@link, saved.files.binary)
+  }
+  if (!is.null(metric.filter)) {
+    proj_out@proj.out@link <- c(proj_out@proj.out@link, saved.files.filtered)
+  }
+  
+  ## 6. SAVE MODEL OBJECT ON HARD DRIVE ----------------------------------------
   ## save a copy of output object without value to be lighter
   nameOut <- paste0(bm.em@sp.name, ".", proj.name, ".ensemble.projection.out")
-  if (!keep.in.memory) { proj_out <- free(proj_out) }
+  if (!keep.in.memory) { 
+    proj_out <- free(proj_out) 
+  }
   assign(nameOut, proj_out)
   save(list = nameOut, file = file.path(namePath, nameOut))
   
@@ -469,7 +520,7 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
 
 
 
-###################################################################################################
+## .BIOMOD_EnsembleForecasting.prepare.workdir ---------------------------------
 
 .BIOMOD_EnsembleForecasting.prepare.workdir <- function(dir.name, sp.name, proj.folder)
 {
@@ -480,10 +531,12 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
   return(indiv_proj_dir)
 }
 
-###################################################################################################
+## Argument Check -------------------------------------------------------------
 
-.BIOMOD_EnsembleForecasting.check.args <- function(bm.em, bm.proj, proj.name, new.env,
-                                                   models.chosen, metric.binary, metric.filter, ...)
+.BIOMOD_EnsembleForecasting.check.args <- function(bm.em, bm.proj, proj.name
+                                                   , new.env, new.env.xy
+                                                   , models.chosen
+                                                   , metric.binary, metric.filter, ...)
 {
   args <- list(...)
   
@@ -500,14 +553,40 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
     .fun_testIfInherits(TRUE, "bm.proj", bm.proj, "BIOMOD.projection.out")
     
     ## check all needed predictions are available
-    needed_pred <- get_needed_models(bm.em, models.chosen = models.chosen)  
+    needed_pred <- get_kept_models(bm.em)  
     missing_pred <- needed_pred[!(needed_pred %in% bm.proj@models.projected)]
-    if (length(missing_pred)) {
+    if (length(missing_pred) > 0) {
       stop("Some models predictions missing :", toString(missing_pred))
     }
   }
   
-  ## 3. Check models.chosen ---------------------------------------------------
+  ## 3. Check new.env ---------------------------------------------------------
+  if (!is.null(new.env)) {
+    .fun_testIfInherits(TRUE, "new.env", new.env, c('matrix', 'data.frame', 'SpatRaster','Raster'))
+    
+    if(inherits(new.env, 'matrix')){
+      if (any(sapply(get_formal_data(bm.em,"expl.var"), is.factor))) {
+        stop("new.env cannot be given as matrix when model involves categorical variables")
+      }
+      new.env <- data.frame(new.env)
+    }
+    if (inherits(new.env, 'Raster')) {
+      # conversion into SpatRaster
+      if(any(raster::is.factor(new.env))){
+        new.env <- categorical_stack_to_terra(raster::stack(new.env))
+      } else {
+        new.env <- rast(new.env)
+      }
+    }
+    
+    if (inherits(new.env, 'SpatRaster')) {
+      .fun_testIfIn(TRUE, "names(new.env)", names(new.env), bm.em@expl.var.names)
+    } else {
+      .fun_testIfIn(TRUE, "colnames(new.env)", colnames(new.env), bm.em@expl.var.names)
+    }
+  }
+  
+  ## 4. Check models.chosen ---------------------------------------------------
   if (models.chosen[1] == 'all') {
     models.chosen <- get_built_models(bm.em)
   } else {
@@ -517,23 +596,24 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
     stop('No models selected')
   }
   
-  ## 4. Check proj.name -------------------------------------------------------
+  ## 5. Check proj.name -------------------------------------------------------
   if (!length(proj.name) && !length(bm.proj)) {
     stop("You have to give a valid 'proj.name' if you don't work with bm.proj")
   } else if (!length(proj.name)) {
     proj.name <- bm.proj@proj.name
   }
   
-  ## 5. Check metric.binary & metric.filter -----------------------------------
+  ## 6. Check metric.binary & metric.filter -----------------------------------
   if (!is.null(metric.binary) | !is.null(metric.filter)) {
     models.evaluation <- get_evaluations(bm.em)
     if (is.null(models.evaluation)) {
       warning("Binary and/or Filtered transformations of projection not ran because of models evaluation information missing")
     } else {
-      available.evaluation <- unique(dimnames(models.evaluation[[1]])[[1]])
+      available.evaluation <- as.character(unique(models.evaluation$metric.eval))
       if (!is.null(metric.binary) && metric.binary[1] == 'all') {
         metric.binary <- available.evaluation
-      } else if (!is.null(metric.binary) && sum(!(metric.binary %in% available.evaluation)) > 0) {
+      } else if (!is.null(metric.binary) && 
+                 any(! metric.binary %in% available.evaluation)) {
         warning(paste0(toString(metric.binary[!(metric.binary %in% available.evaluation)]),
                        " Binary Transformation were switched off because no corresponding evaluation method found"))
         metric.binary <- metric.binary[metric.binary %in% available.evaluation]
@@ -541,7 +621,8 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
       
       if (!is.null(metric.filter) && metric.filter[1] == 'all') {
         metric.filter <- available.evaluation
-      } else if (!is.null(metric.filter) && sum(!(metric.filter %in% available.evaluation)) > 0) {
+      } else if (!is.null(metric.filter) &&
+                 any(!(metric.filter %in% available.evaluation))) {
         warning(paste0(toString(metric.filter[!(metric.filter %in% available.evaluation)]),
                        " Filtered Transformation were switched off because no corresponding evaluation method found"))
         metric.filter <- metric.filter[metric.filter %in% available.evaluation]
@@ -549,17 +630,17 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
     }
   }
   
-  ## 6. Check output.format ---------------------------------------------------
+  ## 7. Check output.format ---------------------------------------------------
   output.format <- args$output.format
   if (is.null(output.format)) {
     if (length(bm.proj) > 0) {
-      output.format = ifelse(bm.proj@type != 'RasterStack', ".RData", ".grd")
+      output.format = ifelse(bm.proj@type != 'SpatRaster', ".RData", ".tif")
     } else {
-      output.format = ifelse(!inherits(new.env, 'Raster'), ".RData", ".grd")
+      output.format = ifelse(!inherits(new.env, 'SpatRaster'), ".RData", ".tif")
     }
   }
   
-  ## 7. Check do.stack --------------------------------------------------------
+  ## 8. Check do.stack --------------------------------------------------------
   do.stack <- args$do.stack
   if (is.null(do.stack)) {
     do.stack <- TRUE # if no info at all set it TRUE
@@ -570,7 +651,7 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
     }
   }
   
-  ## 8. Check keep.in.memory --------------------------------------------------
+  ## 9. Check keep.in.memory --------------------------------------------------
   keep.in.memory <- args$keep.in.memory
   if (is.null(keep.in.memory)) {
     keep.in.memory <- TRUE # if no info at all set it TRUE
@@ -579,19 +660,21 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
       keep.in.memory <- bm.proj@proj.out@inMemory
     }
   }
+  ## 10. Check new.env.xy ------------------------------------------------------
   
-  ## 9. Check new.env.xy ------------------------------------------------------
-  new.env.xy <- args$new.env.xy
   if (is.null(new.env.xy)) {
     if (!is.null(bm.proj)) {
       new.env.xy <- bm.proj@coord
     } else {
-      new.env.xy <- matrix()
+      new.env.xy <- data.frame()
     }
+  } else {
+    new.env.xy <- as.data.frame(new.env.xy)
   }
   
   return(list(bm.em = bm.em,
               bm.proj = bm.proj,
+              new.env = new.env,
               models.chosen = models.chosen,
               proj.name = proj.name,
               metric.binary = metric.binary,

@@ -1,8 +1,8 @@
 Package: biomod2
 Type: Package
 Title: Ensemble Platform for Species Distribution Modeling
-Version: 4.1-2
-Date: 2022-09-29
+Version: 4.2-2
+Date: 2023-01-12
 Authors@R: c(person("Wilfried", "Thuiller", role = c("aut")
                     , email = "wilfried.thuiller@univ-grenoble-alpes.fr"),
              person("Damien", "Georges", role = c("aut")),
@@ -33,20 +33,20 @@ Description: Functions for species distribution modeling, calibration and evalua
   dataset and to combine them in ensemble models and ensemble projections. Some bench of other 
   evaluation and visualisation tools are also available within the package.
 Depends: R (>= 4.1)
-Imports: stats, utils, methods, sp, raster, reshape, reshape2, abind,
-        data.table, foreach, ggplot2, nnet, gbm (>= 2.1.3), mda,
-        randomForest, maxnet, rpart, MASS, pROC (>= 1.15.0),
-        PresenceAbsence, earth, dplyr
+Imports: stats, utils, methods, terra (>= 1.6-33), sp, reshape,
+        reshape2, abind, data.table, foreach, ggplot2, nnet, gbm (>=
+        2.1.3), mda, randomForest, maxnet, rpart, MASS, pROC (>=
+        1.15.0), PresenceAbsence, earth, dplyr
 Suggests: Hmisc, gam, mgcv, car, caret, dismo, ENMeval, doParallel,
-        rasterVis, ggpubr, testthat, knitr
+        raster, ggpubr, testthat, knitr, markdown, tidyterra, ggtext
 License: GPL-3
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.2
 Encoding: UTF-8
 VignetteBuilder: knitr
 Collate: 'biomod2-package.R' 'biomod2_globalVariables.R'
         'biomod2_classes_1.R' 'biomod2_classes_2.R'
         'biomod2_classes_3.R' 'biomod2_classes_4.R'
-        'biomod2_classes_5.R' 'biomod2_internal.R'
+        'biomod2_classes_5.R' 'biomod2_internal.R' 'biomod2_data.R'
         'BIOMOD_CrossValidation.R' 'BIOMOD_EnsembleForecasting.R'
         'BIOMOD_EnsembleModeling.R' 'BIOMOD_FormatingData.R'
         'BIOMOD_LoadModels.R' 'BIOMOD_Modeling.R'
@@ -59,7 +59,8 @@ Collate: 'biomod2-package.R' 'biomod2_globalVariables.R'
         'bm_PseudoAbsences.R' 'bm_RunModelsLoop.R' 'bm_SRE.R'
         'bm_SampleBinaryVector.R' 'bm_SampleFactorLevels.R'
         'bm_VariablesImportance.R' 'zzz.R'
+LazyData: true
 NeedsCompilation: no
-Packaged: 2022-10-25 08:43:58 UTC; patin
+Packaged: 2023-01-16 12:35:46 UTC; patinr
 Repository: CRAN
-Date/Publication: 2022-10-25 12:35:11 UTC
+Date/Publication: 2023-01-16 19:20:14 UTC

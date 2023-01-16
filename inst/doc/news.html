@@ -163,73 +163,189 @@ hr {
 </head>
 
 <body>
-<p><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous"></p>
-
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
 <h2><i class="fas fa-code"></i> Development updates</h2>
-
+<h3><i class="fas fa-feather"></i> 2023</h3>
+<h4>4.2-2 Improvement patch (2023-01-13)</h4>
+<h5>Major Changes</h5>
+<ul>
+<li>‘.tif’ is available as an output format for raster projection</li>
+<li>‘.tif’ is the new default output format for raster projection</li>
+<li>Improved <code>plot</code> and <code>summary</code> methods for <code>BIOMOD_FormatingData</code> output. These method now support the use of <code>calib.lines</code> to explore how the cross-validation dataset are structured.</li>
+<li>Updated <code>plot</code> methods for <code>BIOMOD.projection.out</code> objects so that it uses <code>ggplot2</code> for nicer plots.</li>
+<li>Binary and Filtered transformation are now properly stored in <code>BIOMOD.projection.out</code> objects. They can be loaded from the disk with <code>get_predictions</code> or represented through <code>BIOMOD.projection.out</code> plot method.</li>
+<li><code>get_predictions</code> now return a proper <code>data.frame</code> (unless projection on spatial data) with many additional information available. Old behavior can be reproduced by using <code>get_predictions(x, model.as.col = TRUE)</code>.</li>
+<li><code>get_evaluations</code> now return a cleaner <code>data.frame</code> with more consistent information available.</li>
+</ul>
+<h5>Minor Changes</h5>
+<ul>
+<li>Simplified maxent model names:  ‘MAXENT.Phillips’ -&gt; ‘MAXENT’ (based on <code>maxent.jar</code>); ‘MAXENT.Phillips.2’ -&gt; ‘MAXNET’ (based on <code>maxnet</code> package).</li>
+<li><code>BIOMOD_FormatingData</code> now gives warning when several input data points are located in the same raster cells</li>
+<li>Added options <code>filter.raster</code> in <code>BIOMOD_FormatingData</code> to filter data points so that none are located in the same raster cells.</li>
+<li><code>BIOMOD_EnsembleModeling</code> now have an argument <code>em.algo</code> to select the ensemble algorithm to be computed. Separate arguments are now deprecated (prob.mean, prob.median, prob.cv, prob.ci, committee.averaging, prob.mean.weight). Building all possible ensemble models can now be done with <code>em.algo = c('EMmean','EMmedian','EMcv','EMci','EMca','EMwmean')</code>.</li>
+<li>Some possible values for <code>em.by</code> have slightly changed: ‘PA_dataset’ -&gt; ‘PA’, ‘PA_dataset+repet’ -&gt; ‘PA+run’ and ‘PA_dataset+algo’ -&gt; ‘PA+algo’</li>
+<li>Added an appropriate message when all models fail for <code>BIOMOD_Modeling</code> and <code>BIOMOD_EnsembleModeling</code>.</li>
+</ul>
+<h5>Bugfix</h5>
+<ul>
+<li>Fixed <code>MAXENT.Phillips.2</code> and single variable models.</li>
+<li>Fixed ensemble models when several filtering metrics were asked and some combination of ensemble/metrics had no models</li>
+<li>Bugfix for projection for ensemble models to ensure that the proper set of models was selected</li>
+<li>Bugfix for BIOMOD_CrossValidation for block-stratified sampling</li>
+<li>Bugfix for BIOMOD_CrossValidation for pseudo-absences</li>
+</ul>
+<h5>Internal Changes</h5>
+<ul>
+<li>Array have disappeared from most internal functions</li>
+<li>Removed <code>rasterVis</code> from <code>Suggests</code></li>
+<li>Added <code>tidyterra</code> and <code>ggtext</code> to <code>Suggests</code></li>
+<li>Added checks to <code>get_evaluation</code> when models have no evaluations.</li>
+</ul>
 <h3><i class="fas fa-chess-pawn"></i> 2022</h3>
-
-<h4>4.1-2 (2022-09-29)</h4>
-
+<h4>4.2-1 Bugfix patch</h4>
+<h5>Major Changes</h5>
+<ul>
+<li>Package <code>sp</code> is back into <code>Imports</code> due to the need to use <code>sp::read.asciigrid</code></li>
+<li>Added control for <code>terra</code> version number (&gt;= 1.6-33) as <code>terra</code> 1.6-41 was released on CRAN.</li>
+<li>With <code>do.stack = TRUE</code>, only stacked projection are now saved to the disk.</li>
+</ul>
+<h5>Minor Changes</h5>
+<ul>
+<li>Added <code>initial_heap_size</code> and <code>max_heap_size</code> in <code>MAXENT.Phillips</code> modeling options</li>
+<li>Improved projection efficiency for raster with <code>MAXENT.Phillips</code>.</li>
+</ul>
+<h5>Bugfix</h5>
+<ul>
+<li>Fixed <code>MAXENT.Phillips</code> predict method for large dataset (require <code>sp::read.asciigrid</code>).</li>
+<li>fixed ensemble models using a single PA dataset with em.by = ‘all’ or ‘algo’.</li>
+<li>models using repetition dataset cannot be merged anymore with models using Full dataset in <code>BIOMOD_EnsembleModeling</code>.</li>
+<li>Fixed error in <code>BIOMOD_EnsembleForecasting</code> when a single evaluation metric was available and binary/filtered transformation were asked for.</li>
+<li>Bugfix for plot method for <code>BIOMOD.formated.data.PA</code> object.</li>
+<li>Fixed <code>MAXENT.Phillips</code> for Windows.</li>
+<li>Fixed using <code>do.stack = FALSE</code> with <code>BIOMOD_Projection</code>.</li>
+<li>Fixed <code>EMcv</code> ensemble modeling for <code>data.frame</code> by removing dependency to <code>raster::cv</code>.</li>
+<li>Fixed <code>free</code> method with <code>PackedSpatRaster</code></li>
+<li>Fixed <code>BIOMOD_FormatingData</code> in case where no coordinates are given</li>
+</ul>
+<h5>Internal</h5>
+<ul>
+<li>Updated github workflow : removed obsolete ubuntu 18.04 ; added test on r-devel ; added cache for R packages.</li>
+<li>Updated <code>MAXENT.Phillips</code> <code>predict2</code> method for <code>SpatRaster</code> so that it saves environmental data as <code>.asc</code> and do not use the <code>data.frame</code> method.</li>
+<li>fixed some automatic boolean conversion</li>
+<li>Cleaned up <code>BIOMOD.formated.data@data.mask</code> slot. <code>data.mask</code> can now be safely saved and re-opened ; <code>data.mask</code> can now store a different extent for evaluation dataset</li>
+</ul>
+<h4>4.2-0 Terra Update</h4>
+<h5>Major Changes</h5>
+<ul>
+<li>Package now rely only on <code>terra</code> (<code>&gt; 1.6.33</code>) and do not automatically import <code>raster</code> and <code>sp</code>.</li>
+<li>Moved <code>raster</code> and <code>sp</code> package into <code>SUGGESTS</code> rather than <code>DEPENDS</code>.</li>
+<li><code>raster</code> and <code>sp</code> input data type are still supported.</li>
+<li>Package dataset now are now documented and loaded with <code>data()</code> .</li>
+</ul>
+<h5>Minor Changes</h5>
+<ul>
+<li><code>bm_BinaryTransformation</code> now always returns <code>0</code>/<code>1</code> and never <code>TRUE</code>/<code>FALSE</code></li>
+<li>Added a check to <code>bm_PlotResponseCurves</code> for <code>new.env</code> possible data types.</li>
+<li><code>BIOMOD_Projection</code> and <code>BIOMOD_EnsembleForecasting</code> now properly support matrix as <code>new.env</code></li>
+<li><code>get_prediction</code> on <code>biomod.projection.out</code> generated from <code>BIOMOD_Projection</code> based on <code>SpatRaster</code> with arg <code>as.data.frame = TRUE</code> are now possible.</li>
+<li><code>bm_BinaryTransformation</code> now return same type of object as its input</li>
+<li>Improved communcation for <code>BIOMOD_RangeSize</code>, indicating how comparison are done depending on the number of models in current vs future.</li>
+<li>added argument check for BIOMOD_CrossValidation</li>
+</ul>
+<h5>Bugfix</h5>
+<ul>
+<li>MAXENT.Phillips models can now properly fail</li>
+<li>bugfix for <code>bm_BinaryTransformation</code> with <code>data.frame</code>/<code>matrix</code> and <code>do.filtering = TRUE</code></li>
+<li>Removed obsolete warning about CTA and categorical variables when using raster</li>
+<li><code>bm_PlotResponseCurves</code> now work with factors in univariate representation</li>
+<li><code>bm_PlotResponseCurves</code> properly handles <code>SpatRaster</code> and <code>Raster</code> as <code>new.env</code></li>
+<li>Bugfix for predictions with <code>MAXENT.Phillips</code> and a single environmental variable</li>
+<li>Bugfix for <code>BIOMOD_EnsembleForecasting</code> so that it properly accounts for <code>new.env.xy</code> when projecting on <code>matrix</code> or <code>data.frame</code>.</li>
+<li><code>BIOMOD_EnsembleModeling</code> now works when called for a single ensemble model</li>
+<li>Improved argument check for <code>BIOMOD_RangeSize</code>. Comparisons with non-binary values throw errors.</li>
+<li>bugfix for <code>BIOMOD_RangeSize</code> and data.frame method</li>
+<li><code>BIOMOD_RangeSize</code> <code>data.frame</code> method now handles 1 current vs n future projection</li>
+<li>bugfix for <code>BIOMOD_PresenceOnly</code> that can now work when evaluation data are provided</li>
+<li>bugfix for <code>BIOMOD_PresenceOnly</code> that can now work when only the EM have been provided</li>
+<li>expanded support for <code>BIOMOD_PresenceOnly</code> to <code>SpatRaster</code> and <code>SpatVector</code>.</li>
+<li><code>build_clamping_mask</code> now support categorical variables</li>
+<li>fixed ensemble model EMcv based on a single environmental variable</li>
+</ul>
+<h5>Internal Changes</h5>
+<ul>
+<li>New internal function <code>.categorical2numeric</code> to transform categorical variables into numeric within a <code>data.frame</code>.</li>
+<li>New internal function <code>.get_categorical_names</code> to retrieve categorical variable names from a <code>data.frame</code>.</li>
+<li>Split <code>load_stored_object</code> method into a method for <code>BIOMOD.stored.SpatRaster</code> and a method for all other <code>BIOMOD.stored.data</code>.</li>
+<li><code>BIOMOD.stored.SpatRaster</code> stores <code>PackedSpatraster</code> and not <code>SpatRaster</code>.</li>
+<li>New internal function <code>.CompteurSp</code> based on old function CompteurSp that was defined within a function.</li>
+<li>Removed obsolete function <code>check_data_range()</code>.</li>
+</ul>
+<h4>4.1-3</h4>
+<h5>Bugfix</h5>
+<ul>
+<li>Ensemble models that fails (e.g. EMcv with only one models) will not crash the full ensemble run. Instead a warning is generally displayed at the beginning and the resulting object will list failed models.</li>
+<li>Fixed CTA raster prediction for categorical variables.</li>
+<li>fixed binary transformation in <code>BIOMOD_EnsembleForecasting</code>.</li>
+</ul>
+<h4>Internal Changes</h4>
+<ul>
+<li>
+<p>New internal function .get_kept_models to generate list of models kept by ensemble modeling depending on metric.select.</p>
+</li>
+<li>
+<p>Improved checks for BIOMOD_EnsembleModel to generate warnings when ensemble models are expected to be run with &lt;= 1 models.</p>
+</li>
+<li>
+<p>repaired support for cross-validation table given as data.frame instead of matrix.</p>
+</li>
+</ul>
+<h4>4.1-2 (2022-09-29 - Current CRAN Version)</h4>
 <h5>Major changes</h5>
-
 <ul>
 <li><code>dir.name</code> can now be provided as project argument so that results may be saved in a custom folder.</li>
 <li>predict with <code>CTA</code> algorithm and categorical variables on raster is now possible.</li>
 <li>Changed evaluation for EM models merging PA datasets  (<code>em.by = &quot;algo&quot;</code> or <code>em.by = &quot;all&quot;</code>) so that evaluation uses the union of PA data sets instead of the whole environmental space supplied.</li>
 </ul>
-
 <h5>Minor changes</h5>
-
 <ul>
 <li>Individual EM models projected as raster are now saved with <code>INT2S</code> data format when <code>on_0_1000</code> is set to <code>TRUE</code>.</li>
-<li>Homogenize the use of load functions (<em>use</em> <code>get_[...]</code><em>,</em> <code>load_stored_object</code> <em>and</em> <code>BIOMOD_LoadModels</code><em>, instead of</em> <code>get(load(...))</code>) and the workflow within <code>get_[...]</code> functions (<em>use</em> <code>load_stored_object</code> <em>and similar arguments such as</em> <code>as.data.frame</code><em>,</em> <code>full.name</code><em>, &hellip;</em>).</li>
+<li>Homogenize the use of load functions (<em>use</em> <code>get_[...]</code><em>,</em> <code>load_stored_object</code> <em>and</em> <code>BIOMOD_LoadModels</code><em>, instead of</em> <code>get(load(...))</code>) and the workflow within <code>get_[...]</code> functions (<em>use</em> <code>load_stored_object</code> <em>and similar arguments such as</em> <code>as.data.frame</code><em>,</em> <code>full.name</code><em>, …</em>).</li>
 <li>Adapting predict workflow to properly use S4 class.</li>
 <li>Homogenize <code>BIOMOD.ensemble.models.out</code> and <code>BIOMOD.models.out</code> objects
-
 <ul>
 <li>Add slots in <code>BIOMOD.ensemble.models.out</code> object for evaluations, variables importance and predictions.</li>
 <li>Moved <code>.Models.save.objects</code> in <code>BIOMOD_modeling</code> to <code>.fill_BIOMOD.models.out</code> in <code>biomod2_internal.R</code>.</li>
 <li>Save slots within <code>BIOMOD.ensemble.models.out</code> and use <code>load_stored_object</code> to directly get them within <code>get_[...]</code> functions.</li>
-</ul></li>
 </ul>
-
+</li>
+</ul>
 <h5>Bug Fix</h5>
-
 <ul>
 <li>Validation data can now be properly combined with Pseudo-Absence in <code>BIOMOD_FormatingData</code>, instead of throwing an error linked to <code>data.mask</code>.</li>
 <li>Argument <code>on_0_1000</code> can now be passed without errors so that projection may either be on a range from 0 to 1 or from 0 to 1000. The latter option being more effective memory-wise.</li>
 <li>Completed argument check for function <code>BIOMOD_EnsembleModeling</code> so that <code>em.by</code> can not be of <code>length &gt; 1</code>.</li>
 <li>Corrected function <code>.get_models_assembling</code> so that it did not confound <code>MAXENT.Phillips2</code> with <code>MAXENT.Phillips</code> when grouping models by algorithm in <code>BIOMOD_EnsembleModeling</code>.</li>
-<li>get_prediction method for <code>BIOMOD.ensemble.models.out</code> now accepts an <code>evaluation</code> arg. Evaluation values, variables&#39; importance and Calibration/Evaluation predictions for ensemble models are now properly saved by <code>BIOMOD_EnsembleModeling()</code>.</li>
+<li>get_prediction method for <code>BIOMOD.ensemble.models.out</code> now accepts an <code>evaluation</code> arg. Evaluation values, variables’ importance and Calibration/Evaluation predictions for ensemble models are now properly saved by <code>BIOMOD_EnsembleModeling()</code>.</li>
 <li>evaluation metrics are no longer calculated for models <code>prob.ci.inf</code> et <code>prob.ci.sup</code>.</li>
 <li>Package now properly pass R CMD check.</li>
 <li><code>BIOMOD_PresenceOnly</code> now properly manage <code>NA</code>.</li>
 <li>Corrected bm_PlotResponseCurves to only plot show.variables.</li>
 <li><code>get_predictions.BIOMOD.projection.out</code> now properly works when asked for a subset of model.</li>
 </ul>
-
 <h5>Miscellaneous</h5>
-
 <ul>
 <li>Using models with a single predictor requires updating <code>gbm</code> package to its development version at rpatin/gbm can be used. (see issue <em><a href="https://github.com/biomodhub/biomod2/issues/102">https://github.com/biomodhub/biomod2/issues/102</a></em>)</li>
 </ul>
-
 <h4>4.1-1 (2022-08-30)</h4>
-
 <ul>
 <li>add <code>do.progress</code> parameter (to render or not progress bar) and <code>dir.name</code> parameter in <code>BIOMOD_FormatingData</code> and <code>biomod2</code> objects (<strong>Mathieu B. request</strong>)</li>
 <li>fix <code>BIOMOD_PresenceOnly</code> function by removing <code>ecospat</code> dependency</li>
 </ul>
-
 <h4>4.1 (2022-07-12)</h4>
-
 <ul>
 <li>fix bugs following major release 4.0</li>
 </ul>
-
 <h4>4.0 (2022-03-01)</h4>
-
 <ul>
 <li>MAJOR RELEASE</li>
 <li>clean all functions, reorganize files, remove old / unused functions</li>
@@ -237,11 +353,8 @@ hr {
 <li>update <code>roxygen2</code> documentation for all functions, including examples</li>
 <li>create github website to host documentation, examples, vignettes, news</li>
 </ul>
-
 <h3><i class="fas fa-charging-station"></i> 2021</h3>
-
 <h4>3.5-3 (2021-11-02)</h4>
-
 <ul>
 <li>clean BIOMOD classes definitions and functions (<code>biomod2_classes</code> files)</li>
 <li>clean <code>BIOMOD_FormatingData</code> function</li>
@@ -249,68 +362,47 @@ hr {
 <li>fix <code>BIOMOD_FormatingData</code> : test class condition only a first element (to deal with <code>matrix</code> / <code>array</code> objects)</li>
 <li>fix <code>BIOMOD_EnsembleForecasting</code> for <code>EMcv</code> model when only one single model was kept</li>
 </ul>
-
 <h4>3.5-2 (2021-10-18)</h4>
-
 <ul>
 <li>fix <code>BIOMOD_PresenceOnly</code> function (previously <code>BIOMOD_presenceonly</code>)</li>
 <li>fix <code>BIOMOD_CrossValidation</code> function (previously <code>BIOMOD_cv</code>)</li>
 <li>fix internal function to find <code>MinMax</code> values, when factor included : should get clamping mask to work</li>
 </ul>
-
 <h3><i class="fas fa-battery-full"></i> 2018-2019</h3>
-
 <h4>3.3-20 (2019-03-05)</h4>
-
 <ul>
 <li>Remove maxent Tsurukoa because not maintained anymore (required by CRAN team)</li>
 </ul>
-
 <h4>3.3-18 (2018-07-04)</h4>
-
 <ul>
 <li>fix the gbm multicore issue</li>
 </ul>
-
 <h4>3.3-17 (2018-04-23)</h4>
-
 <ul>
 <li>correct the single presence pseudo-absences generation bug (<strong>Matthias G.</strong>)</li>
 </ul>
-
 <h3><i class="fas fa-battery-three-quarters"></i> 2016</h3>
-
 <h4>3.3-6 (2016-01-14)</h4>
-
 <ul>
 <li>add <code>get_predictions</code> function for ensemble models</li>
 </ul>
-
 <h4>3.3-5 (2016-01-04)</h4>
-
 <ul>
 <li>MARS models are now computed throw <code>earth</code> package (was <code>mda</code> in previous versions)</li>
 <li>MARS now supports factorial explanatory variables</li>
-<li>MARS now supports <code>formula</code> </li>
+<li>MARS now supports <code>formula</code></li>
 </ul>
-
 <h3><i class="fas fa-battery-half"></i> 2015</h3>
-
 <h4>3.3-4 (2015-11-04)</h4>
-
 <ul>
 <li>update <code>BIOMOD_tuning</code> function (<strong>Frank B.</strong>)</li>
 </ul>
-
 <h4>3.3-3 (2015-10-27)</h4>
-
 <ul>
 <li>force sampling of each level of factorial variables</li>
 <li>add <code>betamultiplier</code> parameter to tune MAXENT.Phillips (<strong>Frank B. request</strong>)</li>
 </ul>
-
 <h4>3.3-00 (2015-10-05)</h4>
-
 <ul>
 <li>MAJOR RELEASE</li>
 <li>optimize the memory consumption of projections and ensemble projections procedure</li>
@@ -318,135 +410,97 @@ hr {
 <li>classical version of <code>MAXENT</code> has been renamed <code>MAXENT.Phillips</code></li>
 <li>add a new version of MAXENT <code>MAXENT.Tsuruoka</code></li>
 </ul>
-
 <h4>3.2-00 (2015-07-28)</h4>
-
 <ul>
 <li>add 3 new functions in <code>biomod2</code> (<strong>Frank B. contribution</strong>)</li>
 <li><code>BIOMOD_cv</code> to control models cross validation procedure</li>
 <li><code>BIOMOD_presenceonly</code> to evaluate biomod models using boyce and mpa indices</li>
 <li><code>BIOMOD_tuning</code> to automatically tune <code>BIOMOD_ModelingOptions</code> parameters</li>
 </ul>
-
 <h3><i class="fas fa-battery-quarter"></i> 2014</h3>
-
 <h4>3.1-59 (2014-10-23)</h4>
-
 <ul>
 <li>add model evaluation scores plotting function</li>
 <li>dependence to <code>ggplot2</code></li>
 </ul>
-
 <h4>3.1-53 (2014-08-06)</h4>
-
 <ul>
 <li>new ensemble models names to be more coherent with formal models names</li>
 </ul>
-
 <h4>3.1-44 (2014-05-20)</h4>
-
 <ul>
 <li>possibility to use user defined function to influence the way models are weighted in weighted mean ensemble models (<strong>thanks to Frank B.</strong>)</li>
 </ul>
-
 <h4>3.1-43 (2014-05-20)</h4>
-
 <ul>
 <li>add of <code>as.data.frame</code> argument for <code>get_evaluations()</code> function to enable formal and ensemble models evaluation scores merging</li>
 </ul>
-
 <h4>3.1-42 (2014-05-19)</h4>
-
 <ul>
-<li>enable ensemble forecasting models selection (<strong>thanks to Robin E.</strong>) </li>
+<li>enable ensemble forecasting models selection (<strong>thanks to Robin E.</strong>)</li>
 </ul>
-
 <h3><i class="fas fa-battery-empty"></i> 2013</h3>
-
 <h4>3.1-17 (2013-10-23)</h4>
-
 <ul>
 <li>add parameter to control amount of memory reserved for <code>MAXENT</code> calculations (via java) (<strong>thanks to Burke G.</strong>)</li>
 <li>optimization of memory consumption in models projections when <code>do.stack</code> argument is set to <code>FALSE</code></li>
-<li>binary and filtering projections output re-activated </li>
+<li>binary and filtering projections output re-activated</li>
 </ul>
-
 <h4>3.1-1 (2013-09-04)</h4>
-
 <ul>
 <li>limitation of package dependencies</li>
 <li>fairely definition of package namespace</li>
 <li>add functions to update <code>biomod2</code> objects from a version to the current one</li>
 </ul>
-
 <h4>3.0.2 (2013-07-23)</h4>
-
 <ul>
 <li>new functions to evaluate a-posteriori models quality</li>
 <li>remove weights for models scaling and set it <code>FALSE</code> by default</li>
 </ul>
-
 <h4>3.0.0 (2013-07-01)</h4>
-
 <ul>
 <li>MAJOR RELEASES</li>
 <li>ensemble models are now <code>biomod2</code> models objects (should be predicted, evaluated, and you can do variables importance) the same way than all formal <code>biomod2</code> models</li>
 <li>possibility to produce ensemble models response plot</li>
-<li>ensemble forecasting output is now a <code>biomod2_projection</code> object: should be plotted&hellip;</li>
+<li>ensemble forecasting output is now a <code>biomod2_projection</code> object: should be plotted…</li>
 <li>ensemble forecasting is now doable without doing previous projections (even if it is still advised). Can work with raw explanatory variables</li>
 <li>getter and setter function have been renamed</li>
 <li>new <code>variable_importance</code> function</li>
-<li>&hellip;</li>
+<li>…</li>
 </ul>
-
 <h4>2.1.37 (2013-06-12)</h4>
-
 <ul>
 <li>change (temporally?) gam default package from <code>mgcv</code> to <code>gam</code> to deal with memory (cache) over-consuming (<strong>thanks to Burke G.</strong>)</li>
 <li>update of <code>response.plot2</code> function (optimization + deal with factorial variables)</li>
 </ul>
-
 <h4>2.1.32 (2013-05-30)</h4>
-
 <ul>
 <li>weights for user defined pseudo-absences are now supported (<strong>thanks to Rui F.</strong>)</li>
 <li>deal with unknown factors predictions (<strong>thanks to Denis M.</strong>)</li>
 </ul>
-
 <h4>2.1.13 (2013-03-06)</h4>
-
 <ul>
 <li>Add <code>ProbDensFunc()</code> function to package to produce nice plots that show inter-models variability</li>
 </ul>
-
 <h4>2.1.12 (2013-03-04)</h4>
-
 <ul>
 <li>add <code>rasterVis</code> dependency for nicer <code>biomod2</code> plots</li>
 <li><code>PA.dist.min</code> and <code>PA.dist.max</code> are now defined in meters when you work with unprojected rasters in disk pseudo absences selection</li>
 </ul>
-
 <h4>2.1.9 (2013-02-28)</h4>
-
 <ul>
 <li>possibility to indicate manually which data should be used for calibration (resp. for validation) of models within <code>BIOMOD_Modeling</code></li>
 </ul>
-
 <h4>2.1.9 (2013-02-27)</h4>
-
 <ul>
 <li>one var modeling supported (<strong>thanks Anne O.</strong>)</li>
-<li>new options for response curves plotting (<code>col</code>, <code>lty</code>, <code>data_species</code>&hellip;)</li>
+<li>new options for response curves plotting (<code>col</code>, <code>lty</code>, <code>data_species</code>…)</li>
 </ul>
-
 <h4>2.1.8 (2013-02-25)</h4>
-
 <ul>
 <li>response plot supports now formal models</li>
 </ul>
-
 <h4>2.1.0 (2013-02-21)</h4>
-
 <ul>
 <li>MAJOR RELEASE</li>
 <li>CRAN SUBMISION</li>
@@ -457,54 +511,39 @@ hr {
 <li>add <code>pROC</code> package dependency</li>
 <li>add a modeling cleaner that remove modeling objects from both memory and hard drive: <code>RemoveProperly()</code></li>
 </ul>
-
 <h4>2.0.11 (2013-02-18)</h4>
-
 <ul>
 <li>possibility to consider a user.defined pseudo absences selection (<strong>thanks to Signe N.</strong>)</li>
-<li>possibility to switch off stepwise glm selection (<em>**thanks Frank B.</em>*)</li>
+<li>possibility to switch off stepwise glm selection (*<strong>thanks Frank B.</strong>)</li>
 </ul>
-
 <h4>2.0.9 (2013-02-15)</h4>
-
 <ul>
 <li>automatic save on hard drive of <code>BIOMOD_Projection</code> outputs</li>
 </ul>
-
 <h4>2.0.8 (2013-02-14)</h4>
-
 <ul>
 <li><code>BIOMOD_LoadModels</code> supports multiple models input</li>
-<li>deal with <code>NA</code> in evaluation table issue (<em>**thanks Frank B.</em>*)</li>
+<li>deal with <code>NA</code> in evaluation table issue (*<strong>thanks Frank B.</strong>)</li>
 </ul>
-
 <h4>2.0.7 (2013-02-12)</h4>
-
 <ul>
 <li>bug on weights corrected (<strong>thanks to Lugi M.</strong>)</li>
 </ul>
-
 <h4>2.0.3 (2013-01-18)</h4>
-
 <ul>
 <li>deal with <code>MAXENT</code> categorical variables and categorical raster input</li>
 </ul>
-
 <h4>2.0.0 (2013-01-17)</h4>
-
 <ul>
 <li>MAJOR RELEASE</li>
 <li>CRAN SUBMISION</li>
-<li>models built within <code>biomod2</code> are now defined as &ldquo;biomod2 models objects&rdquo; (own scaling models, own predict function, &hellip;)</li>
+<li>models built within <code>biomod2</code> are now defined as “biomod2 models objects” (own scaling models, own predict function, …)</li>
 <li>full paths are replaced by relative paths to favor portability</li>
 <li>harmonization of names of objects that are saved on hard drive (more coherence between functions)</li>
 <li>possibility to save projections directly in raster format (<code>.grd</code> or <code>.img</code>)</li>
 </ul>
-
 <h3><i class="fas fa-bahai"></i> Year 0</h3>
-
 <h4>1.x.x</h4>
-
 <ul>
 <li>development phase</li>
 </ul>

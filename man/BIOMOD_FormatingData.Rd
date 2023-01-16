@@ -20,40 +20,54 @@ BIOMOD_FormatingData(
   PA.dist.max = NULL,
   PA.sre.quant = 0.025,
   PA.user.table = NULL,
-  na.rm = TRUE
+  na.rm = TRUE,
+  filter.raster = FALSE
 )
 }
 \arguments{
 \item{resp.name}{a \code{character} corresponding to the species name}
 
-\item{resp.var}{a \code{vector}, \code{\link[sp]{SpatialPoints}} (\emph{if presence-only}) or 
-\code{\link[sp]{SpatialPointsDataFrame}} object containing binary data (\code{0} : absence, 
-\code{1} : presence, \code{NA} : indeterminate) for a single species that will be used to 
-build the species distribution model(s)}
+\item{resp.var}{a \code{vector}, a \code{\link[terra:vect]{SpatVector}}
+without associated data (\emph{if presence-only}), 
+or a \code{\link[terra:vect]{SpatVector}} object containing binary data  
+(\code{0} : absence, \code{1} : presence, \code{NA} : indeterminate) 
+for a single species that will be used to build the species distribution model(s)
+\cr \emph{Note that old format from \pkg{sp} are still supported such as
+ \code{SpatialPoints}  (if presence-only) or \code{SpatialPointsDataFrame}
+ object containing binary data.}}
 
-\item{expl.var}{a \code{matrix}, \code{data.frame}, \code{\link[sp]{SpatialPointsDataFrame}} 
-or \code{\link[raster:stack]{RasterStack}} object containing the explanatory variables 
-(in columns or layers) that will be used to build the species distribution model(s)}
+\item{expl.var}{a \code{matrix}, \code{data.frame}, \code{\link[terra:vect]{SpatVector}}
+or \code{\link[terra:rast]{SpatRaster}} object containing the explanatory variables 
+(in columns or layers) that will be used to build the species distribution model(s)
+\cr \emph{Note that old format from \pkg{raster} and \pkg{sp} are still supported such as 
+\code{RasterStack} and \code{SpatialPointsDataFrame} objects. }}
 
 \item{dir.name}{(\emph{optional, default} \code{.}) \cr
 A \code{character} corresponding to the modeling folder}
 
 \item{resp.xy}{(\emph{optional, default} \code{NULL}) \cr 
 If \code{resp.var} is a \code{vector}, a 2-columns \code{matrix} or \code{data.frame} 
-containing the corresponding \code{X} and \code{Y} coordinates that will be used to build the 
-species distribution model(s)}
+containing the corresponding \code{X} and \code{Y} coordinates that will be
+used to build the species distribution model(s)}
 
 \item{eval.resp.var}{(\emph{optional, default} \code{NULL}) \cr 
-A \code{vector}, \code{\link[sp]{SpatialPoints}} (\emph{if presence-only}) or 
-\code{\link[sp]{SpatialPointsDataFrame}} object containing binary data (\code{0} : absence, 
-\code{1} : presence, \code{NA} : indeterminate) for a single species that will be used to 
-evaluate the species distribution model(s) with independent data}
+A \code{vector}, a \code{\link[terra:vect]{SpatVector}}
+without associated data (\emph{if presence-only}), 
+or a \code{\link[terra:vect]{SpatVector}} object containing binary data  
+(\code{0} : absence, \code{1} : presence, \code{NA} : indeterminate) 
+ for a single species that will be used to 
+evaluate the species distribution model(s) with independent data
+\cr \emph{Note that old format from \pkg{sp} are still supported such as
+ \code{SpatialPoints}  (if presence-only) or \code{SpatialPointsDataFrame}
+ object containing binary data.}}
 
 \item{eval.expl.var}{(\emph{optional, default} \code{NULL}) \cr 
-A \code{matrix}, \code{data.frame}, \code{\link[sp]{SpatialPointsDataFrame}} or 
-\code{\link[raster:stack]{RasterStack}} object containing the explanatory variables (in 
+A \code{matrix}, \code{data.frame}, \code{\link[terra:vect]{SpatVector}}
+or \code{\link[terra:rast]{SpatRaster}} object containing the explanatory variables (in 
 columns or layers) that will be used to evaluate the species distribution model(s) with 
-independent data}
+independent data.
+\cr \emph{Note that old format from \pkg{raster} and \pkg{sp} are still supported such as 
+\code{RasterStack} and \code{SpatialPointsDataFrame} objects. }}
 
 \item{eval.resp.xy}{(\emph{optional, default} \code{NULL}) \cr 
 If \code{resp.var} is a \code{vector}, a 2-columns \code{matrix} or \code{data.frame} 
@@ -98,11 +112,15 @@ will be used to build the species distribution model(s) for each repetition (see
 \item{na.rm}{(\emph{optional, default} \code{TRUE}) \cr 
 A \code{logical} value defining whether points having one or several missing values for 
 explanatory variables should be removed from the analysis or not}
+
+\item{filter.raster}{(\emph{optional, default} \code{FALSE}) \cr 
+If \code{expl.var} is of raster type, a \code{logical} value defining whether \code{resp.var} 
+is to be filtered when several points occur in the same raster cell}
 }
 \value{
 A \code{BIOMOD.formated.data} object that can be used to build species distribution model(s) 
-with the \code{\link{BIOMOD_Modeling}} function. \cr \code{print} and \code{plot} 
-functions are available to have a summary of the created object.
+with the \code{\link{BIOMOD_Modeling}} function. \cr
+\code{print} and \code{plot} functions are available to have a summary of the created object.
 }
 \description{
 This function gathers together all input data needed (\emph{xy, 
@@ -112,22 +130,26 @@ with different strategies (see Details).
 }
 \details{
 This function gathers and formats all input data needed to run \pkg{biomod2} models. It 
-supports different kind of inputs (e.g. \code{matrix}, \code{\link[sp]{SpatialPoints}}, 
-\code{\link[raster:stack]{RasterStack}}) and provides different methods to select 
-pseudo-absences if needed. \cr \cr
+supports different kind of inputs (e.g. \code{matrix},
+\code{\link[terra:vect]{SpatVector}}, \code{\link[terra:rast]{SpatRaster}})
+and provides different methods to select pseudo-absences if needed. \cr \cr
 
 \bold{Concerning explanatory variables and XY coordinates :} 
 \itemize{
-  \item if \code{\link[raster:stack]{RasterLayer}} or \code{\link[raster:stack]{RasterStack}} 
-  provided (for \code{expl.var} or \code{eval.expl.var}), \pkg{biomod2} will extract the 
-  corresponding values from XY coordinates provided (\code{resp.xy} or \code{eval.resp.xy} 
-  respectively). \cr \emph{Be sure to give the XY coordinates in the same projection system 
-  than the raster objects !}
-  \item if \code{\link[sp]{SpatialPointsDataFrame}} provided (for \code{resp.var} or 
-  \code{eval.resp.var}), the same rule applies (\emph{same projection system !}).
-  \item if \code{data.frame} provided (for \code{expl.var} or \code{eval.expl.var}), 
-  \pkg{biomod2} will simply merge it (\code{cbind}) with \code{resp.var} without 
-  considering XY coordinates. \cr
+  \item if \code{\link[terra:rast]{SpatRaster}}, \code{RasterLayer} or \code{RasterStack}
+  provided for \code{expl.var} or \code{eval.expl.var}, \cr \pkg{biomod2} will extract 
+  the corresponding values from XY coordinates provided :
+  \itemize{
+    \item either through \code{resp.xy} or \code{eval.resp.xy} respectively
+    \item or \code{resp.var} or \code{eval.resp.var}, if provided as 
+    \code{\link[terra:vect]{SpatVector}} or \code{SpatialPointsDataFrame}
+  }
+  \emph{Be sure to give the objects containing XY coordinates in the same projection 
+  system than the raster objects !}
+   
+  \item if \code{data.frame} or \code{matrix} provided for \code{expl.var} or
+   \code{eval.expl.var}, \cr \pkg{biomod2} will simply merge it (\code{cbind}) 
+   with \code{resp.var} without considering XY coordinates. \cr
   \emph{Be sure to give explanatory and response values in the same row order !}
 }
 
@@ -148,8 +170,10 @@ pseudo-absences if needed. \cr \cr
   \item{Response variable}{
   \pkg{biomod2} models single species at a time (no multi-species). Hence, \code{resp.var} 
   must be a uni-dimensional object (either a \code{vector}, a one-column \code{matrix}, 
-  \code{data.frame} or \code{\link[sp]{SpatialPointsDataFrame}}, or a 
-  \code{\link[sp]{SpatialPoints}} object if presence-only), containing values among :
+  \code{data.frame}, a \code{\link[terra:vect]{SpatVector}} (\emph{without associated 
+  data - if presence-only}), a \code{SpatialPoints} (\emph{if presence-only}), 
+  a \code{SpatialPointsDataFrame} or \code{\link[terra:vect]{SpatVector}} object),
+   containing values among :
   \itemize{
     \item \code{1} : presences
     \item \code{0} : true absences (if any)
@@ -167,18 +191,18 @@ pseudo-absences if needed. \cr \cr
   }
   \item{Evaluation data}{
   Although \pkg{biomod2} provides tools to automatically divide dataset into calibration and 
-  validation parts through the modeling process (see \code{NbRunEval} and \code{DataSplit} 
+  validation parts through the modeling process (see \code{nb.rep} and \code{data.split.perc} 
   parameters in \code{\link{BIOMOD_Modeling}} function ; or \code{\link{BIOMOD_CrossValidation} 
   function}), it is also possible (and strongly advised) to directly provide two independent 
-  datasets, one for calibration and one for validation.
+  datasets, one for calibration/validation and one for evaluation
   }
   \item{Pseudo-absence selection}{
   If no true absences are available, pseudo-absences must be selected from the 
   \emph{background data}, meaning data there is no information whether the species of 
   interest occurs or not. It corresponds either to the remaining pixels of the \code{expl.var} 
-  (if provided as a \code{\link[raster:stack]{RasterStack}}) or to the points identified as 
-  \code{NA} in \code{resp.var} (if \code{expl.var} provided as a \code{matrix} or 
-  \code{data.frame}). \cr 
+  (if provided as a \code{\link[terra:rast]{SpatRaster}} or \code{RasterSatck})
+  or to the points identified as  \code{NA} in \code{resp.var} (if \code{expl.var}
+  provided as a \code{matrix} or \code{data.frame}). \cr 
   Several methods are available to do this selection :
   \describe{
     \item{random}{all points of initial background are pseudo-absence candidates. 
@@ -204,10 +228,10 @@ pseudo-absences if needed. \cr \cr
 }
 }
 \examples{
+library(terra)
 
 # Load species occurrences (6 species available)
-myFile <- system.file('external/species/mammals_table.csv', package = 'biomod2')
-DataSpecies <- read.csv(myFile, row.names = 1)
+data(DataSpecies)
 head(DataSpecies)
 
 # Select the name of the studied species
@@ -220,25 +244,26 @@ myResp <- as.numeric(DataSpecies[, myRespName])
 myRespXY <- DataSpecies[, c('X_WGS84', 'Y_WGS84')]
 
 # Load environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 & bio_12)
-myFiles <- paste0('external/bioclim/current/bio', c(3, 4, 7, 11, 12), '.grd')
-myExpl <- raster::stack(system.file(myFiles, package = 'biomod2'))
+data(bioclim_current)
+myExpl <- terra::rast(bioclim_current)
 
 \dontshow{
-myExtent <- raster::extent(0,30,45,70)
-myExpl <- raster::stack(raster::crop(myExpl, myExtent))
+myExtent <- terra::ext(0,30,45,70)
+myExpl <- terra::crop(myExpl, myExtent)
 }
 
-# ---------------------------------------------------------------
+# ---------------------------------------------------------------#
 # Format Data with true absences
 myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
                                      expl.var = myExpl,
                                      resp.xy = myRespXY,
                                      resp.name = myRespName)
 myBiomodData
+summary(myBiomodData)
 plot(myBiomodData)
 
 
-# ---------------------------------------------------------------
+# ---------------------------------------------------------------#
 # # Transform true absences into potential pseudo-absences
 # myResp.PA <- ifelse(myResp == 1, 1, NA)
 # 
