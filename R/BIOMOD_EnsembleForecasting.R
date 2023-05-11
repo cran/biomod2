@@ -57,6 +57,10 @@
 ##' An \code{integer} value corresponding to the number of computing resources to be used to 
 ##' parallelize the single models computation
 ##' 
+##' @param na.rm (\emph{optional, default} \code{TRUE}) \cr
+##' A boolean defining whether Ensemble Model projection should ignore \code{NA}
+##' in Individual Model projection. Argument ignored by EWmean ensemble algorithm.
+##' 
 ##' @param \ldots (\emph{optional, see Details})
 ##' 
 ##' 
@@ -157,11 +161,11 @@
 ##'                                       modeling.id = 'AllModels',
 ##'                                       models = c('RF', 'GLM'),
 ##'                                       bm.options = myBiomodOptions,
-##'                                       nb.rep = 2,
-##'                                       data.split.perc = 80,
+##'                                       CV.strategy = 'random',
+##'                                       CV.nb.rep = 2,
+##'                                       CV.perc = 0.8,
 ##'                                       metric.eval = c('TSS','ROC'),
 ##'                                       var.import = 3,
-##'                                       do.full.models = FALSE,
 ##'                                       seed.val = 42)
 ##' }
 ##' 
@@ -235,13 +239,22 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
                                        metric.filter = NULL,
                                        compress = TRUE,
                                        nb.cpu = 1,
+                                       na.rm = TRUE,
                                        ...)
 {
   .bm_cat("Do Ensemble Models Projection")
   
   ## 0. Check arguments ---------------------------------------------------------------------------
-  args <- .BIOMOD_EnsembleForecasting.check.args(bm.em, bm.proj, proj.name, new.env, new.env.xy,
-                                                 models.chosen, metric.binary, metric.filter, ...)
+  args <- .BIOMOD_EnsembleForecasting.check.args(bm.em = bm.em,
+                                                 bm.proj = bm.proj, 
+                                                 proj.name = proj.name, 
+                                                 new.env = new.env, 
+                                                 new.env.xy = new.env.xy,
+                                                 models.chosen = models.chosen, 
+                                                 metric.binary = metric.binary, 
+                                                 metric.filter = metric.filter, 
+                                                 na.rm = na.rm, 
+                                                 ...)
   for (argi in names(args)) { assign(x = argi, value = args[[argi]]) }
   rm(args)
   
@@ -293,7 +306,7 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
                                      on_0_1000 = on_0_1000,
                                      nb.cpu = nb.cpu)
     formal_pred <- get_predictions(formal_pred, full.name = models.needed)
-
+    
     # remove tmp directory
     unlink(file.path(bm.em@dir.name, bm.em@sp.name, paste0("proj_", tmp_dir))
            , recursive = TRUE, force = TRUE)
@@ -323,10 +336,12 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
                         , newdata = formal_pred
                         , on_0_1000 = on_0_1000
                         , data_as_formal_predictions = TRUE
-                        , filename = filename)
+                        , filename = filename
+                        , mod.name = em.name
+                        , na.rm = na.rm)
       
-      if(do.stack){
-        if(proj_is_raster){
+      if (do.stack) {
+        if (proj_is_raster) {
           return(wrap(ef.tmp)) 
         } else {
           return(ef.tmp)
@@ -358,8 +373,10 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
   }
   
   ## save projections
-  proj_out@type <- class(new.env)
-  if (!do.stack){
+  proj_out@type <- ifelse(is.null(new.env), 
+                          bm.proj@type,
+                          .get_env_class(new.env))
+  if (!do.stack) {
     saved.files = unlist(proj.em)
   } else {
     assign(x = nameProjSp, value = proj.em)
@@ -536,7 +553,8 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
 .BIOMOD_EnsembleForecasting.check.args <- function(bm.em, bm.proj, proj.name
                                                    , new.env, new.env.xy
                                                    , models.chosen
-                                                   , metric.binary, metric.filter, ...)
+                                                   , metric.binary, metric.filter,
+                                                   na.rm, ...)
 {
   args <- list(...)
   
@@ -564,16 +582,20 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
   if (!is.null(new.env)) {
     .fun_testIfInherits(TRUE, "new.env", new.env, c('matrix', 'data.frame', 'SpatRaster','Raster'))
     
-    if(inherits(new.env, 'matrix')){
+    if (inherits(new.env, 'matrix')) {
       if (any(sapply(get_formal_data(bm.em,"expl.var"), is.factor))) {
         stop("new.env cannot be given as matrix when model involves categorical variables")
       }
       new.env <- data.frame(new.env)
+    } else if (inherits(new.env, 'data.frame')) {
+      # ensure that data.table are coerced into classic data.frame
+      new.env <- as.data.frame(new.env) 
     }
+    
     if (inherits(new.env, 'Raster')) {
       # conversion into SpatRaster
       if(any(raster::is.factor(new.env))){
-        new.env <- categorical_stack_to_terra(raster::stack(new.env))
+        new.env <- .categorical_stack_to_terra(raster::stack(new.env))
       } else {
         new.env <- rast(new.env)
       }
@@ -584,8 +606,13 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
     } else {
       .fun_testIfIn(TRUE, "colnames(new.env)", colnames(new.env), bm.em@expl.var.names)
     }
+    
+    which.factor <- which(sapply(new.env, is.factor))
+    if (length(which.factor) > 0) {
+      new.env <- .check_env_levels(new.env, 
+                                   expected_levels = head(get_formal_data(bm.em, subinfo = "expl.var")))
+    }
   }
-  
   ## 4. Check models.chosen ---------------------------------------------------
   if (models.chosen[1] == 'all') {
     models.chosen <- get_built_models(bm.em)
@@ -671,6 +698,9 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
   } else {
     new.env.xy <- as.data.frame(new.env.xy)
   }
+  
+  ## 11. Check na.rm ------------------------------------------------------
+  stopifnot(is.logical(na.rm))
   
   return(list(bm.em = bm.em,
               bm.proj = bm.proj,

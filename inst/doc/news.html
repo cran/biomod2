@@ -166,6 +166,48 @@ hr {
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
 <h2><i class="fas fa-code"></i> Development updates</h2>
 <h3><i class="fas fa-feather"></i> 2023</h3>
+<h4>4.2-3 Cross-Validation and Pseudo-Absences (2023-04-04)</h4>
+<h5>Major Changes</h5>
+<ul>
+<li>Improved pseudo-absence management: it is now possible to have pseudo-absence dataset of different size and algorithm can be setup to run on different pseudo-absence dataset (with <code>models.pa</code> argument in <code>BIOMOD_Modeling</code>).</li>
+<li>Rework and harmonization of cross-validation function. <code>BIOMOD_CrossValidation</code> have been renamed <code>bm_CrossValidation</code> and cross-validation with k-fold, stratified and environmental strategy now work properly with pseudo-absence dataset. All cross-validation strategy can now be called directly through <code>BIOMOD_Modeling</code>.</li>
+</ul>
+<h5>Minor Changes</h5>
+<ul>
+<li>Improved Documentation (<code>get_evaluations</code>, <code>BIOMOD_EnsembleModeling</code>, <code>bm_RunModelsLoop</code>, <code>bm_RunModel</code>)</li>
+<li>Updated website tutorial to use current biomod2 version</li>
+<li>removed unused parameter <code>save.output</code>. output are now automatically saved.</li>
+<li>Improved management of categorical raster for both <code>terra</code> and <code>raster</code></li>
+<li><code>CV.perc</code> (formerly <code>data.split.perc</code>) now uses a 0-1 range (instead of 0-100)</li>
+<li>Deprecated arguments for <code>BIOMOD_EnsembleModeling</code> now gives an error.</li>
+<li>added argument <code>metric.select.dataset</code> to <code>BIOMOD_EnsembleModeling</code> to choose the dataset which evaluation metric should be used to filter and/or weigh the ensemble models. Default value is now ‘validation’ instead of ‘evaluation’.</li>
+<li>added argument <code>na.rm</code> to <code>BIOMOD_EnsembleModeling</code> to harmonize the management of <code>NA</code> among individual model predictions.</li>
+</ul>
+<h5>Bugfix</h5>
+<ul>
+<li>validation metric calculation now properly use the calibration threshold (i.e a threshold optimized on calibration data instead of validation data). This can lead to less optimistic threshold-dependent validation metric.</li>
+<li>fixed SRE projection assuming the same variables ordering in calibration and projection data</li>
+<li>Ensemble model can again be calculated over models without validation</li>
+<li>Correct print for multiple values in <code>RF$sampsize</code> parameter in <code>BIOMOD_ModelingOptions</code></li>
+<li>Fixed layer name in <code>BIOMOD_Projection</code> and <code>BIOMOD_EnsembleForecasting</code> when <code>terraOption(todisk = TRUE)</code> is activated (for large or numerous raster).</li>
+<li>fixed Ensemble Models based on models without cross-validation (“allRun”)</li>
+<li>model is now robust to using <code>data.table</code> object (that are converted into standard <code>data.frame</code>).</li>
+<li>fixed projection raster name when using <code>do.stack = FALSE</code> and <code>resp.name</code> with <code>.</code> inside.</li>
+<li>fixed using user-defined pseudo-absences along with <code>filter.raster = TRUE</code> in <code>bm_PseudoAbsence</code>.</li>
+<li>fixed weights calculation when using only one pseudo-absence dataset</li>
+<li>fixed summary and show method for <code>BIOMOD.formated.data.PA</code></li>
+</ul>
+<h5>Internal</h5>
+<ul>
+<li>add internal function <code>get_species_data</code> and <code>get_eval_data</code></li>
+<li>removed .BIOMOD_Modeling.prepare.data</li>
+<li>reorganised bm_RunModelsLoop to do the PA loop within the function</li>
+<li><code>calib.lines</code> and <code>eval.lines</code> variable names are standardised (no more <code>calibLines</code> or <code>eval_lines</code>)</li>
+<li>removed dependency to <code>data.table</code> (removed use of <code>rbindlist</code>)</li>
+<li>added <code>.get_env_class</code> to reduce code redundancy</li>
+<li>renamed <code>categorical_stack_to_terra</code> into <code>.categorical_stack_to_terra</code></li>
+<li>dispatched some of <code>BIOMOD_FormatingData</code> checks into <code>bm_PseudoAbsences</code></li>
+</ul>
 <h4>4.2-2 Improvement patch (2023-01-13)</h4>
 <h5>Major Changes</h5>
 <ul>

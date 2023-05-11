@@ -15,6 +15,7 @@ BIOMOD_EnsembleForecasting(
   metric.filter = NULL,
   compress = TRUE,
   nb.cpu = 1,
+  na.rm = TRUE,
   ...
 )
 }
@@ -72,6 +73,10 @@ compressed when saved on hard drive, must be either \code{TRUE}, \code{FALSE}, \
 \item{nb.cpu}{(\emph{optional, default} \code{1}) \cr 
 An \code{integer} value corresponding to the number of computing resources to be used to 
 parallelize the single models computation}
+
+\item{na.rm}{(\emph{optional, default} \code{TRUE}) \cr
+A boolean defining whether Ensemble Model projection should ignore \code{NA}
+in Individual Model projection. Argument ignored by EWmean ensemble algorithm.}
 
 \item{\ldots}{(\emph{optional, see Details})}
 }
@@ -164,11 +169,11 @@ if (file.exists(file.out)) {
                                       modeling.id = 'AllModels',
                                       models = c('RF', 'GLM'),
                                       bm.options = myBiomodOptions,
-                                      nb.rep = 2,
-                                      data.split.perc = 80,
+                                      CV.strategy = 'random',
+                                      CV.nb.rep = 2,
+                                      CV.perc = 0.8,
                                       metric.eval = c('TSS','ROC'),
                                       var.import = 3,
-                                      do.full.models = FALSE,
                                       seed.val = 42)
 }
 
@@ -231,7 +236,6 @@ plot(myBiomodEMProj)
 \code{\link{BIOMOD_RangeSize}}
 
 Other Main functions: 
-\code{\link{BIOMOD_CrossValidation}()},
 \code{\link{BIOMOD_EnsembleModeling}()},
 \code{\link{BIOMOD_FormatingData}()},
 \code{\link{BIOMOD_LoadModels}()},
