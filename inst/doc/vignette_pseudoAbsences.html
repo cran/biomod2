@@ -1,175 +1,94 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-
-<title><i class="fas fa-address-card"></i> Definition</title>
-
-<script type="text/javascript">
-window.onload = function() {
-  var imgs = document.getElementsByTagName('img'), i, img;
-  for (i = 0; i < imgs.length; i++) {
-    img = imgs[i];
-    // center an image if it is the only element of its parent
-    if (img.parentElement.childElementCount === 1)
-      img.parentElement.style.textAlign = 'center';
-  }
-};
-</script>
-
-
-
-
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Pseudo-absences</title>
 <style type="text/css">
-body, td {
-   font-family: sans-serif;
-   background-color: white;
-   font-size: 13px;
-}
-
 body {
+  font-family: sans-serif;
   max-width: 800px;
   margin: auto;
   padding: 1em;
-  line-height: 20px;
+  line-height: 1.5;
+  box-sizing: border-box;
 }
-
-tt, code, pre {
-   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+body, .footnotes, code { font-size: .9em; }
+li li { font-size: .95em; }
+*, *:before, *:after {
+  box-sizing: inherit;
 }
-
-h1 {
-   font-size:2.2em;
-}
-
-h2 {
-   font-size:1.8em;
-}
-
-h3 {
-   font-size:1.4em;
-}
-
-h4 {
-   font-size:1.0em;
-}
-
-h5 {
-   font-size:0.9em;
-}
-
-h6 {
-   font-size:0.8em;
-}
-
-a:visited {
-   color: rgb(50%, 0%, 50%);
-}
-
-pre, img {
-  max-width: 100%;
-}
-pre {
-  overflow-x: auto;
+pre, img { max-width: 100%; }
+pre, pre:hover {
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 pre code {
-   display: block; padding: 0.5em;
+  display: block;
+  overflow-x: auto;
 }
-
-code {
-  font-size: 92%;
-  border: 1px solid #ccc;
+code { font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace; }
+:not(pre) > code, code[class] { background-color: #F8F8F8; }
+code.language-undefined, pre > code:not([class]) {
+  background-color: inherit;
+  border: 1px solid #eee;
 }
-
-code[class] {
-  background-color: #F8F8F8;
+table {
+  margin: auto;
+  border-top: 1px solid #666;
 }
-
-table, td, th {
-  border: none;
-}
-
+table thead th { border-bottom: 1px solid #ddd; }
+th, td { padding: 5px; }
+thead, tfoot, tr:nth-child(even) { background: #eee; }
 blockquote {
-   color:#666666;
-   margin:0;
-   padding-left: 1em;
-   border-left: 0.5em #EEE solid;
+  color: #666;
+  margin: 0;
+  padding-left: 1em;
+  border-left: 0.5em solid #eee;
 }
-
-hr {
-   height: 0px;
-   border-bottom: none;
-   border-top-width: thin;
-   border-top-style: dotted;
-   border-top-color: #999999;
+hr, .footnotes::before { border: 1px dashed #ddd; }
+.frontmatter { text-align: center; }
+#TOC .numbered li { list-style: none; }
+#TOC .numbered { padding-left: 0; }
+#TOC .numbered ul { padding-left: 1em; }
+table, .body h2 { border-bottom: 1px solid #666; }
+.body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
+.footnote-ref a::before { content: "["; }
+.footnote-ref a::after { content: "]"; }
+.footnotes::before {
+  content: "";
+  display: block;
+  max-width: 20em;
 }
 
 @media print {
-   * {
-      background: transparent !important;
-      color: black !important;
-      filter:none !important;
-      -ms-filter: none !important;
-   }
-
-   body {
-      font-size:12pt;
-      max-width:100%;
-   }
-
-   a, a:visited {
-      text-decoration: underline;
-   }
-
-   hr {
-      visibility: hidden;
-      page-break-before: always;
-   }
-
-   pre, blockquote {
-      padding-right: 1em;
-      page-break-inside: avoid;
-   }
-
-   tr, img {
-      page-break-inside: avoid;
-   }
-
-   img {
-      max-width: 100% !important;
-   }
-
-   @page :left {
-      margin: 15mm 20mm 15mm 10mm;
-   }
-
-   @page :right {
-      margin: 15mm 10mm 15mm 20mm;
-   }
-
-   p, h2, h3 {
-      orphans: 3; widows: 3;
-   }
-
-   h2, h3 {
-      page-break-after: avoid;
-   }
+  body {
+    font-size: 12pt;
+    max-width: 100%;
+  }
+  tr, img { page-break-inside: avoid; }
+}
+@media only screen and (min-width: 992px) {
+  pre { white-space: pre; }
 }
 </style>
-
-
-
 </head>
-
 <body>
-<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
-<h3><i class="fas fa-address-card"></i> Definition</h3>
+<div class="include-before">
+</div>
+<div class="frontmatter">
+<div class="title"><h1>Pseudo-absences</h1></div>
+<div class="author"><h2></h2></div>
+<div class="date"><h3></h3></div>
+</div>
+<div class="body">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css">
+<h3 id="definition"><i class="fas fa-address-card"></i> Definition</h3>
 <p><code>biomod2</code> requires either <strong>presence / absence data</strong>, or <strong>presence-only data supplemented with pseudo-absences</strong> that can be generated with the <a href="../reference/BIOMOD_FormatingData.html"><code>BIOMOD_FormatingData</code></a> function.</p>
 <p><em>Pseudo-absences</em> (sometimes also referred as <em>background data</em>) are NOT to be considered as absences, and rather represent the available environment in the studied area. They will be used to compare observed used environment (represented by the presences) against what is available.</p>
 <p><strong>Note</strong> that it is NOT recommended to mix both absence and pseudo-absences data.</p>
 </br>
-<h3><i class="fas fa-cookie"></i> How to select them ? - Methods</h3>
+<h3 id="how-to-select-them-methods"><i class="fas fa-cookie"></i> How to select them ? - Methods</h3>
 <p>3 different methods are implemented within <code>biomod2</code> to select pseudo-absences (PA) :</p>
 <ol>
 <li>the <strong>random</strong> method : PA are randomly selected over the studied area (excluding presence points)</li>
@@ -227,7 +146,7 @@ hr {
 </div>
 <p><strong>Note</strong> that it is also possible for the user to select by himself its own pseudo-absence points, and to give them to the <a href="../reference/BIOMOD_FormatingData.html"><code>BIOMOD_FormatingData</code></a> function.</p>
 </br>
-<h3><i class="fas fa-vial"></i> How to select them ? - Barbet-Massin et al. 2012</h3>
+<h3 id="how-to-select-them-barbet-massin-et-al-2012"><i class="fas fa-vial"></i> How to select them ? - Barbet-Massin et al. 2012</h3>
 <p><strong>Barbet-Massin, M.</strong>, Jiguet, F., Albert, C.H. and Thuiller, W. (<strong>2012</strong>), <em>Selecting pseudo-absences for species distribution models: how, where and how many?</em>. <strong>Methods in Ecology and Evolution</strong>, 3: 327-338. <a href="https://doi.org/10.1111/j.2041-210X.2011.00172.x">https://doi.org/10.1111/j.2041-210X.2011.00172.x</a></p>
 <p>This paper tried to estimate the relative effect of method and number of PA on predictive accuracy of common modelling techniques, using :</p>
 <ul>
@@ -249,7 +168,8 @@ hr {
 <li>number of PA = 3 times the number of presences</li>
 <li>10 repetitions</li>
 </ul>
-
+</div>
+<div class="include-after">
+</div>
 </body>
-
 </html>

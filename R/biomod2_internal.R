@@ -832,6 +832,16 @@ check_duplicated_cells <- function(env, xy, sp, filter.raster,
   
 }
 
+
+# .get_data_mask ----------------------------------------------------------
+.get_data_mask <- function(expl.var, value.out = 1){
+  stopifnot(inherits(expl.var, 'SpatRaster'))
+  classify(as.numeric(!any(is.na(expl.var))),
+           matrix(c(0, NA, 
+                    1, value.out), 
+                  ncol = 2, byrow = TRUE)) 
+}
+
 ## Get new.env class ----------------------------
 ##' @name .get_env_class
 ##' 
@@ -1080,4 +1090,11 @@ check_duplicated_cells <- function(env, xy, sp, filter.raster,
     }
   }
   new.env 
+}
+
+
+# Tools to predict on SpatRaster with xgboost -----------------------------
+
+xgbpred <- function(model, data, ...) {
+  predict(model, newdata = as.matrix(data), ...)
 }
