@@ -97,9 +97,12 @@
 ##' 
 ##' @return 
 ##' 
-##' A \code{BIOMOD.formated.data} object that can be used to build species distribution model(s) 
-##' with the \code{\link{BIOMOD_Modeling}} function. \cr
-##' \code{print} and \code{plot} functions are available to have a summary of the created object.
+##' A \code{\link{BIOMOD.formated.data}} object that can be used to build species distribution 
+##' model(s) with the \code{\link{BIOMOD_Modeling}} function. \cr
+##' \href{https://biomodhub.github.io/biomod2/reference/BIOMOD.formated.data.html}{\code{print/show}}, 
+##' \href{https://biomodhub.github.io/biomod2/reference/plot.html}{\code{plot}} and 
+##' \href{https://biomodhub.github.io/biomod2/reference/summary.html}{\code{summary}} functions 
+##' are available to have a summary of the created object. 
 ##' 
 ##' 
 ##' @details  
@@ -130,17 +133,15 @@
 ##' 
 ##' \bold{Concerning pseudo-absence selection (see \code{\link{bm_PseudoAbsences}}) :}
 ##' \itemize{
-##'   \item{if both presence and absence data are available, and there is enough absences :
+##'   \item if both presence and absence data are available, and there is enough absences :
 ##'   set \code{PA.nb.rep = 0} and no pseudo-absence will be selected.
-##'   }
-##'   \item{if no absence data is available, several pseudo-absence repetitions  
+##'   \item if no absence data is available, several pseudo-absence repetitions  
 ##'   are recommended (to estimate the effect of pseudo-absence selection), as well as high 
 ##'   number of pseudo-absence points. \cr
 ##'   \emph{Be sure not to select more pseudo-absence points than maximum number of pixels in 
-##'   the studied area ! \cr \cr \cr \cr}
-##'   }
-##'   \item{it is possible now to create several pseudo-absence repetitions with different 
-##'   number of points, but with the same sampling strategy}
+##'   the studied area !}
+##'   \item it is possible now to create several pseudo-absence repetitions with different 
+##'   number of points, BUT with the same sampling strategy. \cr \cr \cr \cr
 ##' }
 ##' 
 ##' \describe{
@@ -173,7 +174,7 @@
 ##'   function}), it is also possible (and strongly advised) to directly provide two independent 
 ##'   datasets, one for calibration/validation and one for evaluation
 ##'   }
-##'   \item{Pseudo-absence selection}{
+##'   \item{Pseudo-absence selection (see \code{\link{bm_PseudoAbsences}})}{
 ##'   If no true absences are available, pseudo-absences must be selected from the 
 ##'   \emph{background data}, meaning data there is no information whether the species of 
 ##'   interest occurs or not. It corresponds either to the remaining pixels of the \code{expl.var} 
@@ -188,7 +189,7 @@
 ##'     \item{sre}{pseudo-absences have to be selected in conditions (combination of explanatory 
 ##'     variables) that differ in a defined proportion (\code{PA.sre.quant}) from those of 
 ##'     presence points. A \emph{Surface Range Envelop} model is first run over the species of 
-##'     interest, and pseudo-absences are selected outside this envelop. \cr
+##'     interest (see \code{\link{bm_SRE}}), and pseudo-absences are selected outside this envelop. \cr
 ##'     \emph{This case is appropriate when all the species climatic niche has been sampled, 
 ##'     otherwise it may lead to over-optimistic model evaluations and predictions !}
 ##'     }

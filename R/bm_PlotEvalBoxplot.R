@@ -38,10 +38,10 @@
 ##' \code{...} can take the following values :
 ##' 
 ##' \itemize{
-##'   \item{\code{main}}{ : a \code{character} corresponding to the graphic title}
-##'   \item{\code{scales}}{ : a \code{character} corresponding to the \code{scales} argument of 
+##'   \item \code{main} : a \code{character} corresponding to the graphic title
+##'   \item \code{scales} : a \code{character} corresponding to the \code{scales} argument of 
 ##'   the \code{\link[ggplot2]{facet_wrap}} function, must be either \code{fixed}, \code{free_x}, 
-##'   \code{free_y} or \code{free}}
+##'   \code{free_y} or \code{free}
 ##' }
 ##' 
 ##' 
@@ -92,17 +92,14 @@
 ##'                                        resp.xy = myRespXY,
 ##'                                        resp.name = myRespName)
 ##' 
-##'   # Create default modeling options
-##'   myBiomodOptions <- BIOMOD_ModelingOptions()
-##' 
 ##'   # Model single models
 ##'   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
 ##'                                       modeling.id = 'AllModels',
 ##'                                       models = c('RF', 'GLM'),
-##'                                       bm.options = myBiomodOptions,
 ##'                                       CV.strategy = 'random',
 ##'                                       CV.nb.rep = 2,
 ##'                                       CV.perc = 0.8,
+##'                                       OPT.strategy = 'bigboss',
 ##'                                       metric.eval = c('TSS','ROC'),
 ##'                                       var.import = 3,
 ##'                                       seed.val = 42)

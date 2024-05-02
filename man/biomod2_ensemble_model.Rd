@@ -27,13 +27,13 @@ Class created by \code{\link{BIOMOD_EnsembleModeling}}
 \code{model_class} slot specific value :
 
 \itemize{
-  \item{\code{biomod2_ensemble_model} : }{\code{model_class} is \code{EM}}
-  \item{\code{EMmean_biomod2_model} : }{\code{model_class} is \code{EMmean}}
-  \item{\code{EMmedian_biomod2_model} : }{\code{model_class} is \code{EMmedian}}
-  \item{\code{EMcv_biomod2_model} : }{\code{model_class} is \code{EMcv}}
-  \item{\code{EMci_biomod2_model} : }{\code{model_class} is \code{EMci}}
-  \item{\code{EMca_biomod2_model} : }{\code{model_class} is \code{EMca}}
-  \item{\code{EMwmean_biomod2_model} : }{\code{model_class} is \code{EMwmean}}
+  \item \code{biomod2_ensemble_model} : \code{model_class} is \code{EM}
+  \item \code{EMmean_biomod2_model} : \code{model_class} is \code{EMmean}
+  \item \code{EMmedian_biomod2_model} : \code{model_class} is \code{EMmedian}
+  \item \code{EMcv_biomod2_model} : \code{model_class} is \code{EMcv}
+  \item \code{EMci_biomod2_model} : \code{model_class} is \code{EMci}
+  \item \code{EMca_biomod2_model} : \code{model_class} is \code{EMca}
+  \item \code{EMwmean_biomod2_model} : \code{model_class} is \code{EMwmean}
 }
 }
 \section{Slots}{
@@ -83,10 +83,12 @@ showClass("EMwmean_biomod2_model")
 
 Other Toolbox objects: 
 \code{\link{BIOMOD.ensemble.models.out}},
-\code{\link{BIOMOD.formated.data.PA}},
 \code{\link{BIOMOD.formated.data}},
+\code{\link{BIOMOD.formated.data.PA}},
 \code{\link{BIOMOD.models.options}},
 \code{\link{BIOMOD.models.out}},
+\code{\link{BIOMOD.options.dataset}},
+\code{\link{BIOMOD.options.default}},
 \code{\link{BIOMOD.projection.out}},
 \code{\link{BIOMOD.stored.data}},
 \code{\link{biomod2_model}}

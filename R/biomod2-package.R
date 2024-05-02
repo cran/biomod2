@@ -10,8 +10,11 @@
   {
     RFver <- read.dcf(file = system.file("DESCRIPTION", package = pkgname), fields = "Version")
     mess <- paste(pkgname, RFver, "loaded.\n")
-    mess <- paste(mess, "/!\\ Since version 4.2 biomod2 relies on terra and may thus return SpatRaster that can easily be converted in RasterStack with `stack()`. We apologize for the trouble @('_')@")
+    mess <- paste(mess, "/!\\ New set up for modeling options. We apologize for the trouble ^[*.*]^")
     packageStartupMessage(mess)
+    
+    toLoad <- unique(ModelsTable$package[-which(ModelsTable$package %in% c("MAXENT", "biomod2"))])
+    for (pkg in toLoad) eval(parse(text = paste0("require(", pkg, ")")))
   }
 }
 

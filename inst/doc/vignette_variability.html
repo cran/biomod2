@@ -55,7 +55,7 @@ table, .body h2 { border-bottom: 1px solid #666; }
 .body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
 .footnote-ref a::before { content: "["; }
 .footnote-ref a::after { content: "]"; }
-.footnotes::before {
+section.footnotes::before {
   content: "";
   display: block;
   max-width: 20em;
@@ -74,16 +74,14 @@ table, .body h2 { border-bottom: 1px solid #666; }
 </style>
 </head>
 <body>
-<div class="include-before">
-</div>
 <div class="frontmatter">
 <div class="title"><h1>Variability in results</h1></div>
 <div class="author"><h2></h2></div>
 <div class="date"><h3></h3></div>
 </div>
 <div class="body">
-<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css">
-<h3 id="definition"><i class="fas fa-address-card"></i> Definition</h3>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<h3 id="definition"><i class="fa-solid fa-address-card"></i> Definition</h3>
 <p>When modelling species distribution, there is most of the time an <strong>uncertainty</strong> of what is actually modelled :</p>
 <ul>
 <li>the <em>fundamental niche</em> is most of the time unknown</li>
@@ -91,7 +89,7 @@ table, .body h2 { border-bottom: 1px solid #666; }
 </ul>
 <p>What can be evaluated is how much the modelisation results are <strong>consistent</strong> with what is known and observed, and how much <strong>variability</strong> is present in the results in function of modelling choices.</p>
 </br>
-<h3 id="variability-within-the-evaluation-importance-of-variables"><i class="fas fa-chart-bar"></i> Variability - within the evaluation / importance of variables</h3>
+<h3 id="variability-within-the-evaluation-importance-of-variables"><i class="fa-solid fa-chart-column"></i> Variability - within the evaluation / importance of variables</h3>
 <p>Single and ensemble models can be evaluated by several available evaluation metrics, and the importance of variables can be calculated through several repetitions (see <code>metric.eval</code> and <code>var.import</code> parameters in <a href="../reference/BIOMOD_Modeling.html"><code>BIOMOD_Modeling</code></a> and <a href="../reference/BIOMOD_EnsembleModeling.html"><code>BIOMOD_EnsembleModeling</code></a>).</p>
 <p>Variability in evaluation and importance values can come from the parametrisation of different elements of the modelling :</p>
 <ul>
@@ -115,7 +113,7 @@ table, .body h2 { border-bottom: 1px solid #666; }
 </li>
 </ul>
 </br>
-<h3 id="variability-within-the-predictions"><i class="fas fa-map"></i> Variability - within the predictions</h3>
+<h3 id="variability-within-the-predictions"><i class="fa-solid fa-map"></i> Variability - within the predictions</h3>
 <p>Making projections, either for single or ensemble models, can produce two additional sources of variability in results that can be explored through two parameters :</p>
 <ul>
 <li>
@@ -133,8 +131,6 @@ table, .body h2 { border-bottom: 1px solid #666; }
 </ul>
 </li>
 </ul>
-</div>
-<div class="include-after">
 </div>
 </body>
 </html>

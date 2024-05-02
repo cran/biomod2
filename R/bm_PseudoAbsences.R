@@ -20,8 +20,6 @@
 ##' @param expl.var a \code{matrix}, \code{data.frame}, \code{\link[sp]{SpatialPointsDataFrame}} 
 ##' or \code{\link[terra:rast]{SpatRaster}} object containing the explanatory variables (in 
 ##' columns or layers) that will be used to find the pseudo-absences
-##' @param \ldots (\emph{optional, one or several of the following arguments depending on the selected 
-##' method}) 
 ##' 
 ##' @param nb.rep an \code{integer} corresponding to the number of sets (repetitions) of 
 ##' pseudo-absence points that will be drawn
@@ -46,16 +44,19 @@
 ##' \code{FALSE} values defining which points will be used to build the species distribution 
 ##' model(s) for each repetition
 ##' 
+##' @param \ldots (\emph{optional, one or several of the above arguments depending on the selected 
+##' method}) 
+##' 
 ##' 
 ##' @return 
 ##' 
 ##' A \code{list} containing the following elements :
 ##' \itemize{
-##'   \item{\code{xy} : }{the coordinates of the species observations}
-##'   \item{\code{sp} : }{the values of the species observations (\code{0}, \code{1} or \code{NA})}
-##'   \item{\code{env} : }{the explanatory variables}
-##'   \item{\code{pa.tab} : }{the corresponding table of selected pseudo-absences (indicated by 
-##'   \code{TRUE} or \code{FALSE})}
+##'   \item \code{xy} : the coordinates of the species observations
+##'   \item \code{sp} : the values of the species observations (\code{0}, \code{1} or \code{NA})
+##'   \item \code{env} : the explanatory variables
+##'   \item \code{pa.tab} : the corresponding table of selected pseudo-absences (indicated by 
+##'   \code{TRUE} or \code{FALSE})
 ##' }
 ##' 
 ##'
@@ -67,7 +68,7 @@
 ##' been sampled. This method is the simplest one and the most appropriate if lacking information 
 ##' about the presence sampling (non-exhaustive, biased sampling, etc). \cr \cr
 ##' 
-##' \bold{Concerning SRE selection :}
+##' \bold{Concerning SRE selection (see \code{\link{bm_SRE}}) :}
 ##' 
 ##' The idea is to select pseudo-absences in spatial locations whose environmental conditions are 
 ##' different from those of the presence points. This method is appropriate when most of the 
@@ -89,13 +90,14 @@
 ##' @keywords pseudo-absence random SRE disk
 ##' 
 ##' 
-##' @seealso \code{\link{BIOMOD.formated.data.PA}}, \code{\link{BIOMOD_FormatingData}}
+##' @seealso \code{\link{bm_SRE}}, \code{\link{BIOMOD.formated.data.PA}}, 
+##' \code{\link{BIOMOD_FormatingData}}
 ##' @family Secundary functions
 ##' 
 ##' 
 ##' @examples 
-##' 
 ##' library(terra)
+##' 
 ##' # Load species occurrences (6 species available)
 ##' data(DataSpecies)
 ##' head(DataSpecies)
@@ -127,14 +129,14 @@
 ##' myResp.PA.vect <- vect(cbind(myRespXY, myResp.PA), geom = c("X_WGS84","Y_WGS84"))
 ##' 
 ##' # random method
-##' PA.r <- bm_PseudoAbsences(resp.var = myResp.PA,
+##' PA.r <- bm_PseudoAbsences(resp.var = myResp.PA.vect,
 ##'                           expl.var = myExpl,
 ##'                           nb.rep = 4,
 ##'                           nb.absences = 1000,
 ##'                           strategy = 'random')
 ##' 
 ##' # disk method
-##' PA.d <- bm_PseudoAbsences(resp.var = myResp.PA,
+##' PA.d <- bm_PseudoAbsences(resp.var = myResp.PA.vect,
 ##'                           expl.var = myExpl,
 ##'                           nb.rep = 4,
 ##'                           nb.absences = 500,
@@ -143,7 +145,7 @@
 ##'                           dist.max = 35)
 ##' 
 ##' # SRE method
-##' PA.s <- bm_PseudoAbsences(resp.var = myResp.PA,
+##' PA.s <- bm_PseudoAbsences(resp.var = myResp.PA.vect,
 ##'                           expl.var = myExpl,
 ##'                           nb.rep = 4,
 ##'                           nb.absences = 1000,
@@ -154,7 +156,7 @@
 ##' myPAtable <- data.frame(PA1 = ifelse(myResp == 1, TRUE, FALSE),
 ##'                         PA2 = ifelse(myResp == 1, TRUE, FALSE))
 ##' for (i in 1:ncol(myPAtable)) myPAtable[sample(which(myPAtable[, i] == FALSE), 500), i] = TRUE
-##' PA.u <- bm_PseudoAbsences(resp.var = myResp.PA,
+##' PA.u <- bm_PseudoAbsences(resp.var = myResp.PA.vect,
 ##'                           expl.var = myExpl,
 ##'                           strategy = 'user.defined',
 ##'                           user.table = myPAtable)
@@ -185,6 +187,7 @@
 ##' apply(PA.r_mult$pa.tab, 2, table)
 ##'
 ##' 
+##' @importFrom foreach foreach %do%
 ##' @importFrom terra rast vect freq spatSample values extract
 ##' @importFrom utils packageVersion
 ##'

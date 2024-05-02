@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Modeling Options</title>
+<style type="text/css">
+/**
+ * Prism.s theme ported from highlight.js's xcode style
+ */
+pre code {
+  padding: 1em;
+}
+.token.comment {
+  color: #007400;
+}
+.token.punctuation {
+  color: #999;
+}
+.token.tag,
+.token.selector {
+  color: #aa0d91;
+}
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol {
+  color: #1c00cf;
+}
+.token.property,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin {
+  color: #c41a16;
+}
+.token.inserted {
+  background-color: #ccffd8;
+}
+.token.deleted {
+  background-color: #ffebe9;
+}
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #9a6e3a;
+}
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #836c28;
+}
+.token.function,
+.token.class-name {
+  color: #DD4A68;
+}
+.token.regex,
+.token.important,
+.token.variable {
+  color: #5c2699;
+}
+.token.important,
+.token.bold {
+  font-weight: bold;
+}
+.token.italic {
+  font-style: italic;
+}
+</style>
+<style type="text/css">
+body {
+  font-family: sans-serif;
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+body, .footnotes, code { font-size: .9em; }
+li li { font-size: .95em; }
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+pre, img { max-width: 100%; }
+pre, pre:hover {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+pre code {
+  display: block;
+  overflow-x: auto;
+}
+code { font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace; }
+:not(pre) > code, code[class] { background-color: #F8F8F8; }
+code.language-undefined, pre > code:not([class]) {
+  background-color: inherit;
+  border: 1px solid #eee;
+}
+table {
+  margin: auto;
+  border-top: 1px solid #666;
+}
+table thead th { border-bottom: 1px solid #ddd; }
+th, td { padding: 5px; }
+thead, tfoot, tr:nth-child(even) { background: #eee; }
+blockquote {
+  color: #666;
+  margin: 0;
+  padding-left: 1em;
+  border-left: 0.5em solid #eee;
+}
+hr, .footnotes::before { border: 1px dashed #ddd; }
+.frontmatter { text-align: center; }
+#TOC .numbered li { list-style: none; }
+#TOC .numbered { padding-left: 0; }
+#TOC .numbered ul { padding-left: 1em; }
+table, .body h2 { border-bottom: 1px solid #666; }
+.body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
+.footnote-ref a::before { content: "["; }
+.footnote-ref a::after { content: "]"; }
+section.footnotes::before {
+  content: "";
+  display: block;
+  max-width: 20em;
+}
+
+@media print {
+  body {
+    font-size: 12pt;
+    max-width: 100%;
+  }
+  tr, img { page-break-inside: avoid; }
+}
+@media only screen and (min-width: 992px) {
+  pre { white-space: pre; }
+}
+</style>
+</head>
+<body>
+<div class="frontmatter">
+<div class="title"><h1>Modeling Options</h1></div>
+<div class="author"><h2></h2></div>
+<div class="date"><h3></h3></div>
+</div>
+<div class="body">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<h3 id="modeling-options"><i class="fa-solid fa-address-card"></i> Modeling options</h3>
+<p><code>biomod2</code> is a wrapper calling for single models functions from external packages. Modeling options are automatically retrieved from these packages, allowing the use of all arguments taken into account by these functions.<br />
+<strong>Default</strong> parameter values are unmodified and often non-adapted to species distribution modeling in general, and to specific dataset in particular. <strong>Bigboss</strong> options provided by biomod2 team tend to correct at least the species distribution modeling aspect, while <strong>tuned</strong> options allow to try and find more appropriate parameterization for user data through caret package mainly. The user can also defines its own modeling options parameterization (<strong>user.defined</strong>).</p>
+<p>Note that only binary data type and associated models are allowed currently, but the package structure has been changed to enable the addition of new data types in near future, such as absolute or relative abundances.</p>
+<p>In the dataset <a href="../reference/ModelsTable.html"><code>ModelsTable</code></a>, all the different algorithms are listed with their packages and functions :</p>
+<pre><code class="language-R">           model   type      package         func       train
+1            ANN binary         nnet         nnet      avNNet
+2            CTA binary        rpart        rpart       rpart
+3            FDA binary          mda          fda         fda
+4            GAM binary          gam          gam   gamSpline
+5            GAM binary         mgcv          bam         bam
+6            GAM binary         mgcv          gam         gam
+7            GBM binary          gbm          gbm         gbm
+8            GLM binary        stats          glm         glm
+9           MARS binary        earth        earth       earth
+10        MAXENT binary       MAXENT       MAXENT ENMevaluate
+11        MAXNET binary       maxnet       maxnet      maxnet
+12            RF binary randomForest randomForest          rf
+13           SRE binary      biomod2       bm_SRE      bm_SRE
+14       XGBOOST binary      xgboost      xgboost     xgbTree
+</code></pre>
+<br/>
+<p><em>All the examples are made with the data of the package.</em> <br/>
+<em>For the beginning of the code, see the <a href="examples_1_mainFunctions.html">main functions vignette</a>.</em></p>
+<br/>
+<h3 id="default-options"><i class="fa-solid fa-database"></i> Default options</h3>
+<p><code>biomod2</code> has a set of <code>default</code> options, matching most of the time the algorithms’ default values, but with some minor modifications to allow the <a href="../reference/BIOMOD_Modeling.html"><code>BIOMOD_Modeling</code></a> function to run smoothly. <br/></p>
+<p><em>Please be aware that this strategy can often lead to bad models or even some errors.</em></p>
+<pre><code class="language-R">myBiomodModelOut &lt;- BIOMOD_Modeling(bm.format = myBiomodData,
+                                    modeling.id = 'Example',
+                                    models = c('RF', 'GLM'),
+                                    CV.strategy = 'random',
+                                    CV.nb.rep = 2,
+                                    CV.perc = 0.8,
+                                    OPT.strategy = 'default',
+                                    metric.eval = c('TSS','ROC'),
+                                    var.import = 2,
+                                    seed.val = 42)
+</code></pre>
+<p>You can retrieve the models options with <a href="../reference/getters.out.html"><code>get_options</code></a></p>
+<pre><code class="language-R">get_options(myBiomodModelOut)
+</code></pre>
+<br/>
+<h3 id="bigboss-options"><i class="fa-solid fa-hand-fist"></i> Bigboss options</h3>
+<p>The <code>bigboss</code> set of parameters is available in the dataset <a href="../reference/OptionsBigboss.html"><code>OptionsBigboss</code></a>. This set should give better results than the default set and will be continued to be optimized by the <code>biomod2</code> Team. <br/></p>
+<p><em>Keep in mind that this is something general and dependent of your case, the results can be not better than the default set.</em></p>
+<pre><code class="language-R">myBiomodModelOut &lt;- BIOMOD_Modeling(bm.format = myBiomodData,
+                                    modeling.id = 'Example',
+                                    models = c('RF', 'GLM'),
+                                    CV.strategy = 'random',
+                                    CV.nb.rep = 2,
+                                    CV.perc = 0.8,
+                                    OPT.strategy = 'bigboss',
+                                    metric.eval = c('TSS','ROC'),
+                                    var.import = 2,
+                                    seed.val = 42)
+</code></pre>
+<br/>
+<h3 id="tuned-options"><i class="fa-solid fa-gears"></i> Tuned options</h3>
+<p>With <code>tuned</code> options, some algorithms can be trained over your dataset, and optimized parameters are returned to be used within the <a href="../reference/BIOMOD_Modeling.html"><code>BIOMOD_Modeling</code></a> function. This tuning is mostly based upon the <a href="http://topepo.github.io/caret/"><code>caret</code></a> package which calls a specific function to tune each algorithm (see column <code>train</code> in <code>ModelsTable</code>). As exception, the <code>ENMevaluate</code> function of the <a href="https://jamiemkass.github.io/ENMeval/"><code>ENMeval</code></a> package is called for <code>MAXENT</code> and the <code>biomod2</code> team wrote a special function for <code>SRE</code>.</p>
+<p>Here is the list of the parameters that can be tuned :</p>
+<table>
+<thead>
+<tr>
+<th>algorithm</th>
+<th align="left">parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ANN</td>
+<td align="left"><code>size</code>, <code>decay</code>, <code>bag</code></td>
+</tr>
+<tr>
+<td>FDA</td>
+<td align="left"><code>degree</code>, <code>nprune</code></td>
+</tr>
+<tr>
+<td>GAM</td>
+<td align="left"><code>select</code>, <code>method</code></td>
+</tr>
+<tr>
+<td>GBM</td>
+<td align="left"><code>n.trees</code>, <code>interaction.depth</code>, <code>shrinkage</code>, <code>n.minobsinnode</code></td>
+</tr>
+<tr>
+<td>MARS</td>
+<td align="left"><code>degree</code>, <code>nprune</code></td>
+</tr>
+<tr>
+<td>RF</td>
+<td align="left"><code>mtry</code></td>
+</tr>
+<tr>
+<td>SRE</td>
+<td align="left"><code>quant</code></td>
+</tr>
+<tr>
+<td>XGBOOST</td>
+<td align="left"><code>nrounds</code>, <code>max_depth</code>, <code>eta</code>, <code>gamma</code>, <code>colsampl_bytree</code>, <code>min_child_weight</code>, <code>subsample</code></td>
+</tr>
+</tbody>
+</table>
+<p>For almost every algorithm (except <code>MAXENT</code>, <code>MAXNET</code> and <code>SRE</code>), you can choose to optimize the formula by setting <code>do.formula = TRUE</code>. The optimized formula will be chosen between the different type (<code>simple</code>, <code>quadratic</code>, <code>polynomial</code>, <code>s_smoother</code>) and for different interaction level.<br />
+In the same way, a variable selection can be run for <code>GLM</code> and <code>GAM</code> if <code>do.stepAIC = TRUE</code> (respectively, <code>MASS::stepAIC</code> and <code>gam::step.Gam</code>). <br/></p>
+<p><em>More information about the training can be found in the documentation of the <a href="../reference/bm_tuning.html"><code>bm_Tuning</code></a> function.</em></p>
+<pre><code class="language-R">myBiomodModelOut &lt;- BIOMOD_Modeling(bm.format = myBiomodData,
+                                    modeling.id = 'Example',
+                                    models = c('RF','SRE'),
+                                    CV.strategy = 'random',
+                                    CV.nb.rep = 2,
+                                    CV.perc = 0.8,
+                                    OPT.strategy = 'tuned',
+                                    metric.eval = c('TSS','ROC'),
+                                    var.import = 2,
+                                    seed.val = 42)
+
+print(get_options(myBiomodModelOut), dataset = '_allData_RUN1')                                    
+</code></pre>
+<br/>
+<h3 id="user-defined"><i class="fa-solid fa-pen"></i> User defined</h3>
+<p>The <code>user.defined</code> option allows you to adjust yourself the parameters of all the algorithms.</p>
+<p><em>Note that you can find information about the parameters of MAXENT within the documentation of the <a href="../reference/bm_ModelingOptions.html"><code>bm_ModelingOptions</code></a> function.</em></p>
+<br/>
+<p><strong>Example :</strong></p>
+<ul>
+<li>You want to run 3 models : <code>RF</code>, <code>GLM</code> and <code>MARS.</code></li>
+<li>You have your <code>BiomodData</code> and you set your <a href="vignette_crossValidation.html">cross-validation table</a>.</li>
+<li>Globally, you want to use the <code>bigboss</code> parameters as a base.</li>
+</ul>
+<pre><code class="language-R">myCVtable &lt;- bm_CrossValidation(bm.format = myBiomodData,
+                                strategy = &quot;random&quot;,
+                                nb.rep = 2,
+                                perc = 0.8)
+
+
+myOpt  &lt;- bm_ModelingOptions(data.type = 'binary',
+                             models = c('RF','GLM','MARS'),
+                             strategy = 'bigboss',
+                             bm.format = myBiomodData, 
+                             calib.lines = myCVtable)
+
+print(myOpt)
+</code></pre>
+<ul>
+<li>You decide to tune the parameters for <code>RF</code> and you want to change the formula for <code>GLM</code>.</li>
+</ul>
+<pre><code class="language-R">tuned.rf &lt;- bm_Tuning(model = 'RF',
+                      tuning.fun = 'rf', ## see in ModelsTable
+                      do.formula = TRUE,
+                      bm.options = opt.d@options$RF.binary.randomForest.randomForest,
+                      bm.format = myBiomodData, 
+                      calib.lines = myCVtable)
+
+form.GLM &lt;- bm_MakeFormula(resp.name = myBiomodData@sp.name,
+                           expl.var = head(myBiomodData@data.env.var),
+                           type = 'simple',
+                           interaction.level = 0)
+                     
+user.GLM &lt;- list('_allData_RUN1' = list(formula = form.GLM),
+                 '_allData_RUN2' = list(formula = form.GLM))
+
+</code></pre>
+<ul>
+<li>As you have all the parameters ready, you can set your <a href="../reference/BIOMOD.models.options.html"><code>BIOMOD.models.options</code></a> object and run the <a href="../reference/BIOMOD_Modeling.html"><code>BIOMOD_Modeling</code></a> function.</li>
+</ul>
+<pre><code class="language-R">## Gather in one list
+## Models names can be found in OptionsBigboss@models
+user.val &lt;- list( RF.binary.randomForest.randomForest = tuned.rf,
+                  GLM.binary.stats.glm= user.GLM)
+
+myOpt &lt;- bm_ModelingOptions(data.type = 'binary',
+                            models = c('RF','GLM','MARS'),
+                            strategy = &quot;user.defined&quot;,
+                            user.val = user.val,
+                            user.base = &quot;bigboss&quot;,
+                            bm.format = myBiomodData, 
+                            calib.lines = myCVtable)
+                            
+print(myOpt)
+print(myOpt, dataset = '_allData_RUN1')
+print(myOpt, dataset = '_allData_RUN2')
+
+myBiomodModelOut &lt;- BIOMOD_Modeling(bm.format = myBiomodData,
+                                modeling.id = 'Example',
+                                models = c('RF','GLM','MARS'),
+                                CV.strategy = 'user.defined',
+                                CV.user.table = myCVtable,
+                                OPT.user = myOpt,
+                                metric.eval = c('TSS','ROC'),
+                                var.import = 2)
+</code></pre>
+<p><em>You can find more examples in the <a href="examples_2_secundaryFunctions.html">Secondary functions vignette</a>.</em></p>
+<br/>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>
+</body>
+</html>

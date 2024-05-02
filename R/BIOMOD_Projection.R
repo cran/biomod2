@@ -63,7 +63,7 @@
 ##' 
 ##' @return
 ##' 
-##' A \code{BIOMOD.projection.out} object containing models projections, or links to saved 
+##' A \code{\link{BIOMOD.projection.out}} object containing models projections, or links to saved 
 ##' outputs. \cr Models projections are stored out of \R (for memory storage reasons) in 
 ##' \code{proj.name} folder created in the current working directory :
 ##' \enumerate{
@@ -89,22 +89,22 @@
 ##' 
 ##' \code{...} can take the following values :
 ##' \itemize{
-##   \item{\code{clamping.level} : }{a \code{logical} value defining whether \code{clamping.mask} 
+##   \item \code{clamping.level} : a \code{logical} value defining whether \code{clamping.mask} 
 ##   cells with at least one variable out of its calibration range are to be removed from the 
 ##   projections or not
-##'   \item{\code{omit.na} : }{a \code{logical} value defining whether all not fully referenced 
-##'   environmental points will get \code{NA} as predictions or not}
-##'   \item{\code{on_0_1000} : }{a \code{logical} value defining whether \code{0 - 1} probabilities 
-##'   are to be converted to \code{0 - 1000} scale to save memory on backup}
-##'   \item{\code{do.stack} : }{a \code{logical} value defining whether all projections are to be 
+##'   \item \code{omit.na} : a \code{logical} value defining whether all not fully referenced 
+##'   environmental points will get \code{NA} as predictions or not
+##'   \item \code{on_0_1000} : a \code{logical} value defining whether \code{0 - 1} probabilities 
+##'   are to be converted to \code{0 - 1000} scale to save memory on backup
+##'   \item \code{do.stack} : a \code{logical} value defining whether all projections are to be 
 ##'   saved as one \code{\link[terra:rast]{SpatRaster}} object or several 
 ##'   \code{\link[terra:rast]{SpatRaster}} files (\emph{the default if projections are too heavy to 
-##'   be all loaded at once in memory})}
-##'   \item{\code{keep.in.memory} : }{a \code{logical} value defining whether all projections are 
-##'   to be kept loaded at once in memory, or only links pointing to hard drive are to be returned}
-##'   \item{\code{output.format} : }{a \code{character} value corresponding to the projections 
+##'   be all loaded at once in memory})
+##'   \item \code{keep.in.memory} : a \code{logical} value defining whether all projections are 
+##'   to be kept loaded at once in memory, or only links pointing to hard drive are to be returned
+##'   \item \code{output.format} : a \code{character} value corresponding to the projections 
 ##'   saving format on hard drive, must be either \code{.grd}, \code{.img}, \code{.tif} or \code{.RData} (the 
-##'   default if \code{new.env} is given as \code{matrix} or \code{data.frame})}
+##'   default if \code{new.env} is given as \code{matrix} or \code{data.frame})
 ##' }
 ##' 
 ##' 
@@ -153,17 +153,14 @@
 ##'                                        resp.xy = myRespXY,
 ##'                                        resp.name = myRespName)
 ##' 
-##'   # Create default modeling options
-##'   myBiomodOptions <- BIOMOD_ModelingOptions()
-##' 
 ##'   # Model single models
 ##'   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
 ##'                                       modeling.id = 'AllModels',
 ##'                                       models = c('RF', 'GLM'),
-##'                                       bm.options = myBiomodOptions,
 ##'                                       CV.strategy = 'random',
 ##'                                       CV.nb.rep = 2,
 ##'                                       CV.perc = 0.8,
+##'                                       OPT.strategy = 'bigboss',
 ##'                                       metric.eval = c('TSS','ROC'),
 ##'                                       var.import = 3,
 ##'                                       seed.val = 42)
@@ -186,7 +183,6 @@
 ##' 
 ##' 
 ##' @importFrom foreach foreach %dopar% 
-## @importFrom doParallel registerDoParallel
 ##' @importFrom terra rast subset nlyr writeRaster terraOptions wrap unwrap
 ##'  mem_info app is.factor mask
 ##' @importFrom utils capture.output
@@ -216,6 +212,7 @@ BIOMOD_Projection <- function(bm.mod,
                                         , models.chosen, metric.binary, metric.filter, compress, seed.val, ...)
   for (argi in names(args)) { assign(x = argi, value = args[[argi]]) }
   rm(args)
+  
   
   ## 1. Create output object ----------------------------------------------------------------------
   proj_out <- new('BIOMOD.projection.out',
@@ -257,7 +254,7 @@ BIOMOD_Projection <- function(bm.mod,
     assign(x = nameMask, value = .build_clamping_mask(new.env, MinMax))
     
     if (output.format == '.RData') {
-      if(proj_is_raster){
+      if (proj_is_raster) {
         save(list = wrap(nameMask),
              file = file.path(namePath, 
                               paste0(nameProj, "_ClampingMask", output.format)),
@@ -277,8 +274,8 @@ BIOMOD_Projection <- function(bm.mod,
     }
   }
   
-  ## 4. MAKING PROJECTIONS ------------------------------------------------------------------------
   
+  ## 4. MAKING PROJECTIONS ------------------------------------------------------------------------
   
   if (nb.cpu > 1) {
     if (.getOS() != "windows") {
@@ -290,9 +287,16 @@ BIOMOD_Projection <- function(bm.mod,
       warning("Parallelisation with `foreach` is not available for Windows. Sorry.")
     }
   }
+  if (proj_is_raster) {
+    new.env.wrap <- wrap(new.env) # ensure parallel run compatibility
+  }
   
   proj <- foreach(mod.name = models.chosen) %dopar% {
     cat("\n\t> Projecting", mod.name, "...")
+    if (proj_is_raster) {
+      new.env <- unwrap(new.env.wrap) # ensure parallel run compatibility
+      names(new.env) <- bm.mod@expl.var.names
+    }
     if (do.stack) {
       filename <- NULL
     } else {
@@ -301,7 +305,6 @@ BIOMOD_Projection <- function(bm.mod,
                                    ifelse(output.format == ".RData"
                                           , ".tif", output.format)))
     }
-    
     mod <- get(BIOMOD_LoadModels(bm.out = bm.mod, full.name = mod.name))
     temp_workdir = NULL
     if (length(grep("MAXENT$", mod.name)) == 1) {
@@ -318,9 +321,11 @@ BIOMOD_Projection <- function(bm.mod,
         return(pred.tmp)
       }
     } else {
+      cat(filename)
       return(filename)
     }
   }
+  
   ## Putting predictions into the right format
   if (do.stack) {
     if (proj_is_raster) {
@@ -460,7 +465,6 @@ BIOMOD_Projection <- function(bm.mod,
         }
       }
     }
-    
     
     ### save binary/filtered file link into proj_out ----------------------------
     if (!is.null(metric.binary)) {

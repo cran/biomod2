@@ -120,7 +120,7 @@ table, .body h2 { border-bottom: 1px solid #666; }
 .body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
 .footnote-ref a::before { content: "["; }
 .footnote-ref a::after { content: "]"; }
-.footnotes::before {
+section.footnotes::before {
   content: "";
   display: block;
   max-width: 20em;
@@ -139,8 +139,6 @@ table, .body h2 { border-bottom: 1px solid #666; }
 </style>
 </head>
 <body>
-<div class="include-before">
-</div>
 <div class="frontmatter">
 <div class="title"><h1>Secundary functions</h1></div>
 <div class="author"><h2></h2></div>
@@ -194,9 +192,10 @@ myExpl.sim &lt;- data.frame(var1 = sample(c(0, 1), 100, replace = TRUE),
 ## Create raster data -------------------------------------------------------------------
 ras.1 &lt;- ras.2 &lt;- mask.out &lt;- rast(nrows = 10, ncols = 10)
 ras.1[] &lt;- as.factor(rep(c(1, 2, 3, 4, 5), each = 20))
+ras.1 &lt;- as.factor(ras.1)
 ras.2[] &lt;- rnorm(100)
 stk &lt;- c(ras.1, ras.2)
-names(stk) &lt;- c(&quot;varFact&quot;, &quot;varNorm&quot;)
+names(stk) &lt;- c('varFact', 'varNorm')
 
 ## define a mask for already sampled points
 mask.out[1:40] &lt;- 1
@@ -207,10 +206,10 @@ mask.in[[1]][1:80] &lt;- NA ## only level 5 should be sampled in this mask
 mask.in[[1]][21:80] &lt;- NA ## only levels 1 and 5 should be sampled in this mask
 
 ## Load real data ---------------------------------------------------------
-data(&quot;DataSpecies&quot;)
+data(DataSpecies)
 myResp.real &lt;- as.numeric(DataSpecies[, 'GuloGulo'])
 
-data(&quot;bioclim_current&quot;)
+data(bioclim_current)
 myExpl.real &lt;- rast(bioclim_current)
 
 myCoord.real &lt;- DataSpecies[, c('X_WGS84', 'Y_WGS84')]
@@ -257,8 +256,14 @@ myResp.real.raster[cellFromXY(myResp.real.raster, myCoord.real.1)] &lt;- 1
 <!-- abline(a = 0, b = 0.001, lty = 2) -->
 <!-- ``` -->
 <h4 id="find-optimal-threshold-for-a-specific-evaluation-metric"><i class="fa-solid fa-scale-balanced"></i> Find optimal threshold for a specific evaluation metric</h4>
-<pre><code class="language-R">bm_FindOptimStat(metric.eval = 'TSS', obs = vec.a, fit = vec.b)
-bm_FindOptimStat(metric.eval = 'TSS', obs = vec.a, fit = vec.c, nb.thresh = 100)
+<pre><code class="language-R"># varying the number of thresholds to test
+bm_FindOptimStat(metric.eval = 'TSS', obs = vec.a, fit = vec.b, nb.thresh = 5)
+bm_FindOptimStat(metric.eval = 'TSS', obs = vec.a, fit = vec.b, nb.thresh = 100)
+
+# different metrics
+bm_FindOptimStat(metric.eval = 'TSS', obs = vec.a, fit = vec.c)
+bm_FindOptimStat(metric.eval = 'ROC', obs = vec.a, fit = vec.c)
+bm_FindOptimStat(metric.eval = 'BOYCE', obs = vec.a, fit = vec.c)
 </code></pre>
 <h4 id="from-continuous-to-binary-filtered-vector"><i class="fa-solid fa-filter"></i> From continuous to binary / filtered vector</h4>
 <pre><code class="language-R">vec.d_bin &lt;- bm_BinaryTransformation(data = vec.d, threshold = 500)
@@ -302,7 +307,7 @@ plot(res, zlim = c(0, 1))
 <pre><code class="language-R">mod &lt;- glm(var1 ~ var2 + var3, data = myExpl.sim)
 bm_VariablesImportance(bm.model = mod, 
                        expl.var = myExpl.sim[, c('var2', 'var3')],
-                       method = &quot;full_rand&quot;,
+                       method = 'full_rand',
                        nb.rep = 3)
 </code></pre>
 <p><br/><br/></p>
@@ -311,22 +316,22 @@ bm_VariablesImportance(bm.model = mod,
 myBiomodData &lt;- BIOMOD_FormatingData(resp.var = myResp.real,
                                      expl.var = myExpl.real,
                                      resp.xy = myCoord.real,
-                                     resp.name = &quot;Alien&quot;)
+                                     resp.name = 'Alien')
                                      
 # Transform true absences into potential pseudo-absences
 myResp.real.PA &lt;- ifelse(myResp.real == 1, 1, NA)
-myResp.real.PA.vect &lt;- vect(cbind(myCoord.real, myResp.real.PA), geom = c(&quot;X_WGS84&quot;,&quot;Y_WGS84&quot;))
+myResp.real.PA.vect &lt;- vect(cbind(myCoord.real, myResp.real.PA), geom = c('X_WGS84','Y_WGS84'))
 </code></pre>
 <h4 id="generate-pseudo-absence-datasets"><i class="fa-solid fa-shuffle"></i> Generate pseudo-absence datasets</h4>
 <pre><code class="language-R"># random method
-PA.r &lt;- bm_PseudoAbsences(resp.var = myResp.real.PA,
+PA.r &lt;- bm_PseudoAbsences(resp.var = myResp.real.PA.vect,
                           expl.var = myExpl.real,
                           nb.rep = 4,
                           nb.absences = 1000,
                           strategy = 'random')
 
 # disk method
-PA.d &lt;- bm_PseudoAbsences(resp.var = myResp.real.PA,
+PA.d &lt;- bm_PseudoAbsences(resp.var = myResp.real.PA.vect,
                           expl.var = myExpl.real,
                           nb.rep = 4,
                           nb.absences = 500,
@@ -335,7 +340,7 @@ PA.d &lt;- bm_PseudoAbsences(resp.var = myResp.real.PA,
                           dist.max = 35)
 
 # SRE method
-PA.s &lt;- bm_PseudoAbsences(resp.var = myResp.real.PA,
+PA.s &lt;- bm_PseudoAbsences(resp.var = myResp.real.PA.vect,
                           expl.var = myExpl.real,
                           nb.rep = 4,
                           nb.absences = 1000,
@@ -346,7 +351,7 @@ PA.s &lt;- bm_PseudoAbsences(resp.var = myResp.real.PA,
 myPAtable &lt;- data.frame(PA1 = ifelse(myResp.real == 1, TRUE, FALSE),
                         PA2 = ifelse(myResp.real == 1, TRUE, FALSE))
 for (i in 1:ncol(myPAtable)) myPAtable[sample(which(myPAtable[, i] == FALSE), 500), i] = TRUE
-PA.u &lt;- bm_PseudoAbsences(resp.var = myResp.real.PA,
+PA.u &lt;- bm_PseudoAbsences(resp.var = myResp.real.PA.vect,
                           expl.var = myExpl.real,
                           strategy = 'user.defined',
                           user.table = myPAtable)
@@ -354,19 +359,15 @@ PA.u &lt;- bm_PseudoAbsences(resp.var = myResp.real.PA,
 str(PA.r)
 head(PA.r$pa.tab)
 apply(PA.r$pa.tab, 2, table)
-plot(PA.r)
 
 head(PA.d$pa.tab)
 apply(PA.d$pa.tab, 2, table)
-plot(PA.d)
 
 head(PA.s$pa.tab)
 apply(PA.s$pa.tab, 2, table)
-plot(PA.s)
 
 tail(PA.u$pa.tab)
 apply(PA.u$pa.tab, 2, table)
-plot(PA.u)
 </code></pre>
 <pre><code class="language-R"># random method : different number of PA
 PA.r_mult &lt;- bm_PseudoAbsences(resp.var = myResp.real.PA.vect,
@@ -378,37 +379,36 @@ PA.r_mult &lt;- bm_PseudoAbsences(resp.var = myResp.real.PA.vect,
 str(PA.r_mult)
 head(PA.r_mult$pa.tab)
 apply(PA.r_mult$pa.tab, 2, table)
-plot(PA.r_mult)
 </code></pre>
 <h4 id="generate-calibration-evaluation-datasets_2"><i class="fa-solid fa-scissors"></i> Generate calibration / evaluation datasets</h4>
 <pre><code class="language-R"># random selection
 cv.r &lt;- bm_CrossValidation(bm.format = myBiomodData,
-                           strategy = &quot;random&quot;,
+                           strategy = 'random',
                            nb.rep = 3,
                            k = 0.8)
 
 # k-fold selection
 cv.k &lt;- bm_CrossValidation(bm.format = myBiomodData,
-                           strategy = &quot;kfold&quot;,
+                           strategy = 'kfold',
                            nb.rep = 2,
                            k = 3)
 
 # block selection
 cv.b &lt;- bm_CrossValidation(bm.format = myBiomodData,
-                           strategy = &quot;block&quot;)
+                           strategy = 'block')
 
 # stratified selection (geographic)
 cv.s &lt;- bm_CrossValidation(bm.format = myBiomodData,
-                           strategy = &quot;strat&quot;,
+                           strategy = 'strat',
                            k = 2,
-                           balance = &quot;presences&quot;,
-                           strat = &quot;x&quot;)
+                           balance = 'presences',
+                           strat = 'x')
 
 # stratified selection (environmental)
 cv.e &lt;- bm_CrossValidation(bm.format = myBiomodData,
-                           strategy = &quot;env&quot;,
+                           strategy = 'env',
                            k = 2,
-                           balance = &quot;presences&quot;)
+                           balance = 'presences')
 
 head(cv.r)
 apply(cv.r, 2, table)
@@ -421,8 +421,79 @@ apply(cv.s, 2, table)
 head(cv.e)
 apply(cv.e, 2, table)
 </code></pre>
-</div>
-<div class="include-after">
+<h4 id="retrieve-modeling-options"><i class="fa-solid fa-rectangle-list"></i> Retrieve modeling options</h4>
+<p>All models currently available in <code>biomod2</code> (and their related package and function) are listed within a small dataset. Some of them can be tuned through the <code>train</code> function of the <code>caret</code> package and corresponding training function to be used is also indicated.</p>
+<pre><code class="language-R">data(ModelsTable)
+ModelsTable
+</code></pre>
+<pre><code class="language-R">allModels &lt;- c('ANN', 'CTA', 'FDA', 'GAM', 'GBM', 'GLM'
+               , 'MARS', 'MAXENT', 'MAXNET', 'RF', 'SRE', 'XGBOOST')
+
+# default parameters
+opt.d &lt;- bm_ModelingOptions(data.type = 'binary',
+                            models = allModels,
+                            strategy = 'default')
+
+# providing formated data
+opt.df &lt;- bm_ModelingOptions(data.type = 'binary',
+                             models = allModels,
+                             strategy = 'default',
+                             bm.format = myBiomodData,
+                             calib.lines = cv.k)
+
+opt.d
+opt.d@models
+opt.d@options$ANN.binary.nnet.nnet
+names(opt.d@options$ANN.binary.nnet.nnet@args.values)
+
+opt.df@options$ANN.binary.nnet.nnet
+names(opt.df@options$ANN.binary.nnet.nnet@args.values)
+</code></pre>
+<pre><code class="language-R"># bigboss parameters
+opt.b &lt;- bm_ModelingOptions(data.type = 'binary',
+                            models = allModels,
+                            strategy = 'bigboss')
+
+# user defined parameters
+user.SRE &lt;- list('_allData_allRun' = list(quant = 0.01))
+user.XGBOOST &lt;- list('_allData_allRun' = list(nrounds = 10))
+user.val &lt;- list(SRE.binary.biomod2.bm_SRE = user.SRE
+                 , XGBOOST.binary.xgboost.xgboost = user.XGBOOST)
+
+opt.u &lt;- bm_ModelingOptions(data.type = 'binary',
+                            models = c('SRE', 'XGBOOST'),
+                            strategy = 'user.defined',
+                            user.val = user.val)
+
+opt.b
+opt.u
+</code></pre>
+<pre><code class="language-R"># tune parameters for Random Forest model
+tuned.rf &lt;- bm_Tuning(model = 'RF',
+                      tuning.fun = 'rf', ## see in ModelsTable
+                      do.formula = TRUE,
+                      bm.options = opt.d@options$RF.binary.randomForest.randomForest,
+                      bm.format = myBiomodData)
+tuned.rf ## list object
+
+# tune parameters for GAM (from mgcv package) model
+tuned.gam &lt;- bm_Tuning(model = 'GAM',
+                       tuning.fun = 'gam', ## see in ModelsTable
+                       do.formula = TRUE,
+                       do.stepAIC = TRUE,
+                       bm.options = opt.d@options$GAM.binary.mgcv.gam,
+                       bm.format = myBiomodData)
+tuned.gam ##list object
+
+                              
+# tuned parameters with formated data
+opt.t &lt;- bm_ModelingOptions(data.type = 'binary',
+                            models = c('SRE', 'XGBOOST'),
+                            strategy = 'tuned',
+                            bm.format = myBiomodData)
+
+opt.t ## BIOMOD.modeling.options object
+</code></pre>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>

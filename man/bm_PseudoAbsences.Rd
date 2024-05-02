@@ -105,17 +105,17 @@ If \code{strategy = 'user.defined'}, a \code{matrix} or \code{data.frame} with a
 \code{FALSE} values defining which points will be used to build the species distribution 
 model(s) for each repetition}
 
-\item{\ldots}{(\emph{optional, one or several of the following arguments depending on the selected 
+\item{\ldots}{(\emph{optional, one or several of the above arguments depending on the selected 
 method})}
 }
 \value{
 A \code{list} containing the following elements :
 \itemize{
-  \item{\code{xy} : }{the coordinates of the species observations}
-  \item{\code{sp} : }{the values of the species observations (\code{0}, \code{1} or \code{NA})}
-  \item{\code{env} : }{the explanatory variables}
-  \item{\code{pa.tab} : }{the corresponding table of selected pseudo-absences (indicated by 
-  \code{TRUE} or \code{FALSE})}
+  \item \code{xy} : the coordinates of the species observations
+  \item \code{sp} : the values of the species observations (\code{0}, \code{1} or \code{NA})
+  \item \code{env} : the explanatory variables
+  \item \code{pa.tab} : the corresponding table of selected pseudo-absences (indicated by 
+  \code{TRUE} or \code{FALSE})
 }
 }
 \description{
@@ -129,7 +129,7 @@ The idea is to select pseudo-absences randomly in spatial locations where the sp
 been sampled. This method is the simplest one and the most appropriate if lacking information 
 about the presence sampling (non-exhaustive, biased sampling, etc). \cr \cr
 
-\bold{Concerning SRE selection :}
+\bold{Concerning SRE selection (see \code{\link{bm_SRE}}) :}
 
 The idea is to select pseudo-absences in spatial locations whose environmental conditions are 
 different from those of the presence points. This method is appropriate when most of the 
@@ -148,8 +148,8 @@ in rows, pseudo-absences repetitions in columns, and \code{TRUE/FALSE} values in
 whether each point is to be considered as pseudo-absence or not for each dataset.
 }
 \examples{
-
 library(terra)
+
 # Load species occurrences (6 species available)
 data(DataSpecies)
 head(DataSpecies)
@@ -181,14 +181,14 @@ myResp.PA <- ifelse(myResp == 1, 1, NA)
 myResp.PA.vect <- vect(cbind(myRespXY, myResp.PA), geom = c("X_WGS84","Y_WGS84"))
 
 # random method
-PA.r <- bm_PseudoAbsences(resp.var = myResp.PA,
+PA.r <- bm_PseudoAbsences(resp.var = myResp.PA.vect,
                           expl.var = myExpl,
                           nb.rep = 4,
                           nb.absences = 1000,
                           strategy = 'random')
 
 # disk method
-PA.d <- bm_PseudoAbsences(resp.var = myResp.PA,
+PA.d <- bm_PseudoAbsences(resp.var = myResp.PA.vect,
                           expl.var = myExpl,
                           nb.rep = 4,
                           nb.absences = 500,
@@ -197,7 +197,7 @@ PA.d <- bm_PseudoAbsences(resp.var = myResp.PA,
                           dist.max = 35)
 
 # SRE method
-PA.s <- bm_PseudoAbsences(resp.var = myResp.PA,
+PA.s <- bm_PseudoAbsences(resp.var = myResp.PA.vect,
                           expl.var = myExpl,
                           nb.rep = 4,
                           nb.absences = 1000,
@@ -208,7 +208,7 @@ PA.s <- bm_PseudoAbsences(resp.var = myResp.PA,
 myPAtable <- data.frame(PA1 = ifelse(myResp == 1, TRUE, FALSE),
                         PA2 = ifelse(myResp == 1, TRUE, FALSE))
 for (i in 1:ncol(myPAtable)) myPAtable[sample(which(myPAtable[, i] == FALSE), 500), i] = TRUE
-PA.u <- bm_PseudoAbsences(resp.var = myResp.PA,
+PA.u <- bm_PseudoAbsences(resp.var = myResp.PA.vect,
                           expl.var = myExpl,
                           strategy = 'user.defined',
                           user.table = myPAtable)
@@ -241,14 +241,15 @@ apply(PA.r_mult$pa.tab, 2, table)
 
 }
 \seealso{
-\code{\link{BIOMOD.formated.data.PA}}, \code{\link{BIOMOD_FormatingData}}
+\code{\link{bm_SRE}}, \code{\link{BIOMOD.formated.data.PA}}, 
+\code{\link{BIOMOD_FormatingData}}
 
 Other Secundary functions: 
 \code{\link{bm_BinaryTransformation}()},
-\code{\link{bm_CVnnet}()},
 \code{\link{bm_CrossValidation}()},
 \code{\link{bm_FindOptimStat}()},
 \code{\link{bm_MakeFormula}()},
+\code{\link{bm_ModelingOptions}()},
 \code{\link{bm_PlotEvalBoxplot}()},
 \code{\link{bm_PlotEvalMean}()},
 \code{\link{bm_PlotRangeSize}()},
@@ -258,6 +259,7 @@ Other Secundary functions:
 \code{\link{bm_SRE}()},
 \code{\link{bm_SampleBinaryVector}()},
 \code{\link{bm_SampleFactorLevels}()},
+\code{\link{bm_Tuning}()},
 \code{\link{bm_VariablesImportance}()}
 }
 \author{

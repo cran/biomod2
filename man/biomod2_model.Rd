@@ -33,17 +33,17 @@ Class created by \code{\link{BIOMOD_Modeling}} and \code{\link{bm_RunModel}}
 \code{model_class} slot specific value :
 
 \itemize{
-  \item{\code{ANN_biomod2_model} : }{\code{model_class} is \code{ANN}}
-  \item{\code{CTA_biomod2_model} : }{\code{model_class} is \code{CTA}}
-  \item{\code{FDA_biomod2_model} : }{\code{model_class} is \code{FDA}}
-  \item{\code{GBM_biomod2_model} : }{\code{model_class} is \code{GBM}}
-  \item{\code{GLM_biomod2_model} : }{\code{model_class} is \code{GLM}}
-  \item{\code{MARS_biomod2_model} : }{\code{model_class} is \code{MARS}}
-  \item{\code{MAXENT_biomod2_model} : }{\code{model_class} is \code{MAXENT}}
-  \item{\code{MAXNET_biomod2_model} : }{\code{model_class} is 
-  \code{MAXNET}}
-  \item{\code{RF_biomod2_model} : }{\code{model_class} is \code{RF}}
-  \item{\code{SRE_biomod2_model} : }{\code{model_class} is \code{SRE}}
+  \item \code{ANN_biomod2_model} : \code{model_class} is \code{ANN}
+  \item \code{CTA_biomod2_model} : \code{model_class} is \code{CTA}
+  \item \code{FDA_biomod2_model} : \code{model_class} is \code{FDA}
+  \item \code{GBM_biomod2_model} : \code{model_class} is \code{GBM}
+  \item \code{GLM_biomod2_model} : \code{model_class} is \code{GLM}
+  \item \code{MARS_biomod2_model} : \code{model_class} is \code{MARS}
+  \item \code{MAXENT_biomod2_model} : \code{model_class} is \code{MAXENT}
+  \item \code{MAXNET_biomod2_model} : \code{model_class} is 
+  \code{MAXNET}
+  \item \code{RF_biomod2_model} : \code{model_class} is \code{RF}
+  \item \code{SRE_biomod2_model} : \code{model_class} is \code{SRE}
 }
 }
 \section{Slots}{
@@ -95,10 +95,12 @@ showClass("SRE_biomod2_model")
 
 Other Toolbox objects: 
 \code{\link{BIOMOD.ensemble.models.out}},
-\code{\link{BIOMOD.formated.data.PA}},
 \code{\link{BIOMOD.formated.data}},
+\code{\link{BIOMOD.formated.data.PA}},
 \code{\link{BIOMOD.models.options}},
 \code{\link{BIOMOD.models.out}},
+\code{\link{BIOMOD.options.dataset}},
+\code{\link{BIOMOD.options.default}},
 \code{\link{BIOMOD.projection.out}},
 \code{\link{BIOMOD.stored.data}},
 \code{\link{biomod2_ensemble_model}}

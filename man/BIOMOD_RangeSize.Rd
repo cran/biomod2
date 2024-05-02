@@ -27,22 +27,22 @@ A \code{list} containing two objects :
 \item{Compt.By.Species}{a \code{data.frame} containing the summary of range change for each
 comparison
 \itemize{
-\item{\code{Loss} : }{number of pixels predicted to be lost}
-\item{\code{Stable0} : }{number of pixels not currently occupied and not predicted to be}
-\item{\code{Stable1} : }{number of pixels currently occupied and predicted to remain
-occupied}
-\item{\code{Gain} : }{number of pixels predicted to be gained}
-\item{\code{PercLoss} : }{percentage of pixels currently occupied and predicted to be lost
-(\code{Loss / (Loss + Stable1)})}
-\item{\code{PercGain} : }{percentage of pixels predicted to be gained compare to the
-number of pixels currently occupied (\code{Gain / (Loss + Stable1)})}
-\item{\code{SpeciesRangeChange} : }{percentage of pixels predicted to change (loss or gain)
-compare to the number of pixels currently occupied (\code{PercGain - PercLoss})}
-\item{\code{CurrentRangeSize} : }{number of pixels currently occupied}
-\item{\code{FutureRangeSize0Disp} : }{number of pixels predicted to be occupied, assuming
-no migration}
-\item{\code{FutureRangeSize1Disp} : }{number of pixels predicted to be occupied, assuming
-migration}
+\item \code{Loss} : number of pixels predicted to be lost
+\item \code{Stable0} : number of pixels not currently occupied and not predicted to be
+\item \code{Stable1} : number of pixels currently occupied and predicted to remain
+occupied
+\item \code{Gain} : number of pixels predicted to be gained
+\item \code{PercLoss} : percentage of pixels currently occupied and predicted to be lost
+(\code{Loss / (Loss + Stable1)})
+\item \code{PercGain} : percentage of pixels predicted to be gained compare to the
+number of pixels currently occupied (\code{Gain / (Loss + Stable1)})
+\item \code{SpeciesRangeChange} : percentage of pixels predicted to change (loss or gain)
+compare to the number of pixels currently occupied (\code{PercGain - PercLoss})
+\item \code{CurrentRangeSize} : number of pixels currently occupied
+\item \code{FutureRangeSize0Disp} : number of pixels predicted to be occupied, assuming
+no migration
+\item \code{FutureRangeSize1Disp} : number of pixels predicted to be occupied, assuming
+migration
 }
 }
 \item{Diff.By.Pixel}{an object in the same form than the input data (\code{proj.current} and
@@ -115,17 +115,14 @@ if (file.exists(file.out)) {
                                        resp.xy = myRespXY,
                                        resp.name = myRespName)
 
-  # Create default modeling options
-  myBiomodOptions <- BIOMOD_ModelingOptions()
-
   # Model single models
   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
                                       modeling.id = 'AllModels',
                                       models = c('RF', 'GLM'),
-                                      bm.options = myBiomodOptions,
                                       CV.strategy = 'random',
                                       CV.nb.rep = 2,
                                       CV.perc = 0.8,
+                                      OPT.strategy = 'bigboss',
                                       metric.eval = c('TSS','ROC'),
                                       var.import = 3,
                                       seed.val = 42)
@@ -183,11 +180,8 @@ Other Main functions:
 \code{\link{BIOMOD_EnsembleModeling}()},
 \code{\link{BIOMOD_FormatingData}()},
 \code{\link{BIOMOD_LoadModels}()},
-\code{\link{BIOMOD_ModelingOptions}()},
 \code{\link{BIOMOD_Modeling}()},
-\code{\link{BIOMOD_PresenceOnly}()},
-\code{\link{BIOMOD_Projection}()},
-\code{\link{BIOMOD_Tuning}()}
+\code{\link{BIOMOD_Projection}()}
 }
 \author{
 Wilfried Thuiller, Damien Georges, Bruno Lafourcade

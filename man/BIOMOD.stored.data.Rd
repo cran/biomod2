@@ -8,9 +8,10 @@
 \alias{BIOMOD.stored.SpatRaster-class}
 \alias{BIOMOD.stored.files-class}
 \alias{BIOMOD.stored.formated.data-class}
-\alias{BIOMOD.stored.models.options-class}
+\alias{BIOMOD.stored.options-class}
 \alias{BIOMOD.stored.models.out-class}
-\title{\code{BIOMOD_EnsembleModeling()} output object class}
+\title{\code{\link{BIOMOD_Modeling}} and \code{\link{BIOMOD_EnsembleModeling}} 
+output object class}
 \description{
 Classes used by \code{\link{BIOMOD_Modeling}} and 
 \code{\link{BIOMOD_EnsembleModeling}} to build their output object (see 
@@ -22,16 +23,16 @@ Classes used by \code{\link{BIOMOD_Modeling}} and
 contain a \code{val} slot of specific type :
 
 \itemize{
-  \item{\code{BIOMOD.stored.data.frame} : }{\code{val} is a \code{data.frame}}
-  \item{\code{BIOMOD.stored.SpatRaster} : }{\code{val} is a 
-  \code{\link[terra:PackedSpatRaster-class]{PackedSpatRaster}}}
-  \item{\code{BIOMOD.stored.files} : }{\code{val} is a \code{character}}
-  \item{\code{BIOMOD.stored.formated.data} : }{\code{val} is a 
-  \code{\link{BIOMOD.formated.data}} object}
-  \item{\code{BIOMOD.stored.models.options} : }{\code{val} is a 
-  \code{\link{BIOMOD.models.options}} object}
-  \item{\code{BIOMOD.stored.models.out} : }{\code{val} is a 
-  \code{\link{BIOMOD.models.out}} object}
+  \item \code{BIOMOD.stored.data.frame} : \code{val} is a \code{data.frame}
+  \item \code{BIOMOD.stored.SpatRaster} : \code{val} is a 
+  \code{\link[terra:PackedSpatRaster-class]{PackedSpatRaster}}
+  \item \code{BIOMOD.stored.files} : \code{val} is a \code{character}
+  \item \code{BIOMOD.stored.formated.data} : \code{val} is a 
+  \code{\link{BIOMOD.formated.data}} object
+  \item \code{BIOMOD.stored.options} : \code{val} is a 
+  \code{\link{BIOMOD.models.options}} object
+  \item \code{BIOMOD.stored.models.out} : \code{val} is a 
+  \code{\link{BIOMOD.models.out}} object
 }
 }
 \section{Slots}{
@@ -52,23 +53,24 @@ showClass("BIOMOD.stored.data.frame")
 showClass("BIOMOD.stored.SpatRaster") 
 showClass("BIOMOD.stored.files") 
 showClass("BIOMOD.stored.formated.data") 
-showClass("BIOMOD.stored.models.options") 
+showClass("BIOMOD.stored.options") 
 showClass("BIOMOD.stored.models.out") 
 
 
 }
 \seealso{
-\code{\link{BIOMOD.formated.data}}, \code{\link{BIOMOD.models.options}},
-\code{\link{BIOMOD.models.out}}, 
+\code{\link{BIOMOD.formated.data}}, \code{\link{BIOMOD.models.out}}, 
 \code{\link{BIOMOD_Modeling}}, \code{\link{BIOMOD_EnsembleModeling}}, 
 \code{\link{BIOMOD_Projection}}, \code{\link{BIOMOD_EnsembleForecasting}}
 
 Other Toolbox objects: 
 \code{\link{BIOMOD.ensemble.models.out}},
-\code{\link{BIOMOD.formated.data.PA}},
 \code{\link{BIOMOD.formated.data}},
+\code{\link{BIOMOD.formated.data.PA}},
 \code{\link{BIOMOD.models.options}},
 \code{\link{BIOMOD.models.out}},
+\code{\link{BIOMOD.options.dataset}},
+\code{\link{BIOMOD.options.default}},
 \code{\link{BIOMOD.projection.out}},
 \code{\link{biomod2_ensemble_model}},
 \code{\link{biomod2_model}}

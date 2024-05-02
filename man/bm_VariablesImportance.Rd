@@ -12,13 +12,13 @@ bm_VariablesImportance(
   nb.rep = 1,
   seed.val = NULL,
   do.progress = TRUE,
-  ...
+  temp.workdir = NULL
 )
 }
 \arguments{
 \item{bm.model}{a \code{biomod2_model} object (or \code{nnet}, \code{rpart}, \code{fda}, 
-\code{gam}, \code{glm}, \code{lm}, \code{gbm}, \code{mars}, \code{randomForest}), \code{xgb.Booster} that can be 
-obtained with the \code{\link{get_formal_model}} function}
+\code{gam}, \code{glm}, \code{lm}, \code{gbm}, \code{mars}, \code{randomForest}, 
+\code{xgb.Booster}) that can be obtained with the \code{\link{get_formal_model}} function}
 
 \item{expl.var}{a \code{data.frame} containing the explanatory variables that will be used to 
 compute the variables importance}
@@ -38,15 +38,17 @@ An \code{integer} value corresponding to the new seed value to be set}
 \item{do.progress}{(\emph{optional, default} \code{TRUE}) \cr 
 A \code{logical} value defining whether the progress bar is to be rendered or not}
 
-\item{...}{additional arguments}
+\item{temp.workdir}{(\emph{optional, default} \code{NULL}) \cr 
+A \code{character} value corresponding to the folder name containing temporal prediction files 
+when using \code{MAXENT}}
 }
 \value{
 A \code{3} columns \code{data.frame} containing variable's importance scores for each 
 permutation run :
 \itemize{
-  \item{\code{expl.var}}{ : the considered explanatory variable (the one permuted)}
-  \item{\code{rand}}{ : the ID of the permutation run}
-  \item{\code{var.imp}}{ : the variable's importance score}
+  \item \code{expl.var} : the considered explanatory variable (the one permuted)
+  \item \code{rand} : the ID of the permutation run
+  \item \code{var.imp} : the variable's importance score
 }
 }
 \description{
@@ -70,7 +72,6 @@ the variable on the model.
 The same principle is used in \code{\link[randomForest]{randomForest}}.
 }
 \examples{
-
 ## Create simple simulated data
 myResp.s <- sample(c(0, 1), 20, replace = TRUE)
 myExpl.s <- data.frame(var1 = sample(c(0, 1), 100, replace = TRUE),
@@ -94,10 +95,10 @@ bm_VariablesImportance(bm.model = mod,
 
 Other Secundary functions: 
 \code{\link{bm_BinaryTransformation}()},
-\code{\link{bm_CVnnet}()},
 \code{\link{bm_CrossValidation}()},
 \code{\link{bm_FindOptimStat}()},
 \code{\link{bm_MakeFormula}()},
+\code{\link{bm_ModelingOptions}()},
 \code{\link{bm_PlotEvalBoxplot}()},
 \code{\link{bm_PlotEvalMean}()},
 \code{\link{bm_PlotRangeSize}()},
@@ -107,7 +108,8 @@ Other Secundary functions:
 \code{\link{bm_RunModelsLoop}()},
 \code{\link{bm_SRE}()},
 \code{\link{bm_SampleBinaryVector}()},
-\code{\link{bm_SampleFactorLevels}()}
+\code{\link{bm_SampleFactorLevels}()},
+\code{\link{bm_Tuning}()}
 }
 \author{
 Damien Georges

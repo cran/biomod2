@@ -13,6 +13,7 @@
   PA,
   run,
   plot.eval,
+  point.size = 1.5,
   do.plot = TRUE
 )
 }
@@ -21,7 +22,7 @@
 object. Coordinates must be available to be able to use \code{plot}.}
 
 \item{calib.lines}{(\emph{optional, default} \code{NULL}) \cr
-an \code{array} object returned by \code{\link{get_calib_lines}} or 
+an \code{data.frame} object returned by \code{\link{get_calib_lines}} or 
 \code{\link{bm_CrossValidation}} functions, to explore the distribution of calibration 
 and validation datasets}
 
@@ -47,6 +48,9 @@ be represented}
 
 \item{plot.eval}{(\emph{optional, default} \code{TRUE}) \cr 
 A \code{logical} defining whether evaluation data should be added to the plot or not}
+
+\item{point.size}{a \code{numeric} to adjust the size of points when
+\code{plot.type = 'points'}.}
 
 \item{do.plot}{(\emph{optional, default} \code{TRUE}) \cr 
 A \code{logical} defining whether the plot is to be rendered or not}

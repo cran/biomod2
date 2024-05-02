@@ -16,6 +16,7 @@
   std = TRUE,
   scales,
   size,
+  maxcell = 5e+05,
   ...
 )
 
@@ -48,6 +49,8 @@ to \code{\link[ggplot2:facet_wrap]{facet_wrap}}. Possible values: 'fixed', 'free
 \item{size}{(\emph{optional, default} \code{0.75}) a numeric determing the
 size of points on the plots and passed to
 \code{\link[ggplot2:geom_point]{geom_point}}.}
+
+\item{maxcell}{maximum number of cells to plot. Argument transmitted to \code{\link[terra]{plot}}.}
 
 \item{...}{additional parameters to be passed to \code{\link{get_predictions}} 
 to select the models that will be plotted}
@@ -128,17 +131,14 @@ if (file.exists(file.out)) {
                                        resp.xy = myRespXY,
                                        resp.name = myRespName)
 
-  # Create default modeling options
-  myBiomodOptions <- BIOMOD_ModelingOptions()
-
   # Model single models
   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
                                       modeling.id = 'AllModels',
                                       models = c('RF', 'GLM'),
-                                      bm.options = myBiomodOptions,
                                       CV.strategy = 'random',
                                       CV.nb.rep = 2,
                                       CV.perc = 0.8,
+                                      OPT.strategy = 'bigboss',
                                       metric.eval = c('TSS','ROC'),
                                       var.import = 3,
                                       seed.val = 42)
@@ -164,10 +164,12 @@ plot(myBiomodProj)
 
 Other Toolbox objects: 
 \code{\link{BIOMOD.ensemble.models.out}},
-\code{\link{BIOMOD.formated.data.PA}},
 \code{\link{BIOMOD.formated.data}},
+\code{\link{BIOMOD.formated.data.PA}},
 \code{\link{BIOMOD.models.options}},
 \code{\link{BIOMOD.models.out}},
+\code{\link{BIOMOD.options.dataset}},
+\code{\link{BIOMOD.options.default}},
 \code{\link{BIOMOD.stored.data}},
 \code{\link{biomod2_ensemble_model}},
 \code{\link{biomod2_model}}

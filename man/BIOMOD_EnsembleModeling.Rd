@@ -92,7 +92,7 @@ models evaluation scores}
 
 \item{nb.cpu}{(\emph{optional, default} \code{1}) \cr 
 An \code{integer} value corresponding to the number of computing resources to be used to 
-parallelize the single models computation}
+parallelize the single models predictions and the ensemble models computation}
 
 \item{seed.val}{(\emph{optional, default} \code{NULL}) \cr 
 An \code{integer} value corresponding to the new seed value to be set}
@@ -132,7 +132,7 @@ weighted sum of probabilities across predictions or not}
 instead) \cr old argument name for \code{EMci.alpha}}
 }
 \value{
-A \code{BIOMOD.ensemble.models.out} object containing models outputs, or links to saved 
+A \code{\link{BIOMOD.ensemble.models.out}} object containing models outputs, or links to saved 
 outputs. \cr Models outputs are stored out of \R (for memory storage reasons) in 2 different 
 folders created in the current working directory :
 \enumerate{
@@ -141,8 +141,9 @@ folders created in the current working directory :
   \item a \emph{hidden} folder, named \code{.BIOMOD_DATA}, and containing outputs related 
   files (original dataset, calibration lines, pseudo-absences selected, predictions, 
   variables importance, evaluation values...), that can be retrieved with 
-  \href{https://biomodhub.github.io/biomod2/reference/getters.out.html}{\code{get_[...]}} or \code{\link{load}} functions, and used by other 
-  \pkg{biomod2} functions, like \code{\link{BIOMOD_EnsembleForecasting}}
+  \href{https://biomodhub.github.io/biomod2/reference/getters.out.html}{\code{get_[...]}} 
+  or \code{\link{load}} functions, and used by other \pkg{biomod2} functions, like 
+  \code{\link{BIOMOD_EnsembleForecasting}}
 }
 }
 \description{
@@ -164,15 +165,15 @@ conditions (see Details).
   \code{\link{BIOMOD_Modeling}} function can be combined in 5 different ways to obtain 
   ensemble models :
   \itemize{
-    \item{\code{PA+run} : }{each combination of pseudo-absence and repetition 
-    datasets is done, \emph{merging} algorithms together}
-    \item{\code{PA+algo} : }{each combination of pseudo-absence and algorithm datasets 
-    is done, \emph{merging} repetitions together}
-    \item{\code{PA} : }{pseudo-absence datasets are considered individually, 
-    \emph{merging} algorithms and repetitions together}
-    \item{\code{algo} : }{algorithm datasets are considered individually, \emph{merging} 
-    pseudo-absence and repetitions together}
-    \item{\code{all} : }{all models are combined into one}
+    \item \code{PA+run} : each combination of pseudo-absence and repetition 
+    datasets is done, \emph{merging} algorithms together
+    \item \code{PA+algo} : each combination of pseudo-absence and algorithm datasets 
+    is done, \emph{merging} repetitions together
+    \item \code{PA} : pseudo-absence datasets are considered individually, 
+    \emph{merging} algorithms and repetitions together
+    \item \code{algo} : algorithm datasets are considered individually, \emph{merging} 
+    pseudo-absence and repetitions together
+    \item \code{all} : all models are combined into one
   }
   Hence, depending on the chosen method, the number of ensemble models built will vary. \cr
   \emph{Be aware that if no evaluation data was given to the 
@@ -187,7 +188,7 @@ conditions (see Details).
 
   \item{Evaluation metrics}{
   \itemize{
-    \item{\bold{\code{metric.select}} : }{the selected metrics must be chosen among the ones used
+    \item \bold{\code{metric.select}} : the selected metrics must be chosen among the ones used
     within the \code{\link{BIOMOD_Modeling}} function to build the \code{model.output} object,
     unless \code{metric.select = 'user.defined'} and therefore values will be provided through
     the \code{metric.select.table} parameter. \cr In the case of the selection of several
@@ -199,50 +200,50 @@ conditions (see Details).
       was given to argument \code{em.algo}
       \item weight models if \code{'EMwmean'} was given to argument \code{em.algo}
     }
-    }
-    \item{\bold{\code{metric.select.thresh}} : }{as many values as evaluation metrics
+    \item \bold{\code{metric.select.thresh}} : as many values as evaluation metrics
     selected with the \code{metric.select} parameter, and defining the corresponding quality
     thresholds below which the single models will be excluded from the ensemble model
-    building.}
-    \item{\bold{\code{metric.select.table}} : }{a \code{data.frame} must be given if
+    building.
+    \item \bold{\code{metric.select.table}} : a \code{data.frame} must be given if
     \code{metric.select = 'user.defined'} to allow the use of evaluation metrics other than
     those calculated within \pkg{biomod2}. The \code{data.frame} must contain as many columns
     as \code{models.chosen} with matching names, and as many rows as evaluation metrics to be
     used. The number of rows must match the length of the \code{metric.select.thresh}
     parameter. The values contained in the \code{data.frame} will be compared to those defined
     in \code{metric.select.thresh} to remove \emph{low quality} single models from
-    the ensemble model building.}
-    \item{\bold{\code{metric.select.dataset}} : }{a \code{character} determining the dataset
+    the ensemble model building.
+    \item \bold{\code{metric.select.dataset}} : a \code{character} determining the dataset
     which evaluation metric should be used to filter and/or weigh the
     ensemble models. Should be among \code{evaluation}, \code{validation} or
     \code{calibration}. By default \code{BIOMOD_EnsembleModeling} will use
     the validation dataset unless no validation is available in which case
-    calibration dataset are used.}
-    \item{\bold{\code{metric.eval}} : }{the selected metrics will be used to validate/evaluate
-    the ensemble models built}
+    calibration dataset are used.
+    \item \bold{\code{metric.eval}} : the selected metrics will be used to validate/evaluate
+    the ensemble models built
   }
   }
 
   \item{Ensemble-models algorithms}{The set of models to be calibrated on the data. \cr 
   6 modeling techniques are currently available :
   \itemize{
-    \item{\bold{\code{EMmean}} : }{Mean of probabilities over the selected models. Old name: \code{prob.mean}}
+    \item \bold{\code{EMmean}} : Mean of probabilities over the selected models. 
+    Old name: \code{prob.mean}
     
-    \item{\bold{\code{EMmedian}} : }{Median of probabilities over the selected models \cr 
+    \item \bold{\code{EMmedian}} : Median of probabilities over the selected models \cr 
     The median is less sensitive to outliers than the mean, however it requires more 
     computation time and memory as it loads all predictions (on the contrary to the mean or 
-    the weighted mean). Old name: \code{prob.median}}
+    the weighted mean). Old name: \code{prob.median}
     
-    \item{\bold{\code{EMcv}} : }{Coefficient of variation (sd / mean) of probabilities 
+    \item \bold{\code{EMcv}} : Coefficient of variation (sd / mean) of probabilities 
     over the selected models \cr 
     This model is not scaled. It will be evaluated like all other ensemble models although its 
     interpretation will be obviously different. CV is a measure of uncertainty rather a 
     measure of probability of occurrence. If the CV gets a high evaluation score, it means 
     that the uncertainty is high where the species is observed (which might not be a good 
     feature of the model). \emph{The lower is the score, the better are the models.} 
-    CV is a nice complement to the mean probability.  Old name: \code{prob.cv}}
+    CV is a nice complement to the mean probability.  Old name: \code{prob.cv}
     
-    \item{\bold{\code{EMci}} & \bold{\code{EMci.alpha}} : }{Confidence interval around 
+    \item \bold{\code{EMci}} & \bold{\code{EMci.alpha}} : Confidence interval around 
     the mean of probabilities of the selected models \cr 
     It is also a nice complement to the mean probability. It creates 2 ensemble models : 
     \itemize{
@@ -256,9 +257,8 @@ conditions (see Details).
     \bar{x} +  \frac{t_\alpha sd }{ \sqrt{n} }]}
     \cr
     Old parameter name: \code{prob.ci} & \code{prob.ci.alpha}
-    }
     
-    \item{\bold{\code{EMca}} : }{Probabilities from the selected models are 
+    \item \bold{\code{EMca}} : Probabilities from the selected models are 
     first transformed into binary data according to the thresholds defined when building the 
     \code{model.output} object with the \code{BIOMOD_Modeling} function, maximizing the 
     evaluation metric score over the testing dataset. The committee averaging score is 
@@ -273,13 +273,13 @@ conditions (see Details).
     of uncertainty. When the prediction is close to \code{0} or \code{1}, it means that all 
     models agree to predict \code{0} or \code{1} respectively. When the prediction is around 
     \code{0.5}, it means that half the models predict \code{1} and the other half \code{0}. 
-    \cr Old parameter name: \code{committee.averaging}}
+    \cr Old parameter name: \code{committee.averaging}
     
-    \item{\bold{\code{EMwmean}} & \bold{\code{EMwmean.decay}} : }{
+    \item \bold{\code{EMwmean}} & \bold{\code{EMwmean.decay}} : 
     Probabilities from the selected models are weighted according to their evaluation scores 
     obtained when building the \code{model.output} object with the \code{BIOMOD_Modeling} 
     function (\emph{better a model is, more importance it has in the ensemble}) and summed. \cr
-    Old parameter name: \code{prob.mean.weight} & \code{prob.mean.weight.decay}} 
+    Old parameter name: \code{prob.mean.weight} & \code{prob.mean.weight.decay}
   }
   
 The \code{EMwmean.decay} is the ratio between a weight and the next or previous one. 
@@ -338,17 +338,14 @@ if (file.exists(file.out)) {
                                        resp.xy = myRespXY,
                                        resp.name = myRespName)
 
-  # Create default modeling options
-  myBiomodOptions <- BIOMOD_ModelingOptions()
-
   # Model single models
   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
                                       modeling.id = 'AllModels',
                                       models = c('RF', 'GLM'),
-                                      bm.options = myBiomodOptions,
                                       CV.strategy = 'random',
                                       CV.nb.rep = 2,
                                       CV.perc = 0.8,
+                                      OPT.strategy = 'bigboss',
                                       metric.eval = c('TSS','ROC'),
                                       var.import = 3,
                                       seed.val = 42)
@@ -395,7 +392,7 @@ bm_PlotEvalBoxplot(bm.out = myBiomodEM, group.by = c('algo', 'algo'))
 
 }
 \seealso{
-\code{\link{BIOMOD_FormatingData}}, \code{\link{BIOMOD_ModelingOptions}}, 
+\code{\link{BIOMOD_FormatingData}}, \code{\link{bm_ModelingOptions}}, 
 \code{\link{bm_CrossValidation}}, \code{\link{bm_VariablesImportance}}, 
 \code{\link{BIOMOD_Modeling}}, \code{\link{BIOMOD_EnsembleForecasting}},
 \code{\link{bm_PlotEvalMean}}, \code{\link{bm_PlotEvalBoxplot}}, 
@@ -405,12 +402,9 @@ Other Main functions:
 \code{\link{BIOMOD_EnsembleForecasting}()},
 \code{\link{BIOMOD_FormatingData}()},
 \code{\link{BIOMOD_LoadModels}()},
-\code{\link{BIOMOD_ModelingOptions}()},
 \code{\link{BIOMOD_Modeling}()},
-\code{\link{BIOMOD_PresenceOnly}()},
 \code{\link{BIOMOD_Projection}()},
-\code{\link{BIOMOD_RangeSize}()},
-\code{\link{BIOMOD_Tuning}()}
+\code{\link{BIOMOD_RangeSize}()}
 }
 \author{
 Wilfried Thuiller, Damien Georges, Robin Engler

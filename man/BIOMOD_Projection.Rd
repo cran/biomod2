@@ -78,7 +78,7 @@ An \code{integer} value corresponding to the new seed value to be set}
 \item{\ldots}{(\emph{optional, see Details)})}
 }
 \value{
-A \code{BIOMOD.projection.out} object containing models projections, or links to saved 
+A \code{\link{BIOMOD.projection.out}} object containing models projections, or links to saved 
 outputs. \cr Models projections are stored out of \R (for memory storage reasons) in 
 \code{proj.name} folder created in the current working directory :
 \enumerate{
@@ -107,19 +107,19 @@ calibration / validation range, identifying locations where predictions are unce
 
 \code{...} can take the following values :
 \itemize{
-  \item{\code{omit.na} : }{a \code{logical} value defining whether all not fully referenced 
-  environmental points will get \code{NA} as predictions or not}
-  \item{\code{on_0_1000} : }{a \code{logical} value defining whether \code{0 - 1} probabilities 
-  are to be converted to \code{0 - 1000} scale to save memory on backup}
-  \item{\code{do.stack} : }{a \code{logical} value defining whether all projections are to be 
+  \item \code{omit.na} : a \code{logical} value defining whether all not fully referenced 
+  environmental points will get \code{NA} as predictions or not
+  \item \code{on_0_1000} : a \code{logical} value defining whether \code{0 - 1} probabilities 
+  are to be converted to \code{0 - 1000} scale to save memory on backup
+  \item \code{do.stack} : a \code{logical} value defining whether all projections are to be 
   saved as one \code{\link[terra:rast]{SpatRaster}} object or several 
   \code{\link[terra:rast]{SpatRaster}} files (\emph{the default if projections are too heavy to 
-  be all loaded at once in memory})}
-  \item{\code{keep.in.memory} : }{a \code{logical} value defining whether all projections are 
-  to be kept loaded at once in memory, or only links pointing to hard drive are to be returned}
-  \item{\code{output.format} : }{a \code{character} value corresponding to the projections 
+  be all loaded at once in memory})
+  \item \code{keep.in.memory} : a \code{logical} value defining whether all projections are 
+  to be kept loaded at once in memory, or only links pointing to hard drive are to be returned
+  \item \code{output.format} : a \code{character} value corresponding to the projections 
   saving format on hard drive, must be either \code{.grd}, \code{.img}, \code{.tif} or \code{.RData} (the 
-  default if \code{new.env} is given as \code{matrix} or \code{data.frame})}
+  default if \code{new.env} is given as \code{matrix} or \code{data.frame})
 }
 }
 \examples{
@@ -159,17 +159,14 @@ if (file.exists(file.out)) {
                                        resp.xy = myRespXY,
                                        resp.name = myRespName)
 
-  # Create default modeling options
-  myBiomodOptions <- BIOMOD_ModelingOptions()
-
   # Model single models
   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
                                       modeling.id = 'AllModels',
                                       models = c('RF', 'GLM'),
-                                      bm.options = myBiomodOptions,
                                       CV.strategy = 'random',
                                       CV.nb.rep = 2,
                                       CV.perc = 0.8,
+                                      OPT.strategy = 'bigboss',
                                       metric.eval = c('TSS','ROC'),
                                       var.import = 3,
                                       seed.val = 42)
@@ -201,11 +198,8 @@ Other Main functions:
 \code{\link{BIOMOD_EnsembleModeling}()},
 \code{\link{BIOMOD_FormatingData}()},
 \code{\link{BIOMOD_LoadModels}()},
-\code{\link{BIOMOD_ModelingOptions}()},
 \code{\link{BIOMOD_Modeling}()},
-\code{\link{BIOMOD_PresenceOnly}()},
-\code{\link{BIOMOD_RangeSize}()},
-\code{\link{BIOMOD_Tuning}()}
+\code{\link{BIOMOD_RangeSize}()}
 }
 \author{
 Wilfried Thuiller, Damien Georges

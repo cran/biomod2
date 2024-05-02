@@ -72,9 +72,8 @@ bm_CrossValidation_env(bm.format, ...)
 \S4method{bm_CrossValidation_env}{BIOMOD.formated.data.PA}(bm.format, balance, k, env.var)
 }
 \arguments{
-\item{bm.format}{a \code{\link{BIOMOD.formated.data-class}} or 
-\code{\link{BIOMOD.formated.data.PA-class}} object returned by the 
-\code{\link{BIOMOD_FormatingData}} function}
+\item{bm.format}{a \code{\link{BIOMOD.formated.data}} or \code{\link{BIOMOD.formated.data.PA}} 
+object returned by the \code{\link{BIOMOD_FormatingData}} function}
 
 \item{strategy}{a \code{character} corresponding to the cross-validation selection strategy, 
 must be among \code{random}, \code{kfold}, \code{block}, \code{strat}, \code{env} or 
@@ -92,19 +91,18 @@ percentage of data that will be kept for calibration}
 If \code{strategy = 'kfold'} or \code{strategy = 'strat'} or \code{strategy = 'env'}, an 
 \code{integer} corresponding to the number of partitions}
 
-\item{balance}{(\emph{optional, default} \code{'presences'}) \cr If
-\code{strategy = 'strat'} or \code{strategy = 'env'}, a \code{character}
-corresponding to how data will be balanced between partitions, must be
-either \code{presences} or \code{absence}}
+\item{balance}{(\emph{optional, default} \code{'presences'}) \cr 
+If \code{strategy = 'strat'} or \code{strategy = 'env'}, a \code{character} corresponding 
+to how data will be balanced between partitions, must be either \code{presences} or 
+\code{absence}}
 
-\item{env.var}{(\emph{optional}) \cr If \code{strategy = 'env'}, a
-\code{character} corresponding to the environmental variables used to
-build the partition. \code{k} partitions will be built for each
-environmental variables. By default the function uses all environmental
-variables available.}
+\item{env.var}{(\emph{optional}) \cr 
+If \code{strategy = 'env'}, a \code{character} corresponding to the environmental variables 
+used to build the partition. \code{k} partitions will be built for each environmental 
+variables. \emph{By default the function uses all environmental variables available.}}
 
-\item{strat}{(\emph{optional, default} \code{'both'}) \cr If \code{strategy
-= 'env'}, a \code{character} corresponding to how data will partitioned
+\item{strat}{(\emph{optional, default} \code{'both'}) \cr 
+If \code{strategy = 'env'}, a \code{character} corresponding to how data will partitioned 
 along gradient, must be among \code{x}, \code{y}, \code{both}}
 
 \item{user.table}{(\emph{optional, default} \code{NULL}) \cr
@@ -116,8 +114,8 @@ repetition (in columns) which observation lines should be used for models calibr
 A \code{logical} value defining whether models should be also calibrated and validated over 
 the whole dataset (and pseudo-absence datasets) or not}
 
-\item{\ldots}{(\emph{optional, one or several of the following arguments depending on the selected 
-method})}
+\item{\ldots}{(\emph{optional, one or several of the following arguments depending on the 
+selected method})}
 }
 \value{
 A \code{matrix} or \code{data.frame} defining for each repetition (in columns) which 
@@ -155,36 +153,44 @@ are added at the end. \cr \cr
 \bold{Concerning cross-validation strategies :}
 
 \describe{
-  \item{random}{Most simple method to calibrate and validate a model is to split the original dataset in two 
-datasets : one to calibrate the model and the other one to validate it. The splitting can be 
-repeated \code{nb.rep} times.}
-  \item{k-fold}{The k-fold method splits the original dataset in \code{k} datasets of equal sizes : each part 
-is used successively as the validation dataset while the other \code{k-1} parts are used for 
-the calibration, leading to \code{k} calibration/validation ensembles. This multiple splitting 
-can be repeated \code{nb.rep} times.}
-  \item{block}{It may be used to test for model overfitting and to assess transferability in geographic space.
-\code{block} stratification was described in \emph{Muscarella et al. 2014} (see References). 
-Four bins of equal size are partitioned (bottom-left, bottom-right, top-left and top-right).}
-  \item{stratified}{It may be used to test for model overfitting and to assess transferability in geographic space.
-\code{x} and \code{y} stratification was described in \emph{Wenger and Olden 2012} (see 
-References). \code{y} stratification uses \code{k} partitions along the y-gradient, \code{x} 
-stratification does the same for the x-gradient. \code{both} returns \code{2k} partitions: \code{k} partitions stratified along the x-gradient and \code{k} partitions stratified along the y-gradient.}
-  \item{environmental}{It may be used to test for model overfitting and to assess transferability in environmental space. It returns \code{k} partitions for each variable given in \code{env.var}.}
-  \item{user-defined}{Allow the user to give its own crossvalidation table. For a presence-absence dataset, column names must be formatted as: \code{_allData_RUNx} with \code{x} an integer. For a presence-only dataset for which several pseudo-absence dataset were generated, column names must be formatted as: \code{_PAx_RUNy} with \code{x} an integer and \code{PAx} an existing pseudo-absence dataset and \code{y} an integer \cr \cr}
+  \item{random}{Most simple method to calibrate and validate a model is to split the original 
+  dataset in two datasets : one to calibrate the model and the other one to validate it. The 
+  splitting can be repeated \code{nb.rep} times.}
+  \item{k-fold}{The k-fold method splits the original dataset in \code{k} datasets of equal 
+  sizes : each part is used successively as the validation dataset while the other \code{k-1} 
+  parts are used for the calibration, leading to \code{k} calibration/validation ensembles. 
+  This multiple splitting can be repeated \code{nb.rep} times.}
+  \item{block}{It may be used to test for model overfitting and to assess transferability in 
+  geographic space. \code{block} stratification was described in \emph{Muscarella et al. 2014} 
+  (see References). Four bins of equal size are partitioned (bottom-left, bottom-right, 
+  top-left and top-right).}
+  \item{stratified}{It may be used to test for model overfitting and to assess transferability 
+  in geographic space. \code{x} and \code{y} stratification was described in \emph{Wenger and 
+  Olden 2012} (see References). \code{y} stratification uses \code{k} partitions along the 
+  y-gradient, \code{x} stratification does the same for the x-gradient. \code{both} returns 
+  \code{2k} partitions: \code{k} partitions stratified along the x-gradient and \code{k} 
+  partitions stratified along the y-gradient.}
+  \item{environmental}{It may be used to test for model overfitting and to assess 
+  transferability in environmental space. It returns \code{k} partitions for each variable 
+  given in \code{env.var}.}
+  \item{user-defined}{Allow the user to give its own crossvalidation table. For a 
+  presence-absence dataset, column names must be formatted as: \code{_allData_RUNx} with 
+  \code{x} an integer. For a presence-only dataset for which several pseudo-absence dataset 
+  were generated, column names must be formatted as: \code{_PAx_RUNy} with \code{x} an 
+  integer and \code{PAx} an existing pseudo-absence dataset and \code{y} an integer \cr \cr}
 }
 
 
 \bold{Concerning balance parameter :}
 
-If \code{balance = 'presences'}, presences are divided (balanced) equally
-over the partitions (e.g. \emph{Fig. 1b in Muscarelly et al. 2014}).
-Absences or pseudo-absences will however be unbalanced over the partitions
-especially if the presences are clumped on an edge of the study area.
+If \code{balance = 'presences'}, presences are divided (balanced) equally over the partitions 
+(e.g. \emph{Fig. 1b in Muscarelly et al. 2014}). 
+Absences or pseudo-absences will however be unbalanced over the partitions especially if the 
+presences are clumped on an edge of the study area.
 
-If \code{balance = 'absences'}, absences (resp. pseudo-absences or
-background) are divided (balanced) as equally as possible between the
-partitions (geographical balanced bins given
-that absences are spread over the study area equally, approach similar to \emph{Fig. 1 in
+If \code{balance = 'absences'}, absences (resp. pseudo-absences or background) are divided 
+(balanced) as equally as possible between the partitions (geographical balanced bins given 
+that absences are spread over the study area equally, approach similar to \emph{Fig. 1 in 
 Wenger et Olden 2012}). Presences will however be unbalanced over the partitions especially
 if the presences are clumped on an edge of the study area.
 }
@@ -282,9 +288,9 @@ apply(cv.e, 2, table)
 
 Other Secundary functions: 
 \code{\link{bm_BinaryTransformation}()},
-\code{\link{bm_CVnnet}()},
 \code{\link{bm_FindOptimStat}()},
 \code{\link{bm_MakeFormula}()},
+\code{\link{bm_ModelingOptions}()},
 \code{\link{bm_PlotEvalBoxplot}()},
 \code{\link{bm_PlotEvalMean}()},
 \code{\link{bm_PlotRangeSize}()},
@@ -295,6 +301,7 @@ Other Secundary functions:
 \code{\link{bm_SRE}()},
 \code{\link{bm_SampleBinaryVector}()},
 \code{\link{bm_SampleFactorLevels}()},
+\code{\link{bm_Tuning}()},
 \code{\link{bm_VariablesImportance}()}
 }
 \author{

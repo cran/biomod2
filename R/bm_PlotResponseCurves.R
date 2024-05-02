@@ -67,7 +67,7 @@
 ##' \code{...} can take the following values :
 ##' 
 ##' \itemize{
-##'   \item{\code{main}}{ : a \code{character} corresponding to the graphic title}
+##'   \item \code{main} : a \code{character} corresponding to the graphic title
 ##' }
 ##' 
 ##' 
@@ -126,17 +126,14 @@
 ##'                                        resp.xy = myRespXY,
 ##'                                        resp.name = myRespName)
 ##' 
-##'   # Create default modeling options
-##'   myBiomodOptions <- BIOMOD_ModelingOptions()
-##' 
 ##'   # Model single models
 ##'   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
 ##'                                       modeling.id = 'AllModels',
 ##'                                       models = c('RF', 'GLM'),
-##'                                       bm.options = myBiomodOptions,
 ##'                                       CV.strategy = 'random',
 ##'                                       CV.nb.rep = 2,
 ##'                                       CV.perc = 0.8,
+##'                                       OPT.strategy = 'bigboss',
 ##'                                       metric.eval = c('TSS','ROC'),
 ##'                                       var.import = 3,
 ##'                                       seed.val = 42)
@@ -166,7 +163,7 @@
 ##'                                       
 ##'                                       
 ##' @importFrom terra rast cats global is.factor nlyr                                    
-##' @importFrom foreach foreach %:%
+##' @importFrom foreach foreach %do% %:%
 ##' @importFrom reshape2 melt
 ##' @importFrom ggplot2 ggplot aes_string geom_line geom_rug geom_raster facet_wrap xlab ylab labs 
 ##' theme element_blank element_rect element_text scale_fill_viridis_c
@@ -249,7 +246,7 @@ bm_PlotResponseCurves <- function(bm.out
             mod.name <- ifelse(use.formal.names, formal_names[which(is.element(models, model))], model)
             
             temp_workdir = NULL
-            if (length(grep("MAXENT$", mod.name)) == 1) {
+            if (inherits(mod, "MAXENT_biomod2_model")) {
               temp_workdir = mod@model_output_dir
             }
             proj.tmp <- predict(mod, newdata = new.env.r.tmp, on_0_1000 = on_0_1000, do_check = FALSE, temp_workdir = temp_workdir, seedval = NULL)

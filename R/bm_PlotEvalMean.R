@@ -44,10 +44,10 @@
 ##' \code{...} can take the following values :
 ##' 
 ##' \itemize{
-##'   \item{\code{xlim}}{ : an \code{integer} corresponding to the x maximum limit to represent}
-##'   \item{\code{ylim}}{ : an \code{integer} corresponding to the y maximum limit to represent}
-##'   \item{\code{main}}{ : a \code{character} corresponding to the graphic title}
-##'   \item{\code{col}}{ : a \code{vector} containing new color values}
+##'   \item \code{xlim} : an \code{integer} corresponding to the x maximum limit to represent
+##'   \item \code{ylim} : an \code{integer} corresponding to the y maximum limit to represent
+##'   \item \code{main} : a \code{character} corresponding to the graphic title
+##'   \item \code{col} : a \code{vector} containing new color values
 ##' }
 ##' 
 ##' 
@@ -98,17 +98,14 @@
 ##'                                        resp.xy = myRespXY,
 ##'                                        resp.name = myRespName)
 ##' 
-##'   # Create default modeling options
-##'   myBiomodOptions <- BIOMOD_ModelingOptions()
-##' 
 ##'   # Model single models
 ##'   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
 ##'                                       modeling.id = 'AllModels',
 ##'                                       models = c('RF', 'GLM'),
-##'                                       bm.options = myBiomodOptions,
 ##'                                       CV.strategy = 'random',
 ##'                                       CV.nb.rep = 2,
 ##'                                       CV.perc = 0.8,
+##'                                       OPT.strategy = 'bigboss',
 ##'                                       metric.eval = c('TSS','ROC'),
 ##'                                       var.import = 3,
 ##'                                       seed.val = 42)
@@ -193,8 +190,9 @@ bm_PlotEvalMean <- function(bm.out, metric.eval = NULL, dataset = 'calibration',
   .fun_testIfInherits(TRUE, "bm.out", bm.out, c("BIOMOD.models.out", "BIOMOD.ensemble.models.out"))
   
   ## 2. Check metric.eval argument --------------------------------------------
-  if (is.null(metric.eval)) {
-    scores <- get_evaluations(bm.out)
+  scores <- get_evaluations(bm.out)
+  avail.metrics <- sort(unique(as.character(scores$metric.eval)))
+  if (is.null(metric.eval) && length(avail.metrics) > 1) {
     metric.eval <- sort(unique(as.character(scores$metric.eval)))[1:2]
     warnings(toString(metric.eval), " evaluation metric.eval automatically selected")
   } else {
