@@ -1,8 +1,8 @@
 Package: biomod2
 Type: Package
 Title: Ensemble Platform for Species Distribution Modeling
-Version: 4.2-5
-Date: 2024-04-30
+Version: 4.2-5-2
+Date: 2024-05-31
 Authors@R: c(person("Wilfried", "Thuiller", role = c("aut")
                     , email = "wilfried.thuiller@univ-grenoble-alpes.fr"),
              person("Damien", "Georges", role = c("aut")),
@@ -62,6 +62,6 @@ Collate: 'biomod2-package.R' 'biomod2_globalVariables.R'
         'bm_Tuning.R' 'bm_VariablesImportance.R' 'zzz.R'
 LazyData: true
 NeedsCompilation: no
-Packaged: 2024-05-02 12:22:18 UTC; gueguema
+Packaged: 2024-06-14 14:31:19 UTC; gueguema
 Repository: CRAN
-Date/Publication: 2024-05-02 13:52:59 UTC
+Date/Publication: 2024-06-14 15:10:02 UTC

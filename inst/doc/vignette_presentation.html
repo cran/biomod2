@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Presentation</title>
+<style type="text/css">
+body {
+  font-family: sans-serif;
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+body, .footnotes, code { font-size: .9em; }
+li li { font-size: .95em; }
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+pre, img { max-width: 100%; }
+pre, pre:hover {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+pre code {
+  display: block;
+  overflow-x: auto;
+}
+code { font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace; }
+:not(pre) > code, code[class] { background-color: #F8F8F8; }
+code.language-undefined, pre > code:not([class]) {
+  background-color: inherit;
+  border: 1px solid #eee;
+}
+table {
+  margin: auto;
+  border-top: 1px solid #666;
+}
+table thead th { border-bottom: 1px solid #ddd; }
+th, td { padding: 5px; }
+thead, tfoot, tr:nth-child(even) { background: #eee; }
+blockquote {
+  color: #666;
+  margin: 0;
+  padding-left: 1em;
+  border-left: 0.5em solid #eee;
+}
+hr, .footnotes::before { border: 1px dashed #ddd; }
+.frontmatter { text-align: center; }
+#TOC .numbered li { list-style: none; }
+#TOC .numbered { padding-left: 0; }
+#TOC .numbered ul { padding-left: 1em; }
+table, .body h2 { border-bottom: 1px solid #666; }
+.body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
+.footnote-ref a::before { content: "["; }
+.footnote-ref a::after { content: "]"; }
+section.footnotes::before {
+  content: "";
+  display: block;
+  max-width: 20em;
+}
+
+@media print {
+  body {
+    font-size: 12pt;
+    max-width: 100%;
+  }
+  tr, img { page-break-inside: avoid; }
+}
+@media only screen and (min-width: 992px) {
+  pre { white-space: pre; }
+}
+</style>
+</head>
+<body>
+<div class="frontmatter">
+<div class="title"><h1>Presentation</h1></div>
+<div class="author"><h2></h2></div>
+<div class="date"><h3></h3></div>
+</div>
+<div class="body">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<p><em>To follow <strong>biomod2</strong> evolution of organization and features, the presentation below details the different steps and modules of the package.</em></p>
+<p><br/><br/></p>
+<div style="text-align:center;">
+<embed src="pictures/biomod2_presentation.workflow_05_2024.pdf" width="900" height="700" type="application/pdf" allowfullscreen webkitallowfullscreen>
+</embed>
+</div>
+<p><br/><br/></p>
+<div align="center">
+<p><a href="https://biomodhub.github.io/biomod2/articles/pictures/SCHEMA_BIOMOD2_WORKFLOW_functions.pdf">Download pdf of WORKFLOW GRAPHIC <i class="fas fa-download"></i></a></p>
+<p><a href="https://biomodhub.github.io/biomod2/articles/pictures/biomod2_presentation.workflow_05_2024.pdf">Download pdf of PRESENTATION <i class="fas fa-download"></i></a></p>
+</div>
+<h4 id="data-formating-biomod-formatingdata"><i class="fa-solid fa-list-check"></i> Data formating : <a href="../reference/BIOMOD_FormatingData.html">BIOMOD_FormatingData</a></h4>
+<ul>
+<li>
+<p><strong>Formating data</strong> : combine observations, coordinates and explanatory variables, <br/>and sample pseudo-absences for presence-only data (<em>through <a href="../reference/bm_PseudoAbsences.html">bm_PseudoAbsences</a></em>)</p>
+</li>
+<li>
+<p><strong>Cross-validation</strong> : create calibration / validation datasets (<em>through <a href="../reference/bm_CrossValidation.html">bm_CrossValidation</a></em>)</p>
+</li>
+<li>
+<p><strong>Modeling options</strong> (<em>with the help of <a href="../reference/ModelsTable.html">ModelsTable</a> and <a href="../reference/OptionsBigboss.html">OptionsBigboss</a> datasets</em>)</p>
+<ul>
+<li>Define specific options for single models (<em>through <a href="../reference/bm_ModelingOptions.html">bm_ModelingOptions</a></em>)</li>
+<li>And tune with your own data (<em>through <a href="../reference/bm_Tuning.html">bm_Tuning</a></em>)</li>
+</ul>
+</li>
+</ul>
+<h4 id="single-models-biomod-modeling"><i class="fa-solid fa-virus"></i> Single models : <a href="../reference/BIOMOD_Modeling.html">BIOMOD_Modeling</a></h4>
+<ul>
+<li>
+<p><strong>Evaluation</strong> : transform predicted probabilities in binary values (<em>through <a href="../reference/bm_BinaryTransformation.html">bm_BinaryTransformation</a></em>), <br/>and compute evaluation metrics (<em>through <a href="../reference/bm_FindOptimStat.html">bm_FindOptimStat</a></em>)</p>
+</li>
+<li>
+<p><strong>Variables’ importance</strong> : estimate the impact of each explanatory variable on predictions (<em>through <a href="../reference/bm_VariablesImportance.html">bm_VariablesImportance</a></em>)</p>
+</li>
+</ul>
+<h4 id="ensemble-models-biomod-ensemblemodeling"><i class="fa-solid fa-viruses"></i> Ensemble models : <a href="../reference/BIOMOD_EnsembleModeling.html">BIOMOD_EnsembleModeling</a></h4>
+<ul>
+<li>Filter single models based on one evaluation metric</li>
+<li>Combine them according to different combinations</li>
+<li>And build ensemble models</li>
+</ul>
+<h4 id="exploring-outputs"><i class="fas fa-chart-bar"></i> Exploring outputs</h4>
+<ul>
+<li>Evaluation : <a href="../reference/bm_PlotEvalMean.html">bm_PlotEvalMean</a>, <a href="../reference/bm_PlotEvalBoxplot.html">bm_PlotEvalBoxplot</a></li>
+<li>Variables’ importance : <a href="../reference/bm_PlotVarImpBoxplot.html">bm_PlotVarImpBoxplot</a></li>
+<li>Response curves : <a href="../reference/bm_PlotResponseCurves.html">bm_PlotResponseCurves</a></li>
+</ul>
+<h4 id="projecting-models-biomod-projection-biomod-ensembleforecasting"><i class="fa-solid fa-earth-europe"></i> Projecting models : <a href="../reference/BIOMOD_Projection.html">BIOMOD_Projection</a>, <a href="../reference/BIOMOD_BIOMOD_EnsembleForecasting.html">BIOMOD_EnsembleForecasting</a></h4>
+<ul>
+<li>Project models onto new conditions</li>
+<li>Transform predicted probabilities in binary values (<em>through <a href="../reference/bm_BinaryTransformation.html">bm_BinaryTransformation</a></em>)</li>
+</ul>
+<h4 id="species-range-change-biomod-rangesize"><i class="fa-solid fa-ruler-combined"></i> Species range change : <a href="../reference/BIOMOD_RangeSize.html">BIOMOD_RangeSize</a></h4>
+</div>
+</body>
+</html>

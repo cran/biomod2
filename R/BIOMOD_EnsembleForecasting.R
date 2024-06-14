@@ -38,16 +38,16 @@
 ##' A \code{vector} containing evaluation metric names to be used to transform prediction values 
 ##' into binary values based on models evaluation scores obtained with the 
 ##' \code{\link{BIOMOD_Modeling}} function. Must be among \code{all} (same evaluation metrics than 
-##' those of \code{modeling.output}) or \code{ROC}, \code{TSS}, \code{KAPPA}, \code{ACCURACY}, 
-##' \code{BIAS}, \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, \code{CSI}, \code{ETS}, 
-##' \code{HK}, \code{HSS}, \code{OR}, \code{ORSS}
+##' those of \code{modeling.output}) or \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, 
+##' \code{ACCURACY}, \code{BIAS}, \code{ROC}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, 
+##' \code{CSI}, \code{ETS}, \code{BOYCE}, \code{MPA}
 ##' @param metric.filter (\emph{optional, default} \code{NULL}) \cr 
 ##' A \code{vector} containing evaluation metric names to be used to transform prediction values 
 ##' into filtered values based on models evaluation scores obtained with the 
 ##' \code{\link{BIOMOD_Modeling}} function. Must be among \code{all} (same evaluation metrics than 
-##' those of \code{modeling.output}) or \code{ROC}, \code{TSS}, \code{KAPPA}, \code{ACCURACY}, 
-##' \code{BIAS}, \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, \code{CSI}, \code{ETS}, 
-##' \code{HK}, \code{HSS}, \code{OR}, \code{ORSS}
+##' those of \code{modeling.output}) or \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, 
+##' \code{ACCURACY}, \code{BIAS}, \code{ROC}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, 
+##' \code{CSI}, \code{ETS}, \code{BOYCE}, \code{MPA}
 ##' 
 ##' @param compress (\emph{optional, default} \code{TRUE}) \cr 
 ##' A \code{logical} or a \code{character} value defining whether and how objects should be 
@@ -593,11 +593,13 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
     }
     
     if (inherits(new.env, 'SpatRaster')) {
-      .fun_testIfIn(TRUE, "names(new.env)", names(new.env), bm.em@expl.var.names)
+      .fun_testIfIn(TRUE, "names(new.env)", names(new.env), bm.em@expl.var.names, exact = TRUE)
+      new.env <- new.env[[bm.em@expl.var.names]]
       new.env.mask <- .get_data_mask(new.env, value.out = 1)
       new.env <- mask(new.env, new.env.mask)
     } else {
-      .fun_testIfIn(TRUE, "colnames(new.env)", colnames(new.env), bm.em@expl.var.names)
+      .fun_testIfIn(TRUE, "colnames(new.env)", colnames(new.env), bm.em@expl.var.names, exact = TRUE)
+      new.env <- new.env[ , bm.em@expl.var.names, drop = FALSE]
     }
     
     which.factor <- which(sapply(new.env, is.factor))

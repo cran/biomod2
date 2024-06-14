@@ -1,5 +1,5 @@
 [![Cran Version](https://www.r-pkg.org/badges/version/biomod2?color=yellow)](https://cran.r-project.org/package=biomod2)
-[![Github Version](https://img.shields.io/badge/devel%20version-4.2--5-blue.svg)](https://github.com/biomodhub/biomod2)
+[![Github Version](https://img.shields.io/badge/devel%20version-4.2--5--2-blue.svg)](https://github.com/biomodhub/biomod2)
 [![Last Commit](https://img.shields.io/github/last-commit/biomodhub/biomod2.svg)](https://github.com/biomodhub/biomod2/commits/master)
 [![R-CMD-check](https://github.com/biomodhub/biomod2/actions/workflows/R-CMD-check.yml/badge.svg)](https://github.com/biomodhub/biomod2/actions/workflows/R-CMD-check.yml)
 
@@ -22,7 +22,10 @@ z-index: 10;
 }
 </style>
 
+
 <div align="center">
+<p><img src="articles/pictures/LogoBiomod.png" alt="Logo biomod2" width=150px></img></p>
+
 <b>------------------------------------------------------------<br/>
 Species distribution modeling, <br/>
 calibration and evaluation, <br/>
@@ -46,7 +49,7 @@ install.packages("biomod2", dependencies = TRUE)
 
 <br/>
 
-- **Development version** [![v](https://img.shields.io/badge/devel%20version-4.2--5-blue.svg)](https://github.com/biomodhub/biomod2) from [biomodhub](https://github.com/biomodhub/biomod2) :
+- **Development version** [![v](https://img.shields.io/badge/devel%20version-4.2--5--2-blue.svg)](https://github.com/biomodhub/biomod2) from [biomodhub](https://github.com/biomodhub/biomod2) :
 
 ```R
 library(devtools)
@@ -57,7 +60,7 @@ devtools::install_github("biomodhub/biomod2", dependencies = TRUE)
 
 ### <i class="fas fa-envelope-open-text"></i> `biomod 4.2-5` - Modeling options & Tuning Update
 
-**! `biomod2 4.2-5` is now available on GitHub !**
+**! `biomod2 4.2-5` is now available on CRAN !**
 
 `/!\` Please **feel free to indicate if you notice some strange new behaviors** !
 
@@ -70,7 +73,10 @@ devtools::install_github("biomodhub/biomod2", dependencies = TRUE)
 #### <i class="fas fa-plus-square"></i> What is new ?
 
 - `ModelsTable` and `OptionsBigboss` datasets (*note that improvement of bigboss modeling options is planned in near future*)
-- [data preparation vignette](https://biomodhub.github.io/biomod2/articles/vignette_dataPreparation.html) has been created (*questions you should ask yourself before modeling*)
+- 3 new vignettes have been created :
+    - [data preparation](https://biomodhub.github.io/biomod2/articles/vignette_dataPreparation.html) (*questions you should ask yourself before modeling*)
+    - [cross-validation](https://biomodhub.github.io/biomod2/articles/vignette_crossValidation.html) (*to prepare your own calibration / validation datasets*)
+    - [modeling options](https://biomodhub.github.io/biomod2/articles/vignette_dataPreparation.html) (*to help you navigate through the new way of parameterizing single models*)
 
 <br/>
 
@@ -78,7 +84,7 @@ devtools::install_github("biomodhub/biomod2", dependencies = TRUE)
 <p><img src="articles/pictures/SCHEMA_BIOMOD2_WORKFLOW_functions.png" alt="Main workflow"></img></p>
 </div>
 
-<br/><br/>
+<br/><br/><br/>
 
 
 
