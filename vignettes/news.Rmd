@@ -10,10 +10,33 @@ vignette: >
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
 
 
-
 ## <i class="fas fa-code"></i> Development updates
 
-### <i class="fas fa-pencil-alt"></i> 2024 
+### <i class="fas fa-pen-alt"></i> 2025
+
+### <i class="fas fa-pencil-alt"></i> 2024
+
+##### Bugfix
+
+- 4.2-6-2 :
+  + fix `get_evaluations` and `get_variables_importance` message when data is not available (extended to `bm_Plot[...]` functions)
+  + ~~add cluster management code through `parallel::stopCluster` and `foreach:::.foreachGlobals`~~ <br/>
+  finally rather through `.errorhandling` in `foreach` loop in `bm_RunModelsLoop` (_for MAXENT on Windows_)
+  + merge request improving balanced partitions for stratification strategy in `bm_CrossValidation`
+  + fix metric selection in `bm_PlotEvalMean`
+  + add new tutorial video (_for version 4.2-6_)
+  + add `MAXENT.partitions`, `MAXENT.kfolds`, `MAXENT.user.grp` and `MAXENT.tune.args` parameters in `bm_Tuning` function
+- 4.2-6-1 : fixed path failure within species name (e.g. data format like `tif`)
+
+
+#### 4.2-6 RFd and some tuning (2024-07-22)
+
+- Warning ! Some options for `OptionsBigboss` have been modified (concerns only ANN, CTA and RF models)
+- Some changes for the tuning ranges.
+- Add `RFd` : Random Forest with a down-sampling method.
+- Add `seed.val` for `bm_pseudoAbsences` and `BIOMOD_FormatingData`.
+- Add `fact.aggr` argument for pseudo-absences selection with the random and disk methods. It allows to reduce the resolution of the environment.
+- Possibility to give the same options to all datasets with _"for_all_datasets"_ in `bm_ModelingOptions`.
 
 ##### Bugfix
 
@@ -23,7 +46,8 @@ vignette: >
 - 4.2-5-1 :
   + removed `tests/` folder (unused)
   + fixed check for variable names for `new.env` in `BIOMOD_Projection` and `BIOMOD_EnsembleForecasting`
-  + fixed connexion issue with MAXENT tuning
+  + fixed connection issue with `MAXENT` tuning
+
 
 #### 4.2-5 Modeling options and Tuning (2024-05-02)
 

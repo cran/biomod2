@@ -90,7 +90,7 @@ section.footnotes::before {
 <p>3 different methods are implemented within <code>biomod2</code> to select pseudo-absences (PA) :</p>
 <ol>
 <li>the <strong>random</strong> method : PA are randomly selected over the studied area (excluding presence points)</li>
-<li>the <strong>disk</strong> method : PA are randomly selected within circles around presence points defined by a minimum and a maximum distance values (defined in meters).</li>
+<li>the <strong>disk</strong> method : PA are randomly selected within circles around presence points defined by a minimum and a maximum distance values (defined in the same projection system units as the presence points).</li>
 <li>the <strong>SRE</strong> method : a Surface Range Envelop model is used to randomly select PA outside this envelop, i.e. in conditions (combination of explanatory variables) that differ in a defined proportion from those of presence points.</li>
 </ol>
 <p>The selection of one or the other method will depend on a more important and underlying question : <em>how were obtained the dataset presence points ?</em></p>
@@ -160,7 +160,7 @@ section.footnotes::before {
 <li>MARS, MDA : averaging several runs with relatively fewer PA (100) with presences and absences weighted equally</li>
 <li>CTA, BRT, RF : same amount of PA as available presences</li>
 </ul>
-<p><code>biomod2</code> team advices :</p>
+<p>advice from <code>biomod2</code>’s team:</p>
 <ul>
 <li>random selection of PA when high specificity is valued over high sensitivity</li>
 <li>number of PA = 3 times the number of presences</li>

@@ -182,7 +182,7 @@ myBiomodData
 plot(myBiomodData)
 </code></pre>
 <h4 id="pseudo-absences-extraction"><i class="fa-solid fa-shuffle"></i> Pseudo-absences extraction</h4>
-<p>Single or multiple set of pseudo-absences can be selected with the <a href="../reference/BIOMOD_FormatingData.html"><code>BIOMOD_FormatingData</code></a> function, which calls the <a href="../reference/bm_PseudoAbsences.html"><code>bm_PseudoAbsences</code></a> function to do so. More examples are presented on the <a href="examples_2_secundaryFunctions.html">Secundary functions webpage</a>.</p>
+<p>Single or multiple set of pseudo-absences can be selected with the <a href="../reference/BIOMOD_FormatingData.html"><code>BIOMOD_FormatingData</code></a> function, which calls the <a href="../reference/bm_PseudoAbsences.html"><code>bm_PseudoAbsences</code></a> function to do so. More examples are presented on the <a href="examples_2_secundaryFunctions.html">Secondary functions webpage</a>.</p>
 <pre><code class="language-R"># # Transform true absences into potential pseudo-absences
 # myResp.PA &lt;- ifelse(myResp == 1, 1, NA)
 # 
@@ -216,7 +216,7 @@ plot(myBiomodData)
 # plot(myBiomodData.multi)
 </code></pre>
 <h4 id="cross-validation-datasets"><i class="fa-solid fa-scissors"></i> Cross-validation datasets</h4>
-<p>Several cross-validation methods are available and can be selected with the <a href="../reference/BIOMOD_Modeling.html"><code>BIOMOD_Modeling</code></a> function, which calls the <a href="../reference/bm_CrossValidation.html"><code>bm_CrossValidation</code></a> function to do so. More examples are presented on the <a href="examples_2_secundaryFunctions.html">Secundary functions webpage</a>.</p>
+<p>Several cross-validation methods are available and can be selected with the <a href="../reference/BIOMOD_Modeling.html"><code>BIOMOD_Modeling</code></a> function, which calls the <a href="../reference/bm_CrossValidation.html"><code>bm_CrossValidation</code></a> function to do so. More examples are presented on the <a href="examples_2_secundaryFunctions.html">Secondary functions webpage</a>.</p>
 <pre><code class="language-R"># # k-fold selection
 # cv.k &lt;- bm_CrossValidation(bm.format = myBiomodData,
 #                            strategy = &quot;kfold&quot;,
@@ -233,7 +233,7 @@ plot(myBiomodData)
 # head(cv.s)
 </code></pre>
 <h4 id="retrieve-modeling-options"><i class="fa-solid fa-rectangle-list"></i> Retrieve modeling options</h4>
-<p>Modeling options are automatically retrieved from selected models within the <a href="../reference/BIOMOD_Modeling.html"><code>BIOMOD_Modeling</code></a> function, which calls the <a href="../reference/bm_ModelingOptions.html"><code>bm_ModelingOptions</code></a> function to do so. Model parameters can also be automatically tuned to a specific dataset, by calling the <a href="../reference/bm_Tuning.html"><code>bm_Tuning</code></a> function, however it can be quite long. More examples are presented on the <a href="examples_2_secundaryFunctions.html">Secundary functions webpage</a>.</p>
+<p>Modeling options are automatically retrieved from selected models within the <a href="../reference/BIOMOD_Modeling.html"><code>BIOMOD_Modeling</code></a> function, which calls the <a href="../reference/bm_ModelingOptions.html"><code>bm_ModelingOptions</code></a> function to do so. Model parameters can also be automatically tuned to a specific dataset, by calling the <a href="../reference/bm_Tuning.html"><code>bm_Tuning</code></a> function, however it can be quite long. More examples are presented on the <a href="examples_2_secundaryFunctions.html">Secondary functions webpage</a>.</p>
 <pre><code class="language-R"># # bigboss parameters
 # opt.b &lt;- bm_ModelingOptions(data.type = 'binary',
 #                             models = c('SRE', 'XGBOOST'),
@@ -249,7 +249,7 @@ plot(myBiomodData)
 # opt.t
 </code></pre>
 <p><br/><br/></p>
-<h3 id="run-modelisation"><i class="fa-solid fa-gear"></i> Run modelisation</h3>
+<h3 id="run-modeling"><i class="fa-solid fa-gear"></i> Run modeling</h3>
 <h4 id="single-models_1"><i class="fa-solid fa-virus"></i> Single models</h4>
 <pre><code class="language-R"># Model single models
 myBiomodModelOut &lt;- BIOMOD_Modeling(bm.format = myBiomodData,

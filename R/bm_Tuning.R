@@ -10,7 +10,7 @@
 ##'
 ##' @param model a \code{character} corresponding to the  algorithm to be tuned, must be either 
 ##' \code{ANN}, \code{CTA}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
-##' \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{SRE}, \code{XGBOOST}
+##' \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{RFd}, \code{SRE}, \code{XGBOOST}
 ##' @param tuning.fun a \code{character} corresponding to the model function name to be called 
 ##' through \code{\link[caret]{train}} function for tuning parameters (see \code{\link{ModelsTable}} 
 ##' dataset)
@@ -74,8 +74,10 @@
 ##'   \item{GAM.mgcv}{\code{select}, \code{method}}
 ##'   \item{GBM}{\code{n.trees}, \code{interaction.depth}, \code{shrinkage}, \code{n.minobsinnode}}
 ##'   \item{MARS}{\code{degree}, \code{nprune}}
-##'   \item{MAXENT}{\code{algorithm}, \code{parallel}}
+##'   \item{MAXENT}{\code{algorithm},\code{tune.args}, \code{parallel}, \code{partitions}, \code{kfolds}, 
+##'   \code{user.grp}}
 ##'   \item{RF}{\code{mtry}}
+##'   \item{RFd}{\code{mtry}}
 ##'   \item{SRE}{\code{quant}}
 ##'   \item{XGBOOST}{\code{nrounds}, \code{max_depth}, \code{eta}, \code{gamma}, 
 ##'   \code{colsampl_bytree}, \code{min_child_weight}, \code{subsample}}
@@ -108,7 +110,7 @@
 ##' \code{\link[ENMeval]{ENMevaluate}}, 
 ##' \code{\link{ModelsTable}}, \code{\link{BIOMOD.models.options}}, 
 ##' \code{\link{bm_ModelingOptions}}, \code{\link{BIOMOD_Modeling}}
-##' @family Secundary functions
+##' @family Secondary functions
 ##' 
 ##' 
 ##' @examples
@@ -202,10 +204,10 @@ bm_Tuning <- function(model,
                       weights = NULL,
                       ctrl.train = NULL,
                       params.train = list(ANN.size = c(2, 4, 6, 8),
-                                          ANN.decay = c(0.001, 0.01, 0.05, 0.1),
+                                          ANN.decay = c(0.01, 0.05, 0.1),
                                           ANN.bag = FALSE, 
                                           FDA.degree = 1:2, 
-                                          FDA.nprune = 2:38,
+                                          FDA.nprune = 2:25,
                                           GAM.select = c(TRUE, FALSE),
                                           GAM.method = c('GCV.Cp', 'GACV.Cp', 'REML', 'P-REML', 'ML', 'P-ML'),
                                           GAM.span = c(0.3, 0.5, 0.7),
@@ -215,10 +217,15 @@ bm_Tuning <- function(model,
                                           GBM.shrinkage = c(0.001, 0.01, 0.1),
                                           GBM.n.minobsinnode = 10,
                                           MARS.degree = 1:2, 
-                                          MARS.nprune = 2:max(38, 2 * ncol(bm.format@data.env.var) + 1),
+                                          MARS.nprune = 2:max(21, 2 * ncol(bm.format@data.env.var) + 1),
                                           MAXENT.algorithm = 'maxnet',
                                           MAXENT.parallel = TRUE,
+                                          MAXENT.tune.args = list(rm = seq(0.5, 1, 0.5), fc = c("L")),
+                                          MAXENT.partitions = 'randomkfold',
+                                          MAXENT.kfolds = 10,
+                                          MAXENT.user.grp = NULL,
                                           RF.mtry = 1:min(10, ncol(bm.format@data.env.var)),
+                                          RFd.mtry = 1:min(10, ncol(bm.format@data.env.var)),
                                           SRE.quant = c(0, 0.0125, 0.025, 0.05, 0.1),
                                           XGBOOST.nrounds = 50,
                                           XGBOOST.max_depth = 1,
@@ -316,12 +323,14 @@ bm_Tuning <- function(model,
           }
           
           if (model == "MAXENT") { # ------------------------------------------#
+            
             try(tune.MAXENT <- ENMeval::ENMevaluate(occs = mySpExpl[mySpExpl[, 1] == 1 & !is.na(mySpExpl[, 1]), ],
                                                     bg = mySpExpl[mySpExpl[, 1] == 0 | is.na(mySpExpl[, 1]), ],
-                                                    tune.args = list(rm = seq(0.5, 1, 0.5), fc = c("L")),
+                                                    tune.args = params.train$MAXENT.tune.args,
                                                     algorithm = params.train$MAXENT.algorithm,
-                                                    partitions = "randomkfold",
-                                                    partition.settings = list(kfolds = 10),
+                                                    partitions = params.train$MAXENT.partitions,
+                                                    partition.settings = list(kfolds = params.train$MAXENT.kfolds),
+                                                    user.grp = params.train$MAXENT.user.grp,
                                                     doClamp = TRUE, ## allow to change or not ?
                                                     parallel = params.train$MAXENT.parallel,
                                                     numCores = NULL, ## default to 1 or NULL (all available cores used then) ?
@@ -425,7 +434,7 @@ bm_Tuning <- function(model,
               
               tuning.form <- tuning.grid[which.max(tmp[, metric.eval]), ]
               
-              if (model == "RF") {
+              if (model %in% c("RF","RFd")) {
                 tuning.form <- data.frame(mtry = tuning.grid[which.max(tmp[, metric.eval]), ])
               }
               
@@ -475,7 +484,7 @@ bm_Tuning <- function(model,
                   }
                 }
             } else {
-              if (model == "RF") { typ.vec = c('simple','quadratic', 'polynomial') }
+              if (model %in% c("RF","RFd")) { typ.vec = c('simple','quadratic', 'polynomial') }
               
               TMP <- foreach (typ = typ.vec, .combine = "rbind") %:%
                 foreach (intlev = 0:max.intlev, .combine = "rbind") %do%
@@ -494,7 +503,7 @@ bm_Tuning <- function(model,
                 }
             }
             argstmp$formula <- TMP[which.max(TMP[, metric.eval]), "formula"]
-            if (model %in% c("ANN", "GAM", "GBM", "MARS", "RF")) {
+            if (model %in% c("ANN", "GAM", "GBM", "MARS", "RF","RFd")) {
               argstmp$formula <- formula(argstmp$formula)
             }
           } else {
@@ -563,7 +572,7 @@ bm_Tuning <- function(model,
 {
   ## check model --------------------------------------------------------------
   .fun_testIfIn(TRUE, "model", model, c("ANN", "CTA", "FDA", "GAM", "GBM", "GLM"
-                                        , "MARS", "MAXENT", "MAXNET", "RF", "SRE", "XGBOOST"))
+                                        , "MARS", "MAXENT", "MAXNET", "RF","RFd", "SRE", "XGBOOST"))
   
   ## check namespace ----------------------------------------------------------
   if (!isNamespaceLoaded("caret")) { 
@@ -587,10 +596,10 @@ bm_Tuning <- function(model,
   .fun_testIfInherits(TRUE, "bm.format", bm.format, c("BIOMOD.formated.data", "BIOMOD.formated.data.PA"))
   ## check params.train -------------------------------------------------------
   params.train_init = list(ANN.size = c(2, 4, 6, 8),
-                           ANN.decay = c(0.001, 0.01, 0.05, 0.1),
+                           ANN.decay = c(0.01, 0.05, 0.1),
                            ANN.bag = FALSE, 
                            FDA.degree = 1:2, 
-                           FDA.nprune = 2:38,
+                           FDA.nprune = 2:25,
                            GAM.select = c(TRUE, FALSE),
                            GAM.method = c('GCV.Cp', 'GACV.Cp', 'REML', 'P-REML', 'ML', 'P-ML'),
                            GAM.span = c(0.3, 0.5, 0.7),
@@ -600,10 +609,15 @@ bm_Tuning <- function(model,
                            GBM.shrinkage = c(0.001, 0.01, 0.1),
                            GBM.n.minobsinnode = 10,
                            MARS.degree = 1:2, 
-                           MARS.nprune = 2:max(38, 2 * ncol(bm.format@data.env.var) + 1),
+                           MARS.nprune = 2:max(21, 2 * ncol(bm.format@data.env.var) + 1),
                            MAXENT.algorithm = 'maxnet',
+                           MAXENT.tune.args = list(rm = seq(0.5, 1, 0.5), fc = c("L")),
                            MAXENT.parallel = TRUE,
+                           MAXENT.partitions = 'randomkfold',
+                           MAXENT.kfolds = 10,
+                           MAXENT.user.grp = NULL,
                            RF.mtry = 1:min(10, ncol(bm.format@data.env.var)),
+                           RFd.mtry = 1:min(10, ncol(bm.format@data.env.var)),
                            SRE.quant = c(0, 0.0125, 0.025, 0.05, 0.1),
                            XGBOOST.nrounds = 50,
                            XGBOOST.max_depth = 1,
@@ -619,6 +633,7 @@ bm_Tuning <- function(model,
     }
   }
   params.train = params.train_init
+
   ## check evaluation metric --------------------------------------------------
   if (model == "MAXENT") {
     .fun_testIfIn(TRUE, "metric.eval", metric.eval, c("auc.val.avg", "auc.diff.avg", "or.mtp.avg", "or.10p.avg", "AICc"))
@@ -647,9 +662,10 @@ bm_Tuning <- function(model,
   train.params <- all.params[[tuning.fun]]
   ## get tuning grid through params.train -------------------------------------
   tuning.grid <- NULL
-  if (model %in% c("ANN", "FDA", "GAM", "GBM", "MARS", "RF", "XGBOOST")) {
+
+  if (model %in% c("ANN", "FDA", "GAM", "GBM", "MARS", "RF", "RFd", "XGBOOST")) {
     if (!(model == "GAM")) {
-      params.train = params.train[grep(model, names(params.train))]
+      params.train = params.train[grep(paste0(model,"\\."), names(params.train))]
       .fun_testIfIn(TRUE, "names(params.train)", names(params.train), paste0(model, ".", train.params$params))
     } else if (tuning.fun == "gamLoess"){
       params.train = params.train[c('GAM.span', "GAM.degree")]
@@ -663,7 +679,7 @@ bm_Tuning <- function(model,
   ## get tuning length --------------------------------------------------------
   tuning.length <- 1
   if (model == "CTA") tuning.length <- 30
-  if (model == "RF") tuning.length <- min(30, ncol(bm.format@data.env.var))
+  if (model == "RF" | model == "RFd") tuning.length <- min(30, ncol(bm.format@data.env.var))
   
   ## Do formula ---------------------------------------------------------------
   if (model %in% c("MAXENT", "MAXNET", "SRE", "XGBOOST") && do.formula == TRUE) {

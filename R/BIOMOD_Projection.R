@@ -184,7 +184,7 @@
 ##' 
 ##' @importFrom foreach foreach %dopar% 
 ##' @importFrom terra rast subset nlyr writeRaster terraOptions wrap unwrap
-##'  mem_info app is.factor mask
+##'  mem_info app is.factor mask classify
 ##' @importFrom utils capture.output
 ##' @importFrom abind asub
 ##' 
@@ -212,6 +212,11 @@ BIOMOD_Projection <- function(bm.mod,
                                         , models.chosen, metric.binary, metric.filter, compress, seed.val, ...)
   for (argi in names(args)) { assign(x = argi, value = args[[argi]]) }
   rm(args)
+  
+  # if (.getOS() == "windows" && any(grep("MAXENT", bm.mod@models.computed))){
+  #   env <- foreach:::.foreachGlobals
+  #   rm(list=ls(name=env), pos=env)
+  # }
   
   
   ## 1. Create output object ----------------------------------------------------------------------
@@ -385,9 +390,9 @@ BIOMOD_Projection <- function(bm.mod,
       if (!do.stack) {
         for (i in 1:length(proj_out@proj.out@link)) {
           file.tmp <- proj_out@proj.out@link[i]
-          
+          output.format.search <- paste0("\\",output.format)
           if (eval.meth %in% metric.binary) {
-            file.tmp.binary <- sub(output.format,
+            file.tmp.binary <- sub(output.format.search,
                                    paste0("_", eval.meth, "bin", output.format),
                                    file.tmp)
             saved.files.binary <- c(saved.files.binary, file.tmp.binary)
@@ -399,7 +404,7 @@ BIOMOD_Projection <- function(bm.mod,
           }
           
           if (eval.meth %in% metric.filter) {
-            file.tmp.filtered <- sub(output.format,
+            file.tmp.filtered <- sub(output.format.search,
                                      paste0("_", eval.meth, "filt", output.format),
                                      file.tmp)
             saved.files.filtered <- c(saved.files.filtered, file.tmp.filtered)

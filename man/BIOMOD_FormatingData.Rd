@@ -19,9 +19,11 @@ BIOMOD_FormatingData(
   PA.dist.min = 0,
   PA.dist.max = NULL,
   PA.sre.quant = 0.025,
+  PA.fact.aggr = NULL,
   PA.user.table = NULL,
   na.rm = TRUE,
-  filter.raster = FALSE
+  filter.raster = FALSE,
+  seed.val = NULL
 )
 }
 \arguments{
@@ -93,17 +95,20 @@ select the pseudo-absence points. Must be \code{random}, \code{sre}, \code{disk}
 \item{PA.dist.min}{(\emph{optional, default} \code{0}) \cr 
 If pseudo-absence selection and \code{PA.strategy = 'disk'}, a \code{numeric} defining the 
 minimal distance to presence points used to make the \code{disk} pseudo-absence selection 
-(in meters, see Details)}
+(in the same projection system units as \code{resp.xy} and \code{expl.var}, see Details)}
 
 \item{PA.dist.max}{(\emph{optional, default} \code{0}) \cr 
 If pseudo-absence selection and \code{PA.strategy = 'disk'}, a \code{numeric} defining the 
 maximal distance to presence points used to make the \code{disk} pseudo-absence selection 
-(in meters, see Details)}
+(in the same projection system units as \code{resp.xy} and \code{expl.var}, see Details)}
 
 \item{PA.sre.quant}{(\emph{optional, default} \code{0}) \cr 
 If pseudo-absence selection and \code{PA.strategy = 'sre'}, a \code{numeric} between \code{0} 
 and \code{0.5} defining the half-quantile used to make the \code{sre} pseudo-absence selection 
 (see Details)}
+
+\item{PA.fact.aggr}{(\emph{optional, default} \code{NULL}) \cr
+If \code{strategy = 'random'} or \code{strategy = 'disk'}, a \code{integer} defining the factor of aggregation to reduce the resolution}
 
 \item{PA.user.table}{(\emph{optional, default} \code{NULL}) \cr 
 If pseudo-absence selection and \code{PA.strategy = 'user.defined'}, a \code{matrix} or 
@@ -118,6 +123,9 @@ explanatory variables should be removed from the analysis or not}
 \item{filter.raster}{(\emph{optional, default} \code{FALSE}) \cr 
 If \code{expl.var} is of raster type, a \code{logical} value defining whether \code{resp.var} 
 is to be filtered when several points occur in the same raster cell}
+
+\item{seed.val}{(\emph{optional, default} \code{NULL}) \cr 
+An \code{integer} value corresponding to the new seed value to be set}
 }
 \value{
 A \code{\link{BIOMOD.formated.data}} object that can be used to build species distribution 
@@ -221,9 +229,10 @@ and provides different methods to select pseudo-absences if needed. \cr \cr
     otherwise it may lead to over-optimistic model evaluations and predictions !}
     }
     \item{disk}{pseudo-absences are selected within circles around presence points defined by 
-    \code{PA.dist.min} and \code{PA.dist.max} distance values (in meters). It allows to select 
-    pseudo-absence points that are not too close to (avoid same niche and pseudo-replication) 
-    or too far (localized sampling strategy) from presences.
+    \code{PA.dist.min} and \code{PA.dist.max} distance values (in the same projection system 
+    units as \code{coord} and \code{expl.var}). It allows to select pseudo-absence points that 
+    are not too close to (avoid same niche and pseudo-replication) or too far (localized 
+    sampling strategy) from presences.
     }
     \item{user.defined}{pseudo-absences are defined in advance and given as \code{data.frame} 
     through the \code{PA.user.table} parameter.

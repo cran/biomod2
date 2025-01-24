@@ -16,7 +16,7 @@
 ##' (\emph{a random number by default})
 ##' @param models a \code{vector} containing model names to be computed, must be among 
 ##' \code{ANN}, \code{CTA}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
-##' \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{SRE}, \code{XGBOOST}
+##' \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{RFd}, \code{SRE}, \code{XGBOOST}
 ##' @param models.pa (\emph{optional, default} \code{NULL}) \cr 
 ##' A \code{list} containing for each model a \code{vector} defining which pseudo-absence datasets 
 ##' are to be used, must be among \code{colnames(bm.format@PA.table)}
@@ -69,8 +69,7 @@
 ##' @param OPT.user (\emph{optional, default} \code{TRUE}) \cr  
 ##' A \code{\link{BIOMOD.models.options}} object returned by the \code{\link{bm_ModelingOptions}} 
 ##' function
-##' @param bm.options a \code{\link{BIOMOD.models.options}} object returned by the  
-##' \code{\link{bm_ModelingOptions}} function
+##' @param bm.options \emph{deprecated}, now called \code{OPT.user}
 ##' 
 ##' @param weights (\emph{optional, default} \code{NULL}) \cr 
 ##' A \code{vector} of \code{numeric} values corresponding to observation weights (one per 
@@ -136,9 +135,10 @@
 ##'     \item \code{GLM} : Generalized Linear Model (\code{\link[stats]{glm}})
 ##'     \item \code{MARS} : Multiple Adaptive Regression Splines (\code{\link[earth]{earth}})
 ##'     \item \code{MAXENT} : Maximum Entropy 
-##'     (\url{https://biodiversityinformatics.amnh.org/open_source/maxent/})
+##'     (\href{https://biodiversityinformatics.amnh.org/open_source/maxent/}{see Maxent website})
 ##'     \item \code{MAXNET} : Maximum Entropy (\code{\link[maxnet]{maxnet}})
 ##'     \item \code{RF} : Random Forest (\code{\link[randomForest]{randomForest}})
+##'     \item \code{RFd} : Random Forest downsampled (\code{\link[randomForest]{randomForest}})
 ##'     \item \code{SRE} : Surface Range Envelop or usually called BIOCLIM (\code{\link{bm_SRE}})
 ##'     \item \code{XGBOOST} : eXtreme Gradient Boosting Training (\code{\link[xgboost]{xgboost}})
 ##'   }}
@@ -184,6 +184,8 @@
 ##'     \code{\link{BIOMOD_FormatingData}}), weights are by default calculated such that 
 ##'     \code{prevalence = 0.5}. \emph{Automatically created \code{weights} will be \code{integer} 
 ##'     values to prevent some modeling issues.}
+##'     \item \emph{NOTE THAT \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{RFd} and \code{SRE} 
+##'     models do not take weights into account.}
 ##'   }}
 ##' 
 ##'   \item{metric.eval}{
@@ -213,7 +215,7 @@
 ##'     \item{presence-only}{
 ##'     \itemize{
 ##'       \item \code{BOYCE} : Boyce index
-##'       \item \code{MPA} : Minimal predicted area (cutoff optimising MPA to predict 90\% of 
+##'       \item \code{MPA} : Minimal predicted area (cutoff optimizing MPA to predict 90\% of 
 ##'       presences)
 ##'     }
 ##'     }
@@ -230,7 +232,7 @@
 ##'   \code{eval.[...]} parameters in \code{\link{BIOMOD_FormatingData}}.}
 ##'   }
 ##'   
-##'   \item{var.import}{A value caracterizing how much each variable has an impact on each model 
+##'   \item{var.import}{A value characterizing how much each variable has an impact on each model 
 ##'   predictions can be calculated by randomizing the variable of interest and computing the 
 ##'   correlation between original and shuffled variables (see \code{\link{bm_VariablesImportance}}).}
 ##'   
@@ -569,6 +571,11 @@ BIOMOD_Modeling <- function(bm.format,
   models.out@link <- file.path(models.out@dir.name, models.out@sp.name, name.OUT)
   assign(x = name.OUT, value = models.out)
   save(list = name.OUT, file = models.out@link)
+ 
+  # if (.getOS() == "windows" && "MAXENT" %in% models){
+  #   env <- foreach:::.foreachGlobals
+  #   rm(list=ls(name=env), pos=env)
+  # }
   
   .bm_cat("Done")
   return(models.out)
@@ -622,7 +629,7 @@ BIOMOD_Modeling <- function(bm.format,
   models.switch.off <- NULL
   
   ## check if model is supported
-  avail.models.list <- c('ANN', 'CTA', 'FDA', 'GAM', 'GBM', 'GLM', 'MARS', 'MAXENT', 'MAXNET', 'RF', 'SRE', 'XGBOOST')
+  avail.models.list <- c('ANN', 'CTA', 'FDA', 'GAM', 'GBM', 'GLM', 'MARS', 'MAXENT', 'MAXNET', 'RF','RFd', 'SRE', 'XGBOOST')
   .fun_testIfIn(TRUE, "models", models, avail.models.list)
   
   ## Specific case of one variable with GBM / MAXNET

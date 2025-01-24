@@ -1,8 +1,8 @@
 Package: biomod2
 Type: Package
 Title: Ensemble Platform for Species Distribution Modeling
-Version: 4.2-5-2
-Date: 2024-05-31
+Version: 4.2-6-2
+Date: 2025-01-24
 Authors@R: c(person("Wilfried", "Thuiller", role = c("aut")
                     , email = "wilfried.thuiller@univ-grenoble-alpes.fr"),
              person("Damien", "Georges", role = c("aut")),
@@ -32,7 +32,7 @@ Description: Functions for species distribution modeling, calibration and evalua
   ensemble of models, ensemble forecasting and visualization. The package permits to run
   consistently up to 10 single models on a presence/absences (resp presences/pseudo-absences)
   dataset and to combine them in ensemble models and ensemble projections. Some bench of other 
-  evaluation and visualisation tools are also available within the package.
+  evaluation and visualization tools are also available within the package.
 Depends: R (>= 4.1)
 Imports: stats, utils, methods, terra (>= 1.6-33), sp, reshape,
         reshape2, abind, foreach, ggplot2, gbm (>= 2.1.3), rpart, MASS,
@@ -41,7 +41,7 @@ Suggests: Hmisc, gam, mgcv, earth, maxnet, mda, nnet, randomForest,
         xgboost, car, caret, dismo, ENMeval, doParallel, raster,
         ggpubr, testthat, knitr, markdown, tidyterra, ggtext
 License: GPL-3
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Encoding: UTF-8
 VignetteBuilder: knitr
 Collate: 'biomod2-package.R' 'biomod2_globalVariables.R'
@@ -62,6 +62,6 @@ Collate: 'biomod2-package.R' 'biomod2_globalVariables.R'
         'bm_Tuning.R' 'bm_VariablesImportance.R' 'zzz.R'
 LazyData: true
 NeedsCompilation: no
-Packaged: 2024-06-14 14:31:19 UTC; gueguema
+Packaged: 2025-01-24 14:46:34 UTC; gueguema
 Repository: CRAN
-Date/Publication: 2024-06-14 15:10:02 UTC
+Date/Publication: 2025-01-24 18:20:06 UTC

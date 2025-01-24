@@ -1,5 +1,5 @@
 [![Cran Version](https://www.r-pkg.org/badges/version/biomod2?color=yellow)](https://cran.r-project.org/package=biomod2)
-[![Github Version](https://img.shields.io/badge/devel%20version-4.2--5--2-blue.svg)](https://github.com/biomodhub/biomod2)
+[![Github Version](https://img.shields.io/badge/devel%20version-4.2--6--2-blue.svg)](https://github.com/biomodhub/biomod2)
 [![Last Commit](https://img.shields.io/github/last-commit/biomodhub/biomod2.svg)](https://github.com/biomodhub/biomod2/commits/master)
 [![R-CMD-check](https://github.com/biomodhub/biomod2/actions/workflows/R-CMD-check.yml/badge.svg)](https://github.com/biomodhub/biomod2/actions/workflows/R-CMD-check.yml)
 
@@ -49,7 +49,7 @@ install.packages("biomod2", dependencies = TRUE)
 
 <br/>
 
-- **Development version** [![v](https://img.shields.io/badge/devel%20version-4.2--5--2-blue.svg)](https://github.com/biomodhub/biomod2) from [biomodhub](https://github.com/biomodhub/biomod2) :
+- **Development version** [![v](https://img.shields.io/badge/devel%20version-4.2--6--2-blue.svg)](https://github.com/biomodhub/biomod2) from [biomodhub](https://github.com/biomodhub/biomod2) :
 
 ```R
 library(devtools)
@@ -57,26 +57,31 @@ devtools::install_github("biomodhub/biomod2", dependencies = TRUE)
 ```
 
 <br/><br/>
+<i class="fas fa-exclamation-triangle"></i> All changes between versions are detailed in [News](https://biomodhub.github.io/biomod2/articles/news.html).
+<br/><br/>
+<i class="fab fa-youtube"></i> **NEW** video tutorial in [Videos](https://biomodhub.github.io/biomod2/articles/vignette_videos.html) !
 
-### <i class="fas fa-envelope-open-text"></i> `biomod 4.2-5` - Modeling options & Tuning Update
+<br/><br/><br/>
 
-**! `biomod2 4.2-5` is now available on CRAN !**
+<br/><br/>
 
-`/!\` Please **feel free to indicate if you notice some strange new behaviors** !
+
+### <i class="fas fa-envelope-open-text"></i> `biomod 4.2-6` - Improved OptionsBigBoss and new model
+
+
+<i class="fas fa-exclamation-triangle"></i> Please **feel free to indicate if you notice some strange new behaviors** !
 
 #### <i class="fas fa-exchange-alt"></i> What is changed ?
 
-- modeling options are now automatically retrieved from single models functions, normally allowing the use of all arguments taken into account by these functions
-- tuning has been cleaned up, but keep in mind that it is still a quite long running process
-- in consequence, `BIOMOD_ModelingOptions` and `BIOMOD_Tuning` functions become secundary functions (`bm_ModelingOptions` and `bm_Tuning`), and modeling options can be directly built through `BIOMOD_Modeling` function
+- To improve the models, we made some change in the options for [**`OptionsBigboss`**](https://biomodhub.github.io/biomod2/reference/OptionsBigboss.html). (This only affects the ANN, CTA and RF models.) You can check all your options with the `get_options()` function.
+- To reduce the tuning calculation time, we update the tuning ranges for ANN, FDA and MARS models.
 
 #### <i class="fas fa-plus-square"></i> What is new ?
 
-- `ModelsTable` and `OptionsBigboss` datasets (*note that improvement of bigboss modeling options is planned in near future*)
-- 3 new vignettes have been created :
-    - [data preparation](https://biomodhub.github.io/biomod2/articles/vignette_dataPreparation.html) (*questions you should ask yourself before modeling*)
-    - [cross-validation](https://biomodhub.github.io/biomod2/articles/vignette_crossValidation.html) (*to prepare your own calibration / validation datasets*)
-    - [modeling options](https://biomodhub.github.io/biomod2/articles/vignette_dataPreparation.html) (*to help you navigate through the new way of parameterizing single models*)
+- `biomod2` has a new model: **RFd**. It's a Random Forest model with a down-sampling method.
+- You can now define _seed.val_ for `bm_PseudoAbsences()` and `BIOMOD_FormatingData()`.
+- New _fact.aggr_ argument, for pseudo-absences selection with the random and disk methods, allows to reduce the resolution of the environment.
+- Possibility to give the same options for all datasets with _"for_all_datasets"_ in `bm_ModelingOptions()`.
 
 <br/>
 
@@ -86,7 +91,26 @@ devtools::install_github("biomodhub/biomod2", dependencies = TRUE)
 
 <br/><br/><br/>
 
+<br/><br/>
 
+
+### <i class="fas fa-envelope"></i> `biomod 4.2-5` - Modeling options & Tuning Update
+
+#### <i class="fas fa-exchange-alt"></i> What is changed ?
+
+- modeling options are now automatically retrieved from single models functions, normally allowing the use of all arguments taken into account by these functions
+- tuning has been cleaned up, but keep in mind that it is still a quite long running process
+- in consequence, `BIOMOD_ModelingOptions` and `BIOMOD_Tuning` functions become secondary functions (`bm_ModelingOptions` and `bm_Tuning`), and modeling options can be directly built through `BIOMOD_Modeling` function
+
+#### <i class="fas fa-plus-square"></i> What is new ?
+
+- `ModelsTable` and `OptionsBigboss` datasets (*note that improvement of bigboss modeling options is planned in near future*)
+- 3 new vignettes have been created :
+    - [data preparation](https://biomodhub.github.io/biomod2/articles/vignette_dataPreparation.html) (*questions you should ask yourself before modeling*)
+    - [cross-validation](https://biomodhub.github.io/biomod2/articles/vignette_crossValidation.html) (*to prepare your own calibration / validation datasets*)
+    - [modeling options](https://biomodhub.github.io/biomod2/articles/vignette_modelingOptions.html) (*to help you navigate through the new way of parametrizing single models*)
+
+<br/>
 
 ### <i class="fas fa-envelope"></i> `biomod 4.2` - Terra Update
 
@@ -109,7 +133,7 @@ Sorry for the inconvenience, and please **feel free to indicate if you notice so
 #### <i class="fas fa-exchange-alt"></i> What is changed ?
 
 - all code functions have been cleaned, and old / unused functions have been removed
-- function names have been standardized (`BIOMOD_` for main functions, `bm_` for secundary functions)
+- function names have been standardized (`BIOMOD_` for main functions, `bm_` for secondary functions)
 - parameter names have been standardized (same typo, same names for similar parameters across functions)
 - all documentation and examples have been cleaned up
 

@@ -34,10 +34,15 @@
 ##' half-quantile used to make the \code{sre} pseudo-absence selection (see \code{\link{bm_SRE}})
 ##' @param dist.min (\emph{optional, default} \code{0}) \cr
 ##' If \code{strategy = 'disk'}, a \code{numeric} defining the minimal distance to presence points 
-##' used to make the \code{disk} pseudo-absence selection (in meters)
+##' used to make the \code{disk} pseudo-absence selection (in the same projection system units as 
+##' \code{expl.var})
 ##' @param dist.max (\emph{optional, default} \code{NULL}) \cr
 ##' If \code{strategy = 'disk'}, a \code{numeric} defining the maximal distance to presence points 
-##' used to make the \code{disk} pseudo-absence selection (in meters)
+##' used to make the \code{disk} pseudo-absence selection (in the same projection system units as 
+##' \code{expl.var})
+##' @param fact.aggr (\emph{optional, default} \code{NULL}) \cr
+##' If \code{strategy = 'random'} or \code{strategy = 'disk'}, a \code{integer} defining the 
+##' factor of aggregation to reduce the resolution
 ##' @param user.table (\emph{optional, default} \code{NULL}) \cr
 ##' If \code{strategy = 'user.defined'}, a \code{matrix} or \code{data.frame} with as many rows as 
 ##' \code{resp.var} values, as many columns as \code{nb.rep}, and containing \code{TRUE} or 
@@ -46,6 +51,8 @@
 ##' 
 ##' @param \ldots (\emph{optional, one or several of the above arguments depending on the selected 
 ##' method}) 
+##' @param seed.val (\emph{optional, default} \code{NULL}) \cr 
+##' An \code{integer} value corresponding to the new seed value to be set
 ##' 
 ##' 
 ##' @return 
@@ -92,7 +99,7 @@
 ##' 
 ##' @seealso \code{\link{bm_SRE}}, \code{\link{BIOMOD.formated.data.PA}}, 
 ##' \code{\link{BIOMOD_FormatingData}}
-##' @family Secundary functions
+##' @family Secondary functions
 ##' 
 ##' 
 ##' @examples 
@@ -188,7 +195,7 @@
 ##'
 ##' 
 ##' @importFrom foreach foreach %do%
-##' @importFrom terra rast vect freq spatSample values extract
+##' @importFrom terra rast vect freq spatSample values extract aggregate
 ##' @importFrom utils packageVersion
 ##'
 ##' @export
@@ -198,11 +205,12 @@
 
 
 bm_PseudoAbsences <- function(resp.var, expl.var, nb.rep = 1, strategy = 'random', nb.absences = NULL
-                              , sre.quant = 0, dist.min = 0, dist.max = NULL, user.table = NULL)
+                              , sre.quant = 0, dist.min = 0, dist.max = NULL, fact.aggr = NULL
+                              , user.table = NULL, seed.val = NULL)
 {
   ## 0. Check arguments ---------------------------------------------------------------------------
   args <- .bm_PseudoAbsences.check.args(resp.var, expl.var, nb.rep, strategy, nb.absences
-                                        , sre.quant, dist.min, dist.max, user.table)
+                                        , sre.quant, dist.min, dist.max, user.table,seed.val)
   for (argi in names(args)) { assign(x = argi, value = args[[argi]]) }
   rm(args)
   
@@ -213,9 +221,9 @@ bm_PseudoAbsences <- function(resp.var, expl.var, nb.rep = 1, strategy = 'random
     if (length(nb.absences) == 1) {
       out <- switch(strategy,
                     user.defined = bm_PseudoAbsences_user.defined(resp.var, expl.var, user.table),
-                    random = bm_PseudoAbsences_random(resp.var, expl.var, nb.absences, nb.rep),
+                    random = bm_PseudoAbsences_random(resp.var, expl.var, nb.absences, nb.rep, fact.aggr),
                     sre = bm_PseudoAbsences_sre(resp.var, expl.var, sre.quant, nb.absences, nb.rep),
-                    disk = bm_PseudoAbsences_disk(resp.var, expl.var, dist.min, dist.max, nb.absences, nb.rep))
+                    disk = bm_PseudoAbsences_disk(resp.var, expl.var, dist.min, dist.max, nb.absences, nb.rep, fact.aggr))
     } else if (length(nb.absences) == nb.rep) {
       out.list = foreach(i.abs = unique(nb.absences)) %do% 
         {
@@ -224,9 +232,9 @@ bm_PseudoAbsences <- function(resp.var, expl.var, nb.rep = 1, strategy = 'random
           
           out <- switch(strategy,
                         user.defined = bm_PseudoAbsences_user.defined(resp.var, expl.var, user.table),
-                        random = bm_PseudoAbsences_random(resp.var, expl.var, i.abs, length(i.rep)),
+                        random = bm_PseudoAbsences_random(resp.var, expl.var, i.abs, length(i.rep), fact.aggr),
                         sre = bm_PseudoAbsences_sre(resp.var, expl.var, sre.quant, i.abs, length(i.rep)),
-                        disk = bm_PseudoAbsences_disk(resp.var, expl.var, dist.min, dist.max, i.abs, length(i.rep)))
+                        disk = bm_PseudoAbsences_disk(resp.var, expl.var, dist.min, dist.max, i.abs, length(i.rep), fact.aggr))
           
           ## CASE where all available cells have been selected :
           ## give back only one dataset, even if several were asked
@@ -324,7 +332,8 @@ bm_PseudoAbsences <- function(resp.var, expl.var, nb.rep = 1, strategy = 'random
 
 # Argument Check --------------------------------------------------------------
 
-.bm_PseudoAbsences.check.args <- function(resp.var, expl.var, nb.rep, strategy, nb.absences, sre.quant, dist.min, dist.max, user.table)
+.bm_PseudoAbsences.check.args <- function(resp.var, expl.var, nb.rep, strategy, nb.absences
+                                          , sre.quant, dist.min, dist.max, user.table, seed.val)
 {
   cat('\n\nChecking Pseudo-absence selection arguments...\n')
   ## 1. Check resp.var argument -----------------------------------------------
@@ -420,6 +429,11 @@ bm_PseudoAbsences <- function(resp.var, expl.var, nb.rep = 1, strategy = 'random
       colnames(user.table) <- paste0("PA", 1:ncol(user.table))
       nb.absences <- nrow(user.table)
     }
+  }
+  
+  ## 8. Set the seed (if needed) ---------------------------------------------
+  if (!is.null(seed.val)) {
+    set.seed(seed.val)
   }
   
   return(list(resp.var = resp.var,
@@ -546,7 +560,7 @@ setGeneric("bm_PseudoAbsences_random",
 ##'
 
 setMethod('bm_PseudoAbsences_random', signature(expl.var = "SpatVector"),
-          function(resp.var, expl.var, nb.absences, nb.rep)
+          function(resp.var, expl.var, nb.absences, nb.rep, fact.aggr)
           {
             cat("\n   > random pseudo absences selection")
             
@@ -587,7 +601,7 @@ setMethod('bm_PseudoAbsences_random', signature(expl.var = "SpatVector"),
                           env = as.data.frame(expl.var),
                           pa.tab = pa.tab))
             } else {
-              cat("\nUnsupported case yet!")
+              cat("\n Unsupported case yet!")
               return(NULL)
             }
           })
@@ -600,7 +614,7 @@ setMethod('bm_PseudoAbsences_random', signature(expl.var = "SpatVector"),
 ##'
 
 setMethod('bm_PseudoAbsences_random', signature(expl.var = "SpatRaster"),
-          function(resp.var, expl.var, nb.absences, nb.rep)
+          function(resp.var, expl.var, nb.absences, nb.rep, fact.aggr)
           {
             cat("\n   > random pseudo absences selection")
             # 1. Check if NA are present in resp.var observations or not to determine which dataset to use
@@ -635,12 +649,17 @@ setMethod('bm_PseudoAbsences_random', signature(expl.var = "SpatRaster"),
               cat("\n   > Pseudo absences are selected in explanatory variables")
               # create a mask containing all not already sampled points (presences and absences)
               
+              if (!is.null(fact.aggr)) {
+                expl.var <- terra::aggregate(expl.var, fact = fact.aggr)
+              }
+              
               ## the area we want to sample
               mask.out <- mask.env <- .get_data_mask(expl.var, value.out = -1)
               # add presences and true absences in our mask
               in.cells <- cellFromXY(mask.env, crds(resp.var))
               mask.env[in.cells] <- NA
               mask.out[in.cells] <- 1
+              
               
               # checking of nb candidates
               nb.cells <- .get_nb_available_pa_cells(mask.env, PA.flag = -1)
@@ -871,8 +890,9 @@ setGeneric("bm_PseudoAbsences_disk",
 ##'
 
 setMethod('bm_PseudoAbsences_disk', signature(expl.var = "SpatVector"),
-          function(resp.var, expl.var, dist.min, dist.max, nb.absences, nb.rep) {
+          function(resp.var, expl.var, dist.min, dist.max, nb.absences, nb.rep, fact.aggr) {
             cat("\n   > Disk pseudo absences selection")
+            
             # 1. determining area which can be selected
             coor <- crds(resp.var)
             pres <- which(values(resp.var)[, 1] == 1)
@@ -908,14 +928,12 @@ setMethod('bm_PseudoAbsences_disk', signature(expl.var = "SpatVector"),
 ##'
 ##' @rdname bm_PseudoAbsences
 ##' @export
-##' @importFrom terra rast distance subset mask crds cellFromXY extract
+##' @importFrom terra rast distance subset mask crds cellFromXY extract aggregate
 ##'
 
 setMethod('bm_PseudoAbsences_disk', signature(expl.var = "SpatRaster"),
-          function(resp.var, expl.var, dist.min, dist.max, nb.absences, nb.rep)
+          function(resp.var, expl.var, dist.min, dist.max, nb.absences, nb.rep, fact.aggr)
           {
-            cat("\n   > Disk pseudo absences selection")
-            
             # 1. Check if NA are present in resp.var observations or not to determine which dataset to use
             nb.cells <- .get_nb_available_pa_cells(resp.var)
             if (nb.cells > 0) { # PA will be taken into response variable
@@ -926,7 +944,14 @@ setMethod('bm_PseudoAbsences_disk', signature(expl.var = "SpatRaster"),
                                        nb.absences, nb.rep)
               )
             } else {
+              cat("\n   > Disk pseudo absences selection")
+              
               cat("\n   > Pseudo absences are selected in explanatory variables")
+              cat("\n")
+              
+              if (!is.null(fact.aggr)) {
+                expl.var <- terra::aggregate(expl.var, fact = fact.aggr)
+              }
               
               # create a mask
               dist.mask <- subset(expl.var, 1)
@@ -951,7 +976,7 @@ setMethod('bm_PseudoAbsences_disk', signature(expl.var = "SpatRaster"),
               names(mask.in) = names(expl.var)
               
               # 2. selecting randomly pseudo absences
-              return(bm_PseudoAbsences_random(resp.var, expl.var = mask.in, nb.absences, nb.rep))
+              return(bm_PseudoAbsences_random(resp.var, expl.var = mask.in, nb.absences, nb.rep, fact.aggr = NULL))
             }
           })
 

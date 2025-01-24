@@ -82,8 +82,33 @@ section.footnotes::before {
 <div class="body">
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css">
 <h2 id="development-updates"><i class="fas fa-code"></i> Development updates</h2>
+<h3 id="2025"><i class="fas fa-pen-alt"></i> 2025</h3>
 <h3 id="2024"><i class="fas fa-pencil-alt"></i> 2024</h3>
 <h5 id="bugfix_1">Bugfix</h5>
+<ul>
+<li>4.2-6-2 :
+<ul>
+<li>fix <code>get_evaluations</code> and <code>get_variables_importance</code> message when data is not available (extended to <code>bm_Plot[...]</code> functions)</li>
+<li><del>add cluster management code through <code>parallel::stopCluster</code> and <code>foreach:::.foreachGlobals</code></del> <br/>
+finally rather through <code>.errorhandling</code> in <code>foreach</code> loop in <code>bm_RunModelsLoop</code> (<em>for MAXENT on Windows</em>)</li>
+<li>merge request improving balanced partitions for stratification strategy in <code>bm_CrossValidation</code></li>
+<li>fix metric selection in <code>bm_PlotEvalMean</code></li>
+<li>add new tutorial video (<em>for version 4.2-6</em>)</li>
+<li>add <code>MAXENT.partitions</code>, <code>MAXENT.kfolds</code>, <code>MAXENT.user.grp</code> and <code>MAXENT.tune.args</code> parameters in <code>bm_Tuning</code> function</li>
+</ul>
+</li>
+<li>4.2-6-1 : fixed path failure within species name (e.g. data format like <code>tif</code>)</li>
+</ul>
+<h4 id="4-2-6-rfd-and-some-tuning-2024-07-22">4.2-6 RFd and some tuning (2024-07-22)</h4>
+<ul>
+<li>Warning ! Some options for <code>OptionsBigboss</code> have been modified (concerns only ANN, CTA and RF models)</li>
+<li>Some changes for the tuning ranges.</li>
+<li>Add <code>RFd</code> : Random Forest with a down-sampling method.</li>
+<li>Add <code>seed.val</code> for <code>bm_pseudoAbsences</code> and <code>BIOMOD_FormatingData</code>.</li>
+<li>Add <code>fact.aggr</code> argument for pseudo-absences selection with the random and disk methods. It allows to reduce the resolution of the environment.</li>
+<li>Possibility to give the same options to all datasets with <em>“for_all_datasets”</em> in <code>bm_ModelingOptions</code>.</li>
+</ul>
+<h5 id="bugfix_2">Bugfix</h5>
 <ul>
 <li>4.2-5-2 :
 <ul>
@@ -95,7 +120,7 @@ section.footnotes::before {
 <ul>
 <li>removed <code>tests/</code> folder (unused)</li>
 <li>fixed check for variable names for <code>new.env</code> in <code>BIOMOD_Projection</code> and <code>BIOMOD_EnsembleForecasting</code></li>
-<li>fixed connexion issue with MAXENT tuning</li>
+<li>fixed connection issue with <code>MAXENT</code> tuning</li>
 </ul>
 </li>
 </ul>
@@ -125,7 +150,7 @@ section.footnotes::before {
 <li>Add vignette for modeling options (<em>to help you navigate through the new way of parameterizing single models</em>)</li>
 <li>Update examples and documentation</li>
 </ul>
-<h5 id="bugfix_2">Bugfix</h5>
+<h5 id="bugfix_3">Bugfix</h5>
 <ul>
 <li>Add <code>try</code> and error message in call for models in <code>bm_RunModelsLoop</code></li>
 <li>Check for predictions <code>&gt;1000</code></li>
@@ -156,7 +181,7 @@ section.footnotes::before {
 <li>Correct getters (variable importance, built models)</li>
 <li>Update examples and documentation</li>
 </ul>
-<h5 id="bugfix_3">Bugfix</h5>
+<h5 id="bugfix_4">Bugfix</h5>
 <ul>
 <li>4.2-4-10 : fixed <code>wrap</code> applied to a <code>data.frame</code> in <code>BIOMOD_Projection</code></li>
 <li>4.2-4-9 : fixed <code>predict</code> method for <code>RF</code> with <code>do.classif = FALSE</code></li>
@@ -183,7 +208,7 @@ section.footnotes::before {
 <ul>
 <li>changed <code>CV.do.full.models</code> default value to <code>FALSE</code></li>
 </ul>
-<h5 id="bugfix_4">Bugfix</h5>
+<h5 id="bugfix_5">Bugfix</h5>
 <ul>
 <li>4.2-3-5 :
 <ul>
@@ -214,7 +239,7 @@ section.footnotes::before {
 <li>added argument <code>metric.select.dataset</code> to <code>BIOMOD_EnsembleModeling</code> to choose the dataset which evaluation metric should be used to filter and/or weigh the ensemble models. Default value is now ‘validation’ instead of ‘evaluation’.</li>
 <li>added argument <code>na.rm</code> to <code>BIOMOD_EnsembleModeling</code> to harmonize the management of <code>NA</code> among individual model predictions.</li>
 </ul>
-<h5 id="bugfix_5">Bugfix</h5>
+<h5 id="bugfix_6">Bugfix</h5>
 <ul>
 <li>validation metric calculation now properly use the calibration threshold (i.e a threshold optimized on calibration data instead of validation data). This can lead to less optimistic threshold-dependent validation metric.</li>
 <li>fixed SRE projection assuming the same variables ordering in calibration and projection data</li>
@@ -259,7 +284,7 @@ section.footnotes::before {
 <li>Some possible values for <code>em.by</code> have slightly changed: ‘PA_dataset’ -&gt; ‘PA’, ‘PA_dataset+repet’ -&gt; ‘PA+run’ and ‘PA_dataset+algo’ -&gt; ‘PA+algo’</li>
 <li>Added an appropriate message when all models fail for <code>BIOMOD_Modeling</code> and <code>BIOMOD_EnsembleModeling</code>.</li>
 </ul>
-<h5 id="bugfix_6">Bugfix</h5>
+<h5 id="bugfix_7">Bugfix</h5>
 <ul>
 <li>Fixed <code>MAXENT.Phillips.2</code> and single variable models.</li>
 <li>Fixed ensemble models when several filtering metrics were asked and some combination of ensemble/metrics had no models</li>
@@ -287,7 +312,7 @@ section.footnotes::before {
 <li>Added <code>initial_heap_size</code> and <code>max_heap_size</code> in <code>MAXENT.Phillips</code> modeling options</li>
 <li>Improved projection efficiency for raster with <code>MAXENT.Phillips</code>.</li>
 </ul>
-<h5 id="bugfix_7">Bugfix</h5>
+<h5 id="bugfix_8">Bugfix</h5>
 <ul>
 <li>Fixed <code>MAXENT.Phillips</code> predict method for large dataset (require <code>sp::read.asciigrid</code>).</li>
 <li>Fixed ensemble models using a single PA dataset with <code>em.by = 'all'</code> or <code>'algo'</code>.</li>
@@ -325,7 +350,7 @@ section.footnotes::before {
 <li>Improved communication for <code>BIOMOD_RangeSize</code>, indicating how comparison are done depending on the number of models in current vs future.</li>
 <li>Added argument check for <code>BIOMOD_CrossValidation</code></li>
 </ul>
-<h5 id="bugfix_8">Bugfix</h5>
+<h5 id="bugfix_9">Bugfix</h5>
 <ul>
 <li>MAXENT.Phillips models can now properly fail</li>
 <li>bugfix for <code>bm_BinaryTransformation</code> with <code>data.frame</code>/<code>matrix</code> and <code>do.filtering = TRUE</code></li>
@@ -354,7 +379,7 @@ section.footnotes::before {
 <li>Removed obsolete function <code>check_data_range()</code>.</li>
 </ul>
 <h4 id="4-1-3">4.1-3</h4>
-<h5 id="bugfix_9">Bugfix</h5>
+<h5 id="bugfix_10">Bugfix</h5>
 <ul>
 <li>Ensemble models that fails (e.g. EMcv with only one models) will not crash the full ensemble run. Instead a warning is generally displayed at the beginning and the resulting object will list failed models.</li>
 <li>Fixed CTA raster prediction for categorical variables.</li>
