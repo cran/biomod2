@@ -32,34 +32,31 @@
 ##' be used to project the ensemble species distribution model(s)
 ##' @param models.chosen a \code{vector} containing model names to be kept, must be either 
 ##' \code{all} or a sub-selection of model names that can be obtained with the 
-##' \code{\link{get_built_models}} function
+##' \code{\link{get_built_models}} function applied to \code{bm.mod}
 ##' 
 ##' @param metric.binary (\emph{optional, default} \code{NULL}) \cr 
 ##' A \code{vector} containing evaluation metric names to be used to transform prediction values 
 ##' into binary values based on models evaluation scores obtained with the 
-##' \code{\link{BIOMOD_Modeling}} function. Must be among \code{all} (same evaluation metrics than 
-##' those of \code{modeling.output}) or \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, 
-##' \code{ACCURACY}, \code{BIAS}, \code{ROC}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, 
+##' \code{\link{BIOMOD_EnsembleModeling}} function. Must be among \code{all} (same evaluation 
+##' metrics than those of \code{bm.mod}) or \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, 
+##' \code{ACCURACY}, \code{BIAS}, \code{AUCroc}, \code{AUCprg}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, 
 ##' \code{CSI}, \code{ETS}, \code{BOYCE}, \code{MPA}
+##' \cr \emph{Note that this is for binary data only.}
 ##' @param metric.filter (\emph{optional, default} \code{NULL}) \cr 
 ##' A \code{vector} containing evaluation metric names to be used to transform prediction values 
 ##' into filtered values based on models evaluation scores obtained with the 
-##' \code{\link{BIOMOD_Modeling}} function. Must be among \code{all} (same evaluation metrics than 
-##' those of \code{modeling.output}) or \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, 
-##' \code{ACCURACY}, \code{BIAS}, \code{ROC}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, 
+##' \code{\link{BIOMOD_EnsembleModeling}} function. Must be among \code{all} (same evaluation 
+##' metrics than those of \code{bm.mod}) or \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, 
+##' \code{ACCURACY}, \code{BIAS}, \code{AUCroc}, \code{AUCprg}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, 
 ##' \code{CSI}, \code{ETS}, \code{BOYCE}, \code{MPA}
-##' 
-##' @param compress (\emph{optional, default} \code{TRUE}) \cr 
-##' A \code{logical} or a \code{character} value defining whether and how objects should be 
-##' compressed when saved on hard drive, must be either \code{TRUE}, \code{FALSE}, \code{xz} or 
-##' \code{gzip} (see Details)
-##' @param nb.cpu (\emph{optional, default} \code{1}) \cr 
-##' An \code{integer} value corresponding to the number of computing resources to be used to 
-##' parallelize the single models computation
+##' \cr \emph{Note that this is for binary data only.}
 ##' 
 ##' @param na.rm (\emph{optional, default} \code{TRUE}) \cr
-##' A boolean defining whether Ensemble Model projection should ignore \code{NA}
-##' in Individual Model projection. Argument ignored by EWmean ensemble algorithm.
+##' A \code{logical} value defining whether ensemble model projection should ignore missing values 
+##' in single model projections or not (\emph{ignored by \code{EMwmean} algorithm})
+##' @param nb.cpu (\emph{optional, default} \code{1}) \cr 
+##' An \code{integer} value corresponding to the number of computing resources to be used to 
+##' parallelize the single models computatio
 ##' 
 ##' @param \ldots (\emph{optional, see Details})
 ##' 
@@ -72,37 +69,44 @@
 ##' \enumerate{
 ##'   \item the output is a \code{data.frame} if \code{new.env} is a \code{matrix} or a 
 ##'   \code{data.frame}
-##'   \item it is a \code{\link[terra:rast]{SpatRaster}} if \code{new.env} 
-##'   is a \code{\link[terra:rast]{SpatRaster}} (or several
-##'   \code{\link[terra:rast]{SpatRaster}} objects, if \code{new.env} is too large)
-##'   \item raw projections, as well as binary and filtered projections (if asked),
-##'    are saved in the \code{proj.name} folder
+##'   \item it is a \code{\link[terra:rast]{SpatRaster}} if \code{new.env} is a 
+##'   \code{\link[terra:rast]{SpatRaster}} (or several \code{\link[terra:rast]{SpatRaster}} 
+##'   objects, if \code{new.env} is too large)
+##'   \item raw projections, as well as binary and filtered projections (if asked), are saved in 
+##'   the \code{proj.name} folder
 ##' }
 ##' 
 ##' 
 ##' @details 
 ##' 
-##' If \code{models.chosen = 'all'}, projections are done for all calibration and pseudo absences 
-##' runs if applicable. \cr These projections may be used later by the 
-##' \code{\link{BIOMOD_EnsembleForecasting}} function. \cr \cr
-##' 
-##' If \code{build.clamping.mask = TRUE}, a raster file will be saved within the projection 
-##' folder. This mask values will correspond to the number of variables in each pixel that are out 
-##' of their calibration / validation range, identifying locations where predictions are uncertain. 
-##' \cr \cr
-##' 
 ##' \code{...} can take the following values :
-##' \itemize{
-##'   \item \code{on_0_1000} : a \code{logical} value defining whether \code{0 - 1} 
-##'   probabilities are to be converted to \code{0 - 1000} scale to save memory on backup
-##'   \item \code{do.stack} : a \code{logical} value defining whether all projections are to be 
-##'   saved as one \code{SpatRaster} object or several \code{SpatRaster} files (\emph{the 
-##'   default if projections are too heavy to be all loaded at once in memory})
-##'   \item \code{keep.in.memory} : a \code{logical} value defining whether all projections are 
-##'   to be kept loaded at once in memory, or only links pointing to hard drive are to be returned
-##'   \item \code{output.format} : a \code{character} value corresponding to the projections 
-##'   saving format on hard drive, must be either \code{.grd}, \code{.img}, \code{.tif} or \code{.RData} (the 
-##'   default if \code{new.env} is given as \code{matrix} or \code{data.frame})
+##' \describe{
+##'   \item{digits}{(\emph{optional, default} \code{0}) : \cr
+##'   an \code{integer} value corresponding to the number of digits of the predictions
+##'   }
+##'   \item{on_0_1000}{(\emph{optional, default} \code{TRUE}) : \cr
+##'   a \code{logical} value defining whether \code{0 - 1} probabilities are to be converted to 
+##'   \code{0 - 1000} scale to save memory on backup
+##'   }
+##'   \item{keep.in.memory}{(\emph{optional, default} \code{TRUE}) : \cr
+##'   a \code{logical} value defining whether all projections are to be kept loaded at once in 
+##'   memory, or only links pointing to hard drive are to be returned
+##'   }
+##'   \item{do.stack}{(\emph{optional, default} \code{TRUE}) : \cr 
+##'   a \code{logical} value defining whether all projections are to be saved as one 
+##'   \code{\link[terra:rast]{SpatRaster}} object or several \code{\link[terra:rast]{SpatRaster}} 
+##'   files (\emph{the default if projections are too heavy to be all loaded at once in memory})
+##'   }
+##'   \item{output.format}{(\emph{optional, default} \code{.RData} or \code{.tif}) : \cr
+##'   a \code{character} value corresponding to the projections saving format on hard drive, must 
+##'   be either \code{.grd}, \code{.img}, \code{.tif} or \code{.RData} (the default if 
+##'   \code{new.env} is given as \code{matrix} or \code{data.frame})
+##'   }
+##'   \item{compress}{(\emph{optional, default} \code{TRUE}) : \cr
+##'   a \code{logical} or a \code{character} value defining whether and how objects should be 
+##'   compressed when saved on hard drive. Must be either \code{TRUE}, \code{FALSE}, \code{gzip} 
+##'   (for Windows OS) or \code{xz} (for other OS)
+##'   }
 ##' }
 ##' 
 ##' 
@@ -148,10 +152,10 @@
 ##' } else {
 ##' 
 ##'   # Format Data with true absences
-##'   myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-##'                                        expl.var = myExpl,
+##'   myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+##'                                        resp.var = myResp,
 ##'                                        resp.xy = myRespXY,
-##'                                        resp.name = myRespName)
+##'                                        expl.var = myExpl)
 ##' 
 ##'   # Model single models
 ##'   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
@@ -161,7 +165,7 @@
 ##'                                       CV.nb.rep = 2,
 ##'                                       CV.perc = 0.8,
 ##'                                       OPT.strategy = 'bigboss',
-##'                                       metric.eval = c('TSS','ROC'),
+##'                                       metric.eval = c('TSS', 'AUCroc'),
 ##'                                       var.import = 3,
 ##'                                       seed.val = 42)
 ##' }
@@ -193,7 +197,7 @@
 ##'                                         em.algo = c('EMmean', 'EMca'),
 ##'                                         metric.select = c('TSS'),
 ##'                                         metric.select.thresh = c(0.7),
-##'                                         metric.eval = c('TSS', 'ROC'),
+##'                                         metric.eval = c('TSS', 'AUCroc'),
 ##'                                         var.import = 3,
 ##'                                         seed.val = 42)
 ##' }
@@ -227,6 +231,7 @@
 ##' 
 ###################################################################################################
 
+
 BIOMOD_EnsembleForecasting <- function(bm.em,
                                        bm.proj = NULL,
                                        proj.name = NULL,
@@ -235,9 +240,8 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
                                        models.chosen = 'all',
                                        metric.binary = NULL,
                                        metric.filter = NULL,
-                                       compress = TRUE,
-                                       nb.cpu = 1,
                                        na.rm = TRUE,
+                                       nb.cpu = 1,
                                        ...)
 {
   .bm_cat("Do Ensemble Models Projection")
@@ -264,8 +268,10 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
                   expl.var.names = bm.em@expl.var.names,
                   models.projected = models.chosen,
                   coord = new.env.xy,
-                  modeling.id = bm.em@modeling.id)
+                  modeling.id = bm.em@modeling.id,
+                  data.type = bm.em@data.type)
   proj_out@models.out@link = bm.em@link
+  proj_out@call <- match.call()
   
   proj_is_raster <- FALSE
   if (inherits(new.env, 'SpatRaster') || (length(bm.proj) && inherits(bm.proj@proj.out, 'BIOMOD.stored.SpatRaster'))) {
@@ -292,7 +298,7 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
     formal_pred <- get_predictions(bm.proj, full.name = models.needed)
   } else {
     # make prediction according to given environment
-    tmp_dir <- paste0('Tmp', as.numeric(Sys.time())*100000)
+    tmp_dir <- paste0('Tmp', as.numeric(Sys.time()) * 100000)
     formal_pred <- BIOMOD_Projection(bm.mod = load_stored_object(bm.em@models.out),
                                      new.env = new.env,
                                      proj.name = tmp_dir,
@@ -309,8 +315,13 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
     unlink(file.path(bm.em@dir.name, bm.em@sp.name, paste0("proj_", tmp_dir))
            , recursive = TRUE, force = TRUE)
   }
+
   if (!proj_is_raster) {
-    formal_pred <- tapply(X = formal_pred$pred, INDEX = list(formal_pred$points, formal_pred$full.name), FUN = mean)
+    if (bm.em@data.type %in% c("multiclass", "ordinal")){
+      formal_pred <- tapply(X = formal_pred$pred, INDEX = list(formal_pred$points, formal_pred$full.name), FUN = function(x){as.character(x[1])})
+    } else {
+      formal_pred <- tapply(X = formal_pred$pred, INDEX = list(formal_pred$points, formal_pred$full.name), FUN = mean)
+    }
     formal_pred <- as.data.frame(formal_pred[, models.needed])
   }
   
@@ -318,13 +329,14 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
   proj.em <- foreach(em.name = models.chosen) %dopar%
     {
       cat("\n\t> Projecting", em.name, "...")
-      if(do.stack){
+      if (do.stack) {
         filename <- NULL
       } else {
         filename <- file.path(indiv_proj_dir, paste0(em.name, output.format))
       }
       
       mod <- get(BIOMOD_LoadModels(bm.out = bm.em, full.name = em.name))
+      rm(list = em.name)
       ef.tmp <- predict(mod
                         , newdata = formal_pred
                         , on_0_1000 = on_0_1000
@@ -332,6 +344,21 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
                         , filename = filename
                         , mod.name = em.name
                         , na.rm = na.rm)
+
+      ## cleaning 
+      if (bm.em@data.type %in% c("count", "abundance")) {
+        ef.tmp[ef.tmp < 0] <- 0
+        ef.tmp <- round(ef.tmp, digits = digits)
+      }
+      
+      if(bm.em@data.type == "ordinal" && !grepl("EMfreq|EMcv", em.name)){
+        data_sp <- get_formal_data(bm.em, subinfo = "resp.var")
+        if(proj_is_raster){
+          ef.tmp <- terra::subst(ef.tmp, 1:length(levels(data_sp)), levels(data_sp))
+        } else {
+          ef.tmp <- factor(ef.tmp, levels = levels(data_sp))
+        }
+      }
       
       if (do.stack) {
         if (proj_is_raster) {
@@ -345,7 +372,7 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
     }
   proj_out@models.projected <- models.chosen
   
-  ## Putting predictions into the right format
+  ## putting predictions into the right format
   if (do.stack) {
     if (proj_is_raster) {
       proj.em <- rast(lapply(proj.em, rast)) # SpatRaster needs to be wrapped before saving
@@ -366,9 +393,7 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
   }
   
   ## save projections
-  proj_out@type <- ifelse(is.null(new.env), 
-                          bm.proj@type,
-                          .get_env_class(new.env))
+  proj_out@type <- ifelse(is.null(new.env), bm.proj@type, .get_env_class(new.env))
   if (!do.stack) {
     saved.files = unlist(proj.em)
   } else {
@@ -377,35 +402,36 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
     if (output.format == '.RData') {
       save(list = nameProjSp, file = saved.files, compress = compress)
     } else {
-      writeRaster(x = rast(get(nameProjSp)), filename = saved.files,
-                  overwrite = TRUE, NAflag = -9999, datatype = ifelse(any(grepl("EMcv", models.chosen)), "FLT4S", "INT2S"))
+      writeRaster(x = rast(get(nameProjSp)), filename = saved.files
+                  , overwrite = TRUE, NAflag = -9999
+                  , datatype = ifelse(any(grepl("EMcv", models.chosen) | digits != 0), "FLT4S", "INT2S"))
     }
   }
   proj_out@proj.out@link <- saved.files
   
-  # now that proj have been saved, it can be unwrapped if it is a SpatRaster
+  ## now that proj have been saved, it can be unwrapped if it is a SpatRaster
   if (proj_is_raster && do.stack) {
     proj.trans <- rast(proj.trans) 
   }
   
   
   ## 5. Compute binary and/or filtered transformation ---------------------------------------------
-  if (length(metric.binary) > 0 | length(metric.filter) > 0)
+  if (bm.em@data.type == "binary" && (length(metric.binary) > 0 || length(metric.filter) > 0))
   {
     cat("\n")
     saved.files.binary <- NULL
     saved.files.filtered <- NULL
     to.rm <- grepl("EMcv|EMci", models.chosen)
-    if(any(to.rm)){
+    if (any(to.rm)) {
       cat("\n! Binary/Filtered transformation automatically desactivated for ensemble models with coefficient of variation or confidence intervals")
       models.chosen <- models.chosen[!to.rm]
     }
     
     if (length(models.chosen) > 0) {
       thresholds <- get_evaluations(bm.em, full.name = models.chosen)
-      if (!on_0_1000) { thresholds[, "cutoff"]  <- thresholds[, "cutoff"] / 1000 }
+      if (!on_0_1000) { thresholds[, "cutoff"] <- thresholds[, "cutoff"] / 1000 }
       
-      ## Do binary/filtering transformation
+      ## Do binary/filtering transformation -----------------------------------
       for (eval.meth in unique(c(metric.binary, metric.filter))) {
         thres.tmp <- thresholds[which(thresholds$metric.eval == eval.meth), ]
         rownames(thres.tmp) <- thres.tmp$full.name
@@ -413,13 +439,12 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
         
         cat("\n\t> Building", eval.meth, "binaries / filtered")
         if (!do.stack) {
+          ## NO stack + binary + filtering transformation ---------------------
           for (i in 1:length(proj_out@proj.out@link)) {
             file.tmp <- proj_out@proj.out@link[i]
             output.format.search <- paste0("\\",output.format)
-            if (grepl(pattern = paste0(models.chosen, collapse = "|"),
-                      x = file.tmp)) {
+            if (grepl(pattern = paste0(models.chosen, collapse = "|"), x = file.tmp)) {
               if (eval.meth %in% metric.binary) {
-                
                 file.tmp.binary <- sub(output.format.search,
                                        paste0("_", eval.meth, "bin", output.format),
                                        file.tmp)
@@ -445,14 +470,14 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
             }
           }
         } else {
-          
-          # subset to remove EMcv/EMci models
-          if(proj_is_raster){
+          ## subset to remove EMcv/EMci models
+          if (proj_is_raster) {
             proj.trans <- subset(proj.trans, models.chosen)
           } else {
             proj.trans <- proj.trans[, models.chosen, drop = FALSE]
           }
-          
+
+          ## Stack + binary transformation ------------------------------------
           if (eval.meth %in% metric.binary) {
             nameBin <- paste0(nameProjSp, "_", eval.meth, "bin")
             assign(x = nameBin, value = bm_BinaryTransformation(proj.trans, thres.tmp))
@@ -475,6 +500,7 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
             }
           }
           
+          ## Stack + filtering transformation ---------------------------------
           if (eval.meth %in% metric.filter) {
             nameFilt <- paste0(nameProjSp, "_", eval.meth, "filt")
             # assign(x = nameFilt, value = bm_BinaryTransformation(proj, thres.tmp, do.filtering = TRUE))
@@ -507,7 +533,7 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
     }
   }
   
-  ### save binary/filtered file link into proj_out ----------------------------
+  ## Save binary/filtered files link into proj_out ----------------------------
   if (!is.null(metric.binary)) {
     proj_out@proj.out@link <- c(proj_out@proj.out@link, saved.files.binary)
   }
@@ -516,11 +542,8 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
   }
   
   ## 6. SAVE MODEL OBJECT ON HARD DRIVE ----------------------------------------
-  ## save a copy of output object without value to be lighter
   nameOut <- paste0(bm.em@sp.name, ".", proj.name, ".ensemble.projection.out")
-  if (!keep.in.memory) { 
-    proj_out <- free(proj_out) 
-  }
+  if (!keep.in.memory) { proj_out <- free(proj_out) }
   assign(nameOut, proj_out)
   save(list = nameOut, file = file.path(namePath, nameOut))
   
@@ -529,25 +552,13 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
 }
 
 
-
-## .BIOMOD_EnsembleForecasting.prepare.workdir ---------------------------------
-
-.BIOMOD_EnsembleForecasting.prepare.workdir <- function(dir.name, sp.name, proj.folder)
-{
-  cat("\nCreating suitable Workdir...\n")
-  dir.create(file.path(dir.name, sp.name, proj.folder), showWarnings = FALSE, recursive = TRUE, mode = "777")
-  indiv_proj_dir <- file.path(dir.name, sp.name, proj.folder, "individual_projections")
-  dir.create(indiv_proj_dir, showWarnings = FALSE, recursive = TRUE, mode = "777")
-  return(indiv_proj_dir)
-}
-
-## Argument Check -------------------------------------------------------------
+###################################################################################################
 
 .BIOMOD_EnsembleForecasting.check.args <- function(bm.em, bm.proj, proj.name
                                                    , new.env, new.env.xy
                                                    , models.chosen
-                                                   , metric.binary, metric.filter,
-                                                   na.rm, ...)
+                                                   , metric.binary, metric.filter
+                                                   , na.rm, ...)
 {
   args <- list(...)
   
@@ -606,8 +617,7 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
     
     which.factor <- which(sapply(new.env, is.factor))
     if (length(which.factor) > 0) {
-      new.env <- .check_env_levels(new.env, 
-                                   expected_levels = head(get_formal_data(bm.em, subinfo = "expl.var")))
+      new.env <- .check_env_levels(new.env, expected_levels = head(get_formal_data(bm.em, subinfo = "expl.var")))
     }
   }
   ## 4. Check models.chosen ---------------------------------------------------
@@ -629,27 +639,31 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
   
   ## 6. Check metric.binary & metric.filter -----------------------------------
   if (!is.null(metric.binary) | !is.null(metric.filter)) {
-    models.evaluation <- get_evaluations(bm.em)
-    if (is.null(models.evaluation)) {
-      warning("Binary and/or Filtered transformations of projection not ran because of models evaluation information missing")
+    if (bm.em@data.type != "binary") {
+      cat ("No metric.binary or metric.filter are needed with", bm.em@data.type, "data")
+      metric.binary <- NULL
+      metric.filter <- NULL
     } else {
-      available.evaluation <- as.character(unique(models.evaluation$metric.eval))
-      if (!is.null(metric.binary) && metric.binary[1] == 'all') {
-        metric.binary <- available.evaluation
-      } else if (!is.null(metric.binary) && 
-                 any(! metric.binary %in% available.evaluation)) {
-        warning(paste0(toString(metric.binary[!(metric.binary %in% available.evaluation)]),
-                       " Binary Transformation were switched off because no corresponding evaluation method found"))
-        metric.binary <- metric.binary[metric.binary %in% available.evaluation]
-      }
-      
-      if (!is.null(metric.filter) && metric.filter[1] == 'all') {
-        metric.filter <- available.evaluation
-      } else if (!is.null(metric.filter) &&
-                 any(!(metric.filter %in% available.evaluation))) {
-        warning(paste0(toString(metric.filter[!(metric.filter %in% available.evaluation)]),
-                       " Filtered Transformation were switched off because no corresponding evaluation method found"))
-        metric.filter <- metric.filter[metric.filter %in% available.evaluation]
+      models.evaluation <- get_evaluations(bm.em)
+      if (is.null(models.evaluation)) {
+        warning("Binary and/or Filtered transformations of projection not ran because of models evaluation information missing")
+      } else {
+        available.evaluation <- as.character(unique(models.evaluation$metric.eval))
+        if (!is.null(metric.binary) && metric.binary[1] == 'all') {
+          metric.binary <- available.evaluation
+        } else if (!is.null(metric.binary) && any(! metric.binary %in% available.evaluation)) {
+          warning(paste0(toString(metric.binary[!(metric.binary %in% available.evaluation)]),
+                         " Binary Transformation were switched off because no corresponding evaluation method found"))
+          metric.binary <- metric.binary[metric.binary %in% available.evaluation]
+        }
+        
+        if (!is.null(metric.filter) && metric.filter[1] == 'all') {
+          metric.filter <- available.evaluation
+        } else if (!is.null(metric.filter) && any(!(metric.filter %in% available.evaluation))) {
+          warning(paste0(toString(metric.filter[!(metric.filter %in% available.evaluation)]),
+                         " Filtered Transformation were switched off because no corresponding evaluation method found"))
+          metric.filter <- metric.filter[metric.filter %in% available.evaluation]
+        }
       }
     }
   }
@@ -669,8 +683,7 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
   if (is.null(do.stack)) {
     do.stack <- TRUE # if no info at all set it TRUE
     # if not explicitly defined apply same rules than bm.proj ones
-    if (!is.null(bm.proj) &&
-        all(grepl("individual_projections", bm.proj@proj.out@link))) {
+    if (!is.null(bm.proj) && all(grepl("individual_projections", bm.proj@proj.out@link))) {
       do.stack <- FALSE
     }
   }
@@ -684,8 +697,8 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
       keep.in.memory <- bm.proj@proj.out@inMemory
     }
   }
-  ## 10. Check new.env.xy ------------------------------------------------------
   
+  ## 10. Check new.env.xy ------------------------------------------------------
   if (is.null(new.env.xy)) {
     if (!is.null(bm.proj)) {
       new.env.xy <- bm.proj@coord
@@ -699,17 +712,34 @@ BIOMOD_EnsembleForecasting <- function(bm.em,
   ## 11. Check na.rm ------------------------------------------------------
   stopifnot(is.logical(na.rm))
   
+  ## 12.on_0_1000 --------------------------------
+  on_0_1000 <- ifelse(is.null(args$on_0_1000), TRUE, args$on_0_1000)
+  if (bm.em@data.type  %in% c("count", "abundance", "ordinal", "multiclass")) { on_0_1000 <- FALSE }
+  
   return(list(bm.em = bm.em,
               bm.proj = bm.proj,
-              new.env = new.env,
-              models.chosen = models.chosen,
               proj.name = proj.name,
+              new.env = new.env,
+              new.env.xy = new.env.xy,
+              models.chosen = models.chosen,
               metric.binary = metric.binary,
               metric.filter = metric.filter,
-              output.format = output.format,
-              compress = ifelse(is.null(args$compress), FALSE, args$compress),
-              on_0_1000 = ifelse(is.null(args$on_0_1000), TRUE, args$on_0_1000),
-              do.stack = do.stack,
+              digits = ifelse(is.null(args$digits), 0, args$digits),
+              on_0_1000 = on_0_1000,
               keep.in.memory = keep.in.memory,
-              new.env.xy = new.env.xy))
+              do.stack = do.stack,
+              output.format = output.format,
+              compress = ifelse(is.null(args$compress), FALSE, args$compress)))
 }
+
+
+###################################################################################################
+
+.BIOMOD_EnsembleForecasting.prepare.workdir <- function(dir.name, sp.name, proj.folder)
+{
+  cat("\nCreating suitable Workdir...\n")
+  indiv_proj_dir <- file.path(dir.name, sp.name, proj.folder, "individual_projections")
+  dir.create(indiv_proj_dir, showWarnings = FALSE, recursive = TRUE, mode = "777")
+  return(indiv_proj_dir)
+}
+

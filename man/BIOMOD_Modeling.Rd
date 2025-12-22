@@ -8,7 +8,7 @@ BIOMOD_Modeling(
   bm.format,
   modeling.id = as.character(format(Sys.time(), "\%s")),
   models = c("ANN", "CTA", "FDA", "GAM", "GBM", "GLM", "MARS", "MAXENT", "MAXNET", "RF",
-    "SRE", "XGBOOST"),
+    "RFd", "SRE", "XGBOOST"),
   models.pa = NULL,
   CV.strategy = "random",
   CV.nb.rep = 1,
@@ -19,20 +19,14 @@ BIOMOD_Modeling(
   CV.strat = NULL,
   CV.user.table = NULL,
   CV.do.full.models = TRUE,
-  OPT.data.type = "binary",
   OPT.strategy = "default",
   OPT.user.val = NULL,
   OPT.user.base = "bigboss",
   OPT.user = NULL,
-  bm.options,
-  nb.rep,
-  data.split.perc,
-  data.split.table,
-  do.full.models,
-  weights = NULL,
-  prevalence = NULL,
-  metric.eval = c("KAPPA", "TSS", "ROC"),
+  metric.eval = c("KAPPA", "TSS", "AUCroc"),
   var.import = 0,
+  weights = NULL,
+  prevalence = 0.5,
   scale.models = FALSE,
   nb.cpu = 1,
   seed.val = NULL,
@@ -47,7 +41,7 @@ object returned by the \code{\link{BIOMOD_FormatingData}} function}
 (\emph{a random number by default})}
 
 \item{models}{a \code{vector} containing model names to be computed, must be among 
-\code{ANN}, \code{CTA}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
+\code{ANN}, \code{CTA}, \code{DNN}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
 \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{RFd}, \code{SRE}, \code{XGBOOST}}
 
 \item{models.pa}{(\emph{optional, default} \code{NULL}) \cr 
@@ -75,13 +69,13 @@ If \code{strategy = 'strat'} or \code{strategy = 'env'}, a \code{character} corr
 to how data will be balanced between partitions, must be either \code{presences} or
 \code{absences}}
 
-\item{CV.env.var}{(\emph{optional}) \cr If \code{strategy = 'env'}, a \code{character} 
-corresponding to the environmental variables used to build the partition. \code{k} partitions 
-will be built for each environmental variables. By default the function uses all 
-environmental variables available.}
+\item{CV.env.var}{(\emph{optional, default} \code{NULL}) \cr 
+If \code{strategy = 'env'}, a \code{character} corresponding to the environmental variables 
+used to build the partition (all available variables by default), and for which \code{CV.k} 
+partitions will be built}
 
 \item{CV.strat}{(\emph{optional, default} \code{'both'}) \cr
-If \code{strategy = 'env'}, a \code{character} corresponding to how data will partitioned 
+If \code{strategy = 'strat'}, a \code{character} corresponding to how data will partitioned 
 along gradient, must be among \code{x}, \code{y}, \code{both}}
 
 \item{CV.user.table}{(\emph{optional, default} \code{NULL}) \cr
@@ -92,9 +86,6 @@ repetition (in columns) which observation lines should be used for models calibr
 \item{CV.do.full.models}{(\emph{optional, default} \code{TRUE}) \cr
 A \code{logical} value defining whether models should be also calibrated and validated over 
 the whole dataset (and pseudo-absence datasets) or not}
-
-\item{OPT.data.type}{a \code{character} corresponding to the data type to be used, must be 
-either \code{binary}, \code{binary.PA}, \code{abundance}, \code{compositional}}
 
 \item{OPT.strategy}{a \code{character} corresponding to the method to select models' 
 parameters values, must be either \code{default}, \code{bigboss}, \code{user.defined}, 
@@ -111,32 +102,25 @@ It sets the bases of parameters to be modified by user defined values.}
 A \code{\link{BIOMOD.models.options}} object returned by the \code{\link{bm_ModelingOptions}} 
 function}
 
-\item{bm.options}{\emph{deprecated}, now called \code{OPT.user}}
+\item{metric.eval}{a \code{vector} containing evaluation metric names to be used, must 
+be among \code{AUCroc}, \code{AUCprg}, \code{TSS}, \code{KAPPA}, \code{ACCURACY}, \code{BIAS}, \code{POD}, 
+\code{FAR}, \code{POFD}, \code{SR}, \code{CSI}, \code{ETS}, \code{OR}, \code{ORSS}, 
+\code{BOYCE}, \code{MPA} (\emph{binary data}), 
+\code{RMSE}, \code{MAE}, \code{MSE}, \code{Rsquared}, \code{Rsquared_aj}, \code{Max_error} 
+(\emph{abundance / count / relative data}), 
+\code{Accuracy}, \code{Recall}, \code{Precision}, \code{F1} (\emph{multiclass / ordinal data})}
 
-\item{nb.rep}{\emph{deprecated}, now called \code{CV.nb.rep}}
-
-\item{data.split.perc}{\emph{deprecated}, now called \code{CV.perc}}
-
-\item{data.split.table}{\emph{deprecated}, now called \code{CV.user.table}}
-
-\item{do.full.models}{\emph{deprecated}, now called \code{CV.do.full.models}}
+\item{var.import}{(\emph{optional, default} \code{NULL}) \cr 
+An \code{integer} corresponding to the number of permutations to be done for each variable to 
+estimate variable importance}
 
 \item{weights}{(\emph{optional, default} \code{NULL}) \cr 
 A \code{vector} of \code{numeric} values corresponding to observation weights (one per 
 observation, see Details)}
 
-\item{prevalence}{(\emph{optional, default} \code{NULL}) \cr 
+\item{prevalence}{(\emph{optional, default} \code{0.5}) \cr 
 A \code{numeric} between \code{0} and \code{1} corresponding to the species prevalence to 
 build '\emph{weighted response weights}' (see Details)}
-
-\item{metric.eval}{a \code{vector} containing evaluation metric names to be used, must 
-be among \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, \code{BIAS}, 
-\code{ROC}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, \code{CSI}, \code{ETS}, 
-\code{BOYCE}, \code{MPA}}
-
-\item{var.import}{(\emph{optional, default} \code{NULL}) \cr 
-An \code{integer} corresponding to the number of permutations to be done for each variable to 
-estimate variable importance}
 
 \item{scale.models}{(\emph{optional, default} \code{FALSE}) \cr 
 A \code{logical} value defining whether all models predictions should be scaled with a 
@@ -185,10 +169,11 @@ metrics (see Details).
   \itemize{
     \item \code{ANN} : Artificial Neural Network (\code{\link[nnet]{nnet}})
     \item \code{CTA} : Classification Tree Analysis (\code{\link[rpart]{rpart}})
+    \item \code{DNN} : Deep Neural Network (\code{\link[cito]{cito}})
     \item \code{FDA} : Flexible Discriminant Analysis (\code{\link[mda]{fda}})
     \item \code{GAM} : Generalized Additive Model (\code{\link[gam]{gam}}, \code{\link[mgcv]{gam}} 
     or \code{\link[mgcv]{bam}}) \cr 
-    (see \code{\link{bm_ModelingOptions} for details on algorithm selection})
+    (see \code{\link{bm_ModelingOptions}} for details on algorithm selection)
     \item \code{GBM} : Generalized Boosting Model, or usually called Boosted Regression Trees 
     (\code{\link[gbm]{gbm}})
     \item \code{GLM} : Generalized Linear Model (\code{\link[stats]{glm}})
@@ -200,7 +185,17 @@ metrics (see Details).
     \item \code{RFd} : Random Forest downsampled (\code{\link[randomForest]{randomForest}})
     \item \code{SRE} : Surface Range Envelop or usually called BIOCLIM (\code{\link{bm_SRE}})
     \item \code{XGBOOST} : eXtreme Gradient Boosting Training (\code{\link[xgboost]{xgboost}})
-  }}
+  }
+  \tabular{rcccccccccccccc}{
+    \tab \strong{ANN} \tab \strong{CTA} \tab \strong{DNN} \tab \strong{FDA} \tab \strong{GAM} \tab \strong{GBM} 
+    \tab \strong{GLM} \tab \strong{MARS} \tab \strong{MAXENT} \tab \strong{MAXNET} 
+    \tab \strong{RF} \tab \strong{RFd} \tab \strong{SRE} \tab \strong{XGBOOST} \cr
+   binary \tab x \tab x \tab x \tab x \tab x \tab x \tab x \tab x \tab x \tab x \tab x \tab x \tab x \tab x \cr
+   multiclass \tab  \tab x \tab x \tab x \tab  \tab  \tab  \tab x \tab  \tab  \tab x \tab  \tab  \tab x \cr
+   ordinal \tab  \tab x \tab x \tab x \tab x \tab  \tab x \tab x \tab  \tab  \tab x \tab  \tab  \tab x \cr
+   abundance / count / relative \tab  \tab x \tab x \tab  \tab x \tab x \tab x \tab x \tab  \tab  \tab x \tab  \tab  \tab x 
+  }
+  }
   
   \item{models.pa}{Different models might respond differently to different numbers of 
   pseudo-absences. It is possible to create sets of pseudo-absences with different numbers 
@@ -213,8 +208,7 @@ metrics (see Details).
   
   \item{OPT.[...] parameters}{Different methods are available to parameterize the 
   single models (see \code{\link{bm_ModelingOptions}} and 
-  \code{\link{BIOMOD.options.dataset}}). Note that only \code{binary} data type is 
-  allowed currently.
+  \code{\link{BIOMOD.options.dataset}}). 
   \itemize{
     \item \code{default} : only default parameter values of default parameters of the single 
     models functions are retrieved. Nothing is changed so it might not give good results.
@@ -228,26 +222,14 @@ metrics (see Details).
     some default values
   }
   }
-  
-  \item{weights & prevalence}{More or less weight can be given to some specific observations.
-  \itemize{
-    \item If \code{weights = prevalence = NULL}, each observation (presence or absence) will 
-    have the same weight, no matter the total number of presences and absences.
-    \item If \code{prevalence = 0.5}, presences and absences will be weighted equally 
-    (\emph{i.e. the weighted sum of presences equals the weighted sum of absences}). 
-    \item If \code{prevalence} is set below (\emph{above}) \code{0.5}, more weight will be 
-    given to absences (\emph{presences}).
-    \item If \code{weights} is defined, \code{prevalence} argument will be ignored, and each 
-    observation will have its own weight.
-    \item If pseudo-absences have been generated (\code{PA.nb.rep > 0} in 
-    \code{\link{BIOMOD_FormatingData}}), weights are by default calculated such that 
-    \code{prevalence = 0.5}. \emph{Automatically created \code{weights} will be \code{integer} 
-    values to prevent some modeling issues.}
-    \item \emph{NOTE THAT \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{RFd} and \code{SRE} 
-    models do not take weights into account.}
-  }}
 
   \item{metric.eval}{
+  \emph{Please refer to  
+  \href{https://www.cawcr.gov.au/projects/verification/}{CAWRC website ("Methods for 
+  dichotomous forecasts")} to get detailed description (simple/complex metrics).} \cr
+  Several evaluation metrics can be selected. \cr
+  Optimal value of each method can be obtained with the \code{\link{get_optim_value}} 
+  function.
   \describe{
     \item{simple}{
     \itemize{
@@ -261,7 +243,8 @@ metrics (see Details).
     }
     \item{complex}{
     \itemize{
-      \item \code{ROC} : Relative operating characteristic
+      \item \code{AUCroc} : Area Under Curve of Relative operating characteristic
+      \item \code{AUCprg} : Area Under Curve of Precision-Recall-Gain curve
       \item \code{TSS} : True skill statistic (Hanssen and Kuipers discriminant, Peirce's 
       skill score)
       \item \code{KAPPA} : Cohen's Kappa (Heidke skill score)
@@ -278,16 +261,31 @@ metrics (see Details).
       presences)
     }
     }
+    \item{abundance / count / relative data}{
+    \itemize{
+      \item \code{RMSE} : Root Mean Square Error
+      \item \code{MSE} : Mean Square Error
+      \item \code{MAE} : Mean Absolute Error
+      \item \code{Rsquared} : R squared
+      \item \code{Rsquared_aj} : R squared adjusted
+      \item \code{Max_error} : Maximum error
+    }
+    }
+    \item{multiclass/ordinal data}{
+    \itemize{
+      \item \code{Accuracy} : Accuracy
+      \item \code{Recall} : Macro average Recall
+      \item \code{Precision} : Macro average Precision
+      \item \code{F1} : Macro F1 score
+    }
+    }
   }
-  Optimal value of each method can be obtained with the \code{\link{get_optim_value}} 
-  function. Several evaluation metrics can be selected. \emph{Please refer to the 
-  \href{https://www.cawcr.gov.au/projects/verification/}{CAWRC website (section "Methods for 
-  dichotomous forecasts")} to get detailed description of each metric.}
   Results after modeling can be obtained through the \code{\link{get_evaluations}} function. \cr 
   Evaluation metric are calculated on the calibrating data (column \code{calibration}), on 
   the cross-validation data (column \code{validation}) or on the evaluation data 
-  (column \code{evaluation}). \cr \emph{For cross-validation data, see \code{CV.[...]} 
-  parameters in \code{\link{BIOMOD_Modeling}} function ; for evaluation data, see 
+  (column \code{evaluation}). \cr 
+  \emph{For cross-validation data, see \code{CV.[...]} parameters in 
+  \code{\link{BIOMOD_Modeling}} function. \cr For evaluation data, see 
   \code{eval.[...]} parameters in \code{\link{BIOMOD_FormatingData}}.}
   }
   
@@ -295,13 +293,27 @@ metrics (see Details).
   predictions can be calculated by randomizing the variable of interest and computing the 
   correlation between original and shuffled variables (see \code{\link{bm_VariablesImportance}}).}
   
-  \item{scale.models}{\bold{This parameter is quite experimental and it is recommended 
-  not to use it. It may lead to reduction in projection scale amplitude.} Some categorical 
-  models always have to be scaled (\code{FDA}, \code{ANN}), but it may be interesting to 
-  scale all computed models to ensure comparable predictions (\code{0-1000} range). It might 
-  be particularly useful when doing ensemble forecasting to remove the scale prediction effect 
-  (\emph{the more extended projections are, the more they influence ensemble forecasting 
-  results}).
+  \item{weights & prevalence}{
+  More or less weight can be given to some specific observations. \cr Automatically created 
+  \code{weights} will be \code{integer} values to prevent some modeling issues. \cr 
+  \emph{Note that \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{RFd} and \code{SRE} models 
+  do not take weights into account.}
+  \itemize{
+    \item If \code{prevalence = 0.5} (the default), presences and absences will be weighted equally 
+    (\emph{i.e. the weighted sum of presences equals the weighted sum of absences}). 
+    \item If \code{prevalence} is set below (\emph{above}) \code{0.5}, more weight will be 
+    given to absences (\emph{presences}).
+    \item If \code{weights} is defined, \code{prevalence} argument will be ignored 
+    (\emph{EXCEPT for \code{MAXENT}}).
+  }}
+  
+  \item{scale.models}{A binomial GLM is created to scale predictions from 0 to 1. \cr
+  \code{SRE} is never scaled, and \code{ANN} and \code{FDA} categorical models always are. \cr
+  \emph{Note that it may lead to reduction in projected scale amplitude.} \cr
+  \bold{This parameter is quite experimental and it is recommended not to use it.} It was 
+  developed in the idea to ensure comparable predictions by removing the scale prediction 
+  effect (\emph{the more extended projections are, the more they influence ensemble 
+  forecasting results}).
   }
 }
 }
@@ -332,10 +344,10 @@ myExpl <- terra::crop(myExpl, myExtent)
 
 # ---------------------------------------------------------------------------- #
 # Format Data with true absences
-myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-                                     expl.var = myExpl,
+myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+                                     resp.var = myResp,
                                      resp.xy = myRespXY,
-                                     resp.name = myRespName)
+                                     expl.var = myExpl)
 
 
 # ---------------------------------------------------------------------------- #
@@ -347,7 +359,7 @@ myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
                                     CV.nb.rep = 2,
                                     CV.perc = 0.8,
                                     OPT.strategy = 'bigboss',
-                                    metric.eval = c('TSS','ROC'),
+                                    metric.eval = c('TSS','AUCroc'),
                                     var.import = 2,
                                     seed.val = 42)
 myBiomodModelOut
@@ -385,7 +397,7 @@ bm_PlotEvalBoxplot(bm.out = myBiomodModelOut, group.by = c('algo', 'run'))
 \seealso{
 \code{\link[stats]{glm}}, \code{\link[gam]{gam}},
   \code{\link[mgcv]{gam}}, \code{\link[mgcv]{bam}}, \code{\link[gbm]{gbm}},
-  \code{\link[rpart]{rpart}}, \code{\link[nnet]{nnet}},
+  \code{\link[rpart]{rpart}}, \code{\link[nnet]{nnet}}, \code{\link[cito]{cito}},
   \code{\link[mda]{fda}}, \code{\link[earth]{earth}},
   \code{\link[randomForest]{randomForest}}, \code{\link[maxnet]{maxnet}},
   \code{\link[xgboost]{xgboost}}, \code{\link{BIOMOD_FormatingData}},

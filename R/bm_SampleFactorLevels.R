@@ -96,6 +96,7 @@
 ##' 
 ###################################################################################################
 
+
 bm_SampleFactorLevels <- function(expl.var, mask.out = NULL, mask.in = NULL)
 {
   if (inherits(expl.var, 'SpatRaster')) {
@@ -116,7 +117,7 @@ bm_SampleFactorLevels.SpatRaster <- function(expl.var, mask.out = NULL, mask.in 
 {
   ## check if some factorial variables are in the input data
   fact.var <- which(is.factor(expl.var))
-  if(any(fact.var))
+  if (any(fact.var))
   { ## some factorial variables present
     fact.level.cells <- as.numeric(unlist(sapply(fact.var, function(f)
     {
@@ -124,22 +125,24 @@ bm_SampleFactorLevels.SpatRaster <- function(expl.var, mask.out = NULL, mask.in 
       selected.cells <- NULL
       
       ## get the factor levels on the full dataset
-      fact.level.names <- cats(subset(expl.var, f))[[1]][,2]
-      fact.level <- fact.level.original <- cats(subset(expl.var, f))[[1]][,1]
-      cat("\n\t> fact.level for",  names(expl.var)[f], ":\t", paste(fact.level, fact.level.names, sep = ":", collapse = "\t"))
+      fact.level.names <- cats(subset(expl.var, f))[[1]][, 2]
+      fact.level <- fact.level.original <- cats(subset(expl.var, f))[[1]][, 1]
+      cat("\n\t> fact.level for",  names(expl.var)[f], ":\t"
+          , paste(fact.level, fact.level.names, sep = ":", collapse = "\t"))
+      
       ## mask containing points that have already been sampled ------------------------------------
       if (!is.null(mask.out))
       {
         ## check the factor levels that have already been sampled
-        fact.levels.sampled <- 
-          unique(na.omit(
-            values((mask(subset(expl.var, f), mask.out, maskvalues = c(1), inverse = TRUE)))
-          ))
+        fact.levels.sampled <- unique(na.omit(
+          values((mask(subset(expl.var, f), mask.out, maskvalues = c(1), inverse = TRUE)))
+        ))
         ## update levels names (lost during mask conversion)
         cat("\n\t - according to mask.out levels", fact.levels.sampled, "have already been sampled")
         ## update the list of factor levels to sample
         fact.level <- setdiff(fact.level, fact.levels.sampled)
       }
+      
       ## if there still is some levels to sample --------------------------------------------------
       ## take a random value of them in the full dataset 
       if (length(fact.level) > 0) {
@@ -164,7 +167,7 @@ bm_SampleFactorLevels.data.frame <- function(expl.var, mask.out = NULL, mask.in 
 {
   ## check if some factorial variables are in the input data
   fact.var <- which(sapply(expl.var, is.factor))
-  if(any(fact.var))
+  if (any(fact.var))
   { ## some factorial variables present
     fact.level.cells <- as.numeric(unlist(sapply(fact.var, function(f)
     {
@@ -173,7 +176,8 @@ bm_SampleFactorLevels.data.frame <- function(expl.var, mask.out = NULL, mask.in 
       
       ## get the factor levels on the full dataset
       fact.level <- fact.level.original <- levels(expl.var[, f])
-      cat("\n\t> fact.level for",  colnames(expl.var)[f], ":\t", paste(1:length(fact.level), fact.level, sep = ":", collapse = "\t"))
+      cat("\n\t> fact.level for",  colnames(expl.var)[f], ":\t"
+          , paste(1:length(fact.level), fact.level, sep = ":", collapse = "\t"))
       
       ## mask containing points that have already been sampled ------------------------------------
       if (!is.null(mask.out))
@@ -205,7 +209,7 @@ bm_SampleFactorLevels.data.frame <- function(expl.var, mask.out = NULL, mask.in 
               fact.levels.in.m.in <- intersect(fact.level, x.f.levels)
               if (length(fact.levels.in.m.in) > 0) {
                 cat("\n\t - levels", fact.levels.in.m.in, "will be sampled in mask.out", mask.in.id)
-                selected.cells <- c(selected.cells, sapply(fact.levels.in.m.in, function(fl){
+                selected.cells <- c(selected.cells, sapply(fact.levels.in.m.in, function(fl) {
                   candidate.cells <- na.omit(which(x.f.masked[] == fl))
                   selected.cell <- NULL
                   if (length(candidate.cells) == 1) { ## single candidate cell
@@ -226,7 +230,7 @@ bm_SampleFactorLevels.data.frame <- function(expl.var, mask.out = NULL, mask.in 
         ## b. take a random value of them in the full dataset 
         ## !! this should be tricky if mask.in arg is given because the value will be picked out of 
         ## mask.in but is necessary to ensure that models will run smoothly
-        if (length(fact.level) > 0){
+        if (length(fact.level) > 0) {
           cat("\n\t - levels", fact.level, "will be sampled in the original data.frame")
           selected.cells <- c(selected.cells, sapply(fact.level, function(fl) {
             candidate.cells <- na.omit(which(expl.var[, f] == fl))

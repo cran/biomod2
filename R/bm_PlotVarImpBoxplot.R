@@ -1,6 +1,6 @@
 ###################################################################################################
 ##' @name bm_PlotVarImpBoxplot
-##' @author Damien Georges, Maya Gueguen
+##' @author Damien Georges, Maya Guéguen
 ##' 
 ##' @title Plot boxplot of variables importance
 ##' 
@@ -82,10 +82,10 @@
 ##' } else {
 ##' 
 ##'   # Format Data with true absences
-##'   myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-##'                                        expl.var = myExpl,
+##'   myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+##'                                        resp.var = myResp,
 ##'                                        resp.xy = myRespXY,
-##'                                        resp.name = myRespName)
+##'                                        expl.var = myExpl)
 ##' 
 ##'   # Model single models
 ##'   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
@@ -111,8 +111,9 @@
 ##' bm_PlotVarImpBoxplot(bm.out = myBiomodModelOut, group.by = c('algo', 'expl.var', 'PA'))
 ##' 
 ##' 
-##' @importFrom ggplot2 ggplot aes_string geom_boxplot facet_wrap xlab ylab labs 
+##' @importFrom ggplot2 ggplot geom_boxplot facet_wrap xlab ylab labs 
 ##' theme element_blank element_rect element_text scale_y_continuous
+##' @importFrom rlang .data
 ##' 
 ##' @export
 ##' 
@@ -133,9 +134,9 @@ bm_PlotVarImpBoxplot <- function(bm.out, group.by = c('run', 'expl.var', 'algo')
   ggdat = get_variables_importance(bm.out)
   
   if (!is.null(ggdat))
-  {
+  { 
     ## 2. PLOT graphic ------------------------------------------------------------------------------
-    gg <- ggplot(ggdat, aes_string(x = group.by[1], y = "var.imp", fill = group.by[2])) +
+    gg <- ggplot(ggdat, aes(x = .data[[group.by[1]]], y = .data$var.imp, color = .data[[group.by[2]]])) +
       geom_boxplot() + ## add boxplot
       facet_wrap(group.by[3], scales = "free_x") +
       scale_y_continuous(breaks = seq(0, 1, 0.1), labels = paste0(seq(0, 100, 10), "%")) + 
@@ -172,7 +173,7 @@ bm_PlotVarImpBoxplot <- function(bm.out, group.by = c('run', 'expl.var', 'algo')
     }
   } else if (inherits(bm.out, "BIOMOD.ensemble.models.out")) {
     for (i in 1:length(group.by)) {
-      .fun_testIfIn(TRUE, paste0("group.by[", i, "]"), group.by[i], c("full.name", "merged.by.PA", "merged.by.run", "algo", "expl.var"))
+      .fun_testIfIn(TRUE, paste0("group.by[", i, "]"), group.by[i], c("full.name", "merged.by.PA", "merged.by.run", "algo", "filtered.by", "expl.var"))
     }
   } 
   

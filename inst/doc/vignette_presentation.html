@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="generator" content="litedown 0.7">
 <title>Presentation</title>
 <style type="text/css">
 body {
@@ -11,73 +12,105 @@ body {
   margin: auto;
   padding: 1em;
   line-height: 1.5;
-  box-sizing: border-box;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
-body, .footnotes, code { font-size: .9em; }
+body, .abstract, code, .footnotes, footer, #refs, .caption { font-size: .9em; }
 li li { font-size: .95em; }
-*, *:before, *:after {
-  box-sizing: inherit;
-}
+ul:has(li > input[type="checkbox"]) { list-style: none; padding-left: 1em; }
+*, :before, :after { box-sizing: border-box; }
+a { color: steelblue; }
 pre, img { max-width: 100%; }
-pre, pre:hover {
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-pre code {
-  display: block;
-  overflow-x: auto;
-}
+pre { white-space: pre-wrap; word-break: break-word; }
+pre code { display: block; padding: 1em; overflow-x: auto; }
 code { font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace; }
-:not(pre) > code, code[class] { background-color: #F8F8F8; }
-code.language-undefined, pre > code:not([class]) {
-  background-color: inherit;
-  border: 1px solid #eee;
+:not(pre, th) > code, code[class], div > .caption { background: #f8f8f8; }
+pre > code:is(:not([class]), .language-plain, .language-none, .plain), .box, .figure, .table { background: inherit; border: 1px solid #eee; }
+pre > code {
+  &.message { border-color: #9eeaf9; }
+  &.warning { background: #fff3cd; border-color: #fff3cd; }
+  &.error { background: #f8d7da; border-color: #f8d7da; }
 }
+.fenced-chunk { border-left: 1px solid #666; }
+.code-fence {
+  opacity: .4;
+  border: 1px dashed #666;
+  border-left: 2px solid;
+  &:hover { opacity: inherit; }
+}
+.box, .figure, .table, table { margin: 1em auto; }
+div > .caption { padding: 1px 1em; }
+.figure { p:has(img, svg), pre:has(svg) { text-align: center; } }
+.flex-col { display: flex; justify-content: space-between; }
 table {
-  margin: auto;
-  border-top: 1px solid #666;
+  &:only-child:not(.table > *) { margin: auto; }
+  th, td { padding: 5px; font-variant-numeric: tabular-nums; }
+  thead, tfoot, tr:nth-child(even) { background: whitesmoke; }
+  thead th { border-bottom: 1px solid #ddd; }
+  &:not(.datatable-table) {
+    border-top: 1px solid #666;
+    border-bottom: 1px solid #666;
+  }
 }
-table thead th { border-bottom: 1px solid #ddd; }
-th, td { padding: 5px; }
-thead, tfoot, tr:nth-child(even) { background: #eee; }
 blockquote {
   color: #666;
   margin: 0;
-  padding-left: 1em;
-  border-left: 0.5em solid #eee;
+  padding: 1px 1em;
+  border-left: .5em solid #eee;
 }
 hr, .footnotes::before { border: 1px dashed #ddd; }
 .frontmatter { text-align: center; }
-#TOC .numbered li { list-style: none; }
-#TOC .numbered { padding-left: 0; }
-#TOC .numbered ul { padding-left: 1em; }
-table, .body h2 { border-bottom: 1px solid #666; }
+#TOC {
+  a { text-decoration: none; }
+  ul { list-style: none; padding-left: 1em; }
+  & > ul { padding: 0; }
+  ul ul { border-left: 1px solid lightsteelblue; }
+}
+.body h2 { border-bottom: 1px solid #666; }
 .body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
-.footnote-ref a::before { content: "["; }
-.footnote-ref a::after { content: "]"; }
-section.footnotes::before {
-  content: "";
-  display: block;
-  max-width: 20em;
+.main-number::after { content: "."; }
+span[class^="ref-number-"] { font-weight: bold; }
+.ref-number-fig::after, .ref-number-tab::after { content: ":"; }
+.cross-ref-chp::before { content: "Chapter "; }
+.cross-ref-sec::before { content: "Section "; }
+.cross-ref-fig::before, .ref-number-fig::before { content: "Figure "; }
+.cross-ref-tab::before, .ref-number-tab::before { content: "Table "; }
+.cross-ref-eqn::before, .MathJax_ref:has(mjx-mtext > mjx-c + mjx-c)::before { content: "Equation "; }
+.abstract, #refs {
+  &::before { display: block; margin: 1em auto; font-weight: bold; }
+}
+.abstract::before { content: "Abstract"; text-align: center; }
+#refs::before { content: "Bibliography"; font-size: 1.5em; }
+.ref-paren-open::before { content: "("; }
+.ref-paren-close::after { content: ")"; }
+.ref-semicolon::after { content: "; "; }
+.ref-and::after { content: " and "; }
+.ref-et-al::after { content: " et al."; font-style: italic; }
+.footnote-ref a {
+  &::before { content: "["; }
+  &::after { content: "]"; }
+}
+section.footnotes {
+  margin-top: 2em;
+  &::before { content: ""; display: block; max-width: 20em; }
+}
+.fade {
+  background: repeating-linear-gradient(135deg, white, white 30px, #ddd 32px, #ddd 32px);
+  opacity: 0.6;
 }
 
 @media print {
-  body {
-    font-size: 12pt;
-    max-width: 100%;
-  }
-  tr, img { page-break-inside: avoid; }
+  body { max-width: 100%; }
+  tr, img { break-inside: avoid; }
 }
 @media only screen and (min-width: 992px) {
-  pre { white-space: pre; }
+  body:not(.pagesjs) pre:has(.line-numbers):not(:hover) { white-space: pre; }
 }
 </style>
 </head>
 <body>
 <div class="frontmatter">
 <div class="title"><h1>Presentation</h1></div>
-<div class="author"><h2></h2></div>
-<div class="date"><h3></h3></div>
 </div>
 <div class="body">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -92,7 +125,7 @@ section.footnotes::before {
 <p><a href="https://biomodhub.github.io/biomod2/articles/pictures/SCHEMA_BIOMOD2_WORKFLOW_functions.pdf">Download pdf of WORKFLOW GRAPHIC <i class="fas fa-download"></i></a></p>
 <p><a href="https://biomodhub.github.io/biomod2/articles/pictures/biomod2_presentation.workflow_05_2024.pdf">Download pdf of PRESENTATION <i class="fas fa-download"></i></a></p>
 </div>
-<h4 id="data-formatting-biomod-formatingdata"><i class="fa-solid fa-list-check"></i> Data formatting : <a href="../reference/BIOMOD_FormatingData.html">BIOMOD_FormatingData</a></h4>
+<h4 id="sec:data-formatting-biomod-formatingdata"><i class="fa-solid fa-list-check"></i> Data formatting : <a href="../reference/BIOMOD_FormatingData.html">BIOMOD_FormatingData</a></h4>
 <ul>
 <li>
 <p><strong>Formatting data</strong> : combine observations, coordinates and explanatory variables, <br/>and sample pseudo-absences for presence-only data (<em>through <a href="../reference/bm_PseudoAbsences.html">bm_PseudoAbsences</a></em>)</p>
@@ -108,7 +141,7 @@ section.footnotes::before {
 </ul>
 </li>
 </ul>
-<h4 id="single-models-biomod-modeling"><i class="fa-solid fa-virus"></i> Single models : <a href="../reference/BIOMOD_Modeling.html">BIOMOD_Modeling</a></h4>
+<h4 id="sec:single-models-biomod-modeling"><i class="fa-solid fa-virus"></i> Single models : <a href="../reference/BIOMOD_Modeling.html">BIOMOD_Modeling</a></h4>
 <ul>
 <li>
 <p><strong>Evaluation</strong> : transform predicted probabilities in binary values (<em>through <a href="../reference/bm_BinaryTransformation.html">bm_BinaryTransformation</a></em>), <br/>and compute evaluation metrics (<em>through <a href="../reference/bm_FindOptimStat.html">bm_FindOptimStat</a></em>)</p>
@@ -117,24 +150,24 @@ section.footnotes::before {
 <p><strong>Variables’ importance</strong> : estimate the impact of each explanatory variable on predictions (<em>through <a href="../reference/bm_VariablesImportance.html">bm_VariablesImportance</a></em>)</p>
 </li>
 </ul>
-<h4 id="ensemble-models-biomod-ensemblemodeling"><i class="fa-solid fa-viruses"></i> Ensemble models : <a href="../reference/BIOMOD_EnsembleModeling.html">BIOMOD_EnsembleModeling</a></h4>
+<h4 id="sec:ensemble-models-biomod-ensemblemodeling"><i class="fa-solid fa-viruses"></i> Ensemble models : <a href="../reference/BIOMOD_EnsembleModeling.html">BIOMOD_EnsembleModeling</a></h4>
 <ul>
 <li>Filter single models based on one evaluation metric</li>
 <li>Combine them according to different combinations</li>
 <li>And build ensemble models</li>
 </ul>
-<h4 id="exploring-outputs"><i class="fas fa-chart-bar"></i> Exploring outputs</h4>
+<h4 id="sec:exploring-outputs"><i class="fas fa-chart-bar"></i> Exploring outputs</h4>
 <ul>
 <li>Evaluation : <a href="../reference/bm_PlotEvalMean.html">bm_PlotEvalMean</a>, <a href="../reference/bm_PlotEvalBoxplot.html">bm_PlotEvalBoxplot</a></li>
 <li>Variables’ importance : <a href="../reference/bm_PlotVarImpBoxplot.html">bm_PlotVarImpBoxplot</a></li>
 <li>Response curves : <a href="../reference/bm_PlotResponseCurves.html">bm_PlotResponseCurves</a></li>
 </ul>
-<h4 id="projecting-models-biomod-projection-biomod-ensembleforecasting"><i class="fa-solid fa-earth-europe"></i> Projecting models : <a href="../reference/BIOMOD_Projection.html">BIOMOD_Projection</a>, <a href="../reference/BIOMOD_BIOMOD_EnsembleForecasting.html">BIOMOD_EnsembleForecasting</a></h4>
+<h4 id="sec:projecting-models-biomod-projection-biomod-ensembleforecasting"><i class="fa-solid fa-earth-europe"></i> Projecting models : <a href="../reference/BIOMOD_Projection.html">BIOMOD_Projection</a>, <a href="../reference/BIOMOD_BIOMOD_EnsembleForecasting.html">BIOMOD_EnsembleForecasting</a></h4>
 <ul>
 <li>Project models onto new conditions</li>
 <li>Transform predicted probabilities in binary values (<em>through <a href="../reference/bm_BinaryTransformation.html">bm_BinaryTransformation</a></em>)</li>
 </ul>
-<h4 id="species-range-change-biomod-rangesize"><i class="fa-solid fa-ruler-combined"></i> Species range change : <a href="../reference/BIOMOD_RangeSize.html">BIOMOD_RangeSize</a></h4>
+<h4 id="sec:species-range-change-biomod-rangesize"><i class="fa-solid fa-ruler-combined"></i> Species range change : <a href="../reference/BIOMOD_RangeSize.html">BIOMOD_RangeSize</a></h4>
 </div>
 </body>
 </html>

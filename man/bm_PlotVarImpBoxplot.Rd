@@ -77,10 +77,10 @@ if (file.exists(file.out)) {
 } else {
 
   # Format Data with true absences
-  myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-                                       expl.var = myExpl,
+  myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+                                       resp.var = myResp,
                                        resp.xy = myRespXY,
-                                       resp.name = myRespName)
+                                       expl.var = myExpl)
 
   # Model single models
   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
@@ -117,12 +117,14 @@ Other Secondary functions:
 \code{\link{bm_CrossValidation}()},
 \code{\link{bm_FindOptimStat}()},
 \code{\link{bm_MakeFormula}()},
+\code{\link{bm_ModelAnalysis}()},
 \code{\link{bm_ModelingOptions}()},
 \code{\link{bm_PlotEvalBoxplot}()},
 \code{\link{bm_PlotEvalMean}()},
 \code{\link{bm_PlotRangeSize}()},
 \code{\link{bm_PlotResponseCurves}()},
 \code{\link{bm_PseudoAbsences}()},
+\code{\link{bm_RangeSize}()},
 \code{\link{bm_RunModelsLoop}()},
 \code{\link{bm_SRE}()},
 \code{\link{bm_SampleBinaryVector}()},
@@ -131,13 +133,14 @@ Other Secondary functions:
 \code{\link{bm_VariablesImportance}()}
 
 Other Plot functions: 
+\code{\link{bm_ModelAnalysis}()},
 \code{\link{bm_PlotEvalBoxplot}()},
 \code{\link{bm_PlotEvalMean}()},
 \code{\link{bm_PlotRangeSize}()},
 \code{\link{bm_PlotResponseCurves}()}
 }
 \author{
-Damien Georges, Maya Gueguen
+Damien Georges, Maya Guéguen
 }
 \concept{Plot functions}
 \concept{Secondary functions}

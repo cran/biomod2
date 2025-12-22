@@ -6,6 +6,7 @@
 \alias{biomod2_model-class}
 \alias{ANN_biomod2_model-class}
 \alias{CTA_biomod2_model-class}
+\alias{DNN_biomod2_model-class}
 \alias{FDA_biomod2_model-class}
 \alias{GAM_biomod2_model-class}
 \alias{GBM_biomod2_model-class}
@@ -36,6 +37,7 @@ Class created by \code{\link{BIOMOD_Modeling}} and \code{\link{bm_RunModel}}
 \itemize{
   \item \code{ANN_biomod2_model} : \code{model_class} is \code{ANN}
   \item \code{CTA_biomod2_model} : \code{model_class} is \code{CTA}
+  \item \code{DNN_biomod2_model} : \code{model_class} is \code{DNN}
   \item \code{FDA_biomod2_model} : \code{model_class} is \code{FDA}
   \item \code{GBM_biomod2_model} : \code{model_class} is \code{GBM}
   \item \code{GLM_biomod2_model} : \code{model_class} is \code{GLM}
@@ -55,11 +57,15 @@ Class created by \code{\link{BIOMOD_Modeling}} and \code{\link{bm_RunModel}}
 
 \item{\code{model_class}}{a \code{character} corresponding to the model class}
 
+\item{\code{model_type}}{a \code{character} corresponding to the type of data}
+
 \item{\code{model_options}}{a \code{list} containing the model options}
 
 \item{\code{model}}{the corresponding model object}
 
 \item{\code{scaling_model}}{the corresponding scaled model object}
+
+\item{\code{levels_factor}}{the levels of the original data for ordinal and multiclass}
 
 \item{\code{dir_name}}{a \code{character} corresponding to the modeling folder}
 
@@ -81,6 +87,7 @@ Class created by \code{\link{BIOMOD_Modeling}} and \code{\link{bm_RunModel}}
 showClass("biomod2_model")
 showClass("ANN_biomod2_model")
 showClass("CTA_biomod2_model")
+showClass("DNN_biomod2_model")
 showClass("FDA_biomod2_model")
 showClass("GAM_biomod2_model")
 showClass("GBM_biomod2_model")
@@ -105,6 +112,7 @@ Other Toolbox objects:
 \code{\link{BIOMOD.options.dataset}},
 \code{\link{BIOMOD.options.default}},
 \code{\link{BIOMOD.projection.out}},
+\code{\link{BIOMOD.rangesize.out}},
 \code{\link{BIOMOD.stored.data}},
 \code{\link{biomod2_ensemble_model}}
 }

@@ -1,6 +1,6 @@
 ###################################################################################################
 ##' @name bm_PlotResponseCurves
-##' @author Damien Georges, Maya Gueguen
+##' @author Damien Georges, Maya Guéguen
 ##' 
 ##' @title Plot response curves
 ##' 
@@ -74,7 +74,7 @@
 ##' @references
 ##' 
 ##' \itemize{
-##'   \item Elith, J., Ferrier, S., Huettmann, FALSE. and Leathwick, J. R. 2005. The evaluation 
+##'   \item Elith, J., Ferrier, S., Huettmann, F., and Leathwick, J. R. 2005. The evaluation 
 ##'   strip: A new and robust method for plotting predicted responses from species distribution 
 ##'   models. \emph{Ecological Modelling}, \bold{186}, 280-289.
 ##' }
@@ -121,10 +121,10 @@
 ##' } else {
 ##' 
 ##'   # Format Data with true absences
-##'   myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-##'                                        expl.var = myExpl,
+##'   myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+##'                                        resp.var = myResp,
 ##'                                        resp.xy = myRespXY,
-##'                                        resp.name = myRespName)
+##'                                        expl.var = myExpl)
 ##' 
 ##'   # Model single models
 ##'   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
@@ -134,7 +134,7 @@
 ##'                                       CV.nb.rep = 2,
 ##'                                       CV.perc = 0.8,
 ##'                                       OPT.strategy = 'bigboss',
-##'                                       metric.eval = c('TSS','ROC'),
+##'                                       metric.eval = c('TSS', 'ROC'),
 ##'                                       var.import = 3,
 ##'                                       seed.val = 42)
 ##' }
@@ -165,13 +165,15 @@
 ##' @importFrom terra rast cats global is.factor nlyr                                    
 ##' @importFrom foreach foreach %do% %:%
 ##' @importFrom reshape2 melt
-##' @importFrom ggplot2 ggplot aes_string geom_line geom_rug geom_raster facet_wrap xlab ylab labs 
+##' @importFrom ggplot2 ggplot geom_line geom_rug geom_raster facet_wrap xlab ylab labs 
 ##' theme element_blank element_rect element_text scale_fill_viridis_c
+##' @importFrom rlang .data
 ##' 
 ##' @export
 ##' 
 ##' 
 ###################################################################################################
+
 
 bm_PlotResponseCurves <- function(bm.out
                                   , models.chosen = 'all'
@@ -250,7 +252,12 @@ bm_PlotResponseCurves <- function(bm.out
             if (inherits(mod, "MAXENT_biomod2_model")) {
               temp_workdir = mod@model_output_dir
             }
-            proj.tmp <- predict(mod, newdata = new.env.r.tmp, on_0_1000 = on_0_1000, do_check = FALSE, temp_workdir = temp_workdir, seedval = NULL)
+            proj.tmp <- predict(mod, newdata = new.env.r.tmp, on_0_1000 = on_0_1000
+                                , do_check = FALSE, temp_workdir = temp_workdir, seedval = NULL)
+            
+            if(bm.out@data.type == "multiclass" && grepl("XGBOOST", mod.name)) {
+              proj.tmp <- .numeric2factor(proj.tmp, get_formal_data(bm.out, 'resp.var'))
+            }
             
             res = data.frame(pts.tmp, proj.tmp)
             colnames(res) = c(vari, mod.name)
@@ -306,7 +313,12 @@ bm_PlotResponseCurves <- function(bm.out
               temp_workdir = mod@model_output_dir
             }
             
-            proj.tmp <- predict(mod, newdata = new.env.r.tmp, on_0_1000 = on_0_1000, do_check = FALSE, temp_workdir = temp_workdir, seedval = NULL)
+            proj.tmp <- predict(mod, newdata = new.env.r.tmp, on_0_1000 = on_0_1000
+                                , do_check = FALSE, temp_workdir = temp_workdir, seedval = NULL)
+            
+            if(bm.out@data.type == "multiclass" && grepl("XGBOOST", mod.name)) {
+              proj.tmp <- .numeric2factor(proj.tmp, get_formal_data(bm.out, 'resp.var'))
+            }
             
             res = data.frame(pts.tmp1, pts.tmp2, proj.tmp)
             colnames(res) = c(vari1, vari2, mod.name)
@@ -328,9 +340,9 @@ bm_PlotResponseCurves <- function(bm.out
   ## 2. PLOT graphic --------------------------------------------------------------------
   if (!do.bivariate) {
     new.env_m <- melt(new.env[, show.variables], variable.name = "expl.name", value.name = "expl.val")
-    gg <- ggplot(ggdat, aes_string(x = "expl.val", y = "pred.val", color = "pred.name")) +
+    gg <- ggplot(ggdat, aes(x = .data$expl.val, y = .data$pred.val, color = .data$pred.name)) +
       geom_line() +
-      geom_rug(data = new.env_m, sides = 'b', inherit.aes = FALSE, aes_string(x = "expl.val")) +
+      geom_rug(data = new.env_m, sides = 'b', inherit.aes = FALSE, aes(x = .data$expl.val)) +
       facet_wrap("expl.name", scales = "free_x") +
       xlab("") +
       ylab("") +
@@ -354,13 +366,13 @@ bm_PlotResponseCurves <- function(bm.out
       }
     names(list.ggdat) = comb.names
     
-    gg <- ggplot(ggdat, aes_string(fill = "pred.val"))
+    gg <- ggplot(ggdat, aes(fill = .data$pred.val))
     for (ii in 1:length(list.ggdat)) {
       combi = names(list.ggdat)[ii]
       vari1 = strsplit(combi, "[+]")[[1]][1]
       vari2 = strsplit(combi, "[+]")[[1]][2]
       gg <- gg +
-        geom_raster(data = list.ggdat[[ii]], aes_string(x = vari1, y = vari2))
+        geom_raster(data = list.ggdat[[ii]], aes(x = .data[[vari1]], y = .data[[vari2]]))
     }
     gg <- gg +
       facet_wrap("pred.name ~ sub('[+]', ' [ x - y ] ', comb)", scales = "free") +
@@ -376,12 +388,20 @@ bm_PlotResponseCurves <- function(bm.out
     gg <- gg + labs(title = main)
   }
   
-  if (do.plot){ print(gg) }
+  if (do.plot){ 
+    # if (bm.out@data.type == "multiclass"){
+    #   levels <- mod@levels_factor
+    #   cat("\nThe levels are represent as : ")
+    #   for (i in 1:length(levels)){
+    #     cat("\n\t ", i, " : ", levels[i])
+    #   }
+    # }
+    print(gg) }
   return(list(tab = ggdat, plot = invisible(gg)))
 }
 
 
-# Argument check ---------------------------------------------------------------
+###################################################################################################
 
 .bm_PlotResponseCurves.check.args <- function(bm.out, models.chosen, new.env, show.variables, do.bivariate, ...)
 {
@@ -439,7 +459,6 @@ bm_PlotResponseCurves <- function(bm.out
   }
   
   ## 3. Check new.env argument ------------------------------------------------
-
   .fun_testIfInherits(TRUE, "new.env", new.env, 
                       c("SpatRaster","Raster","data.frame","matrix"))
   
@@ -521,7 +540,7 @@ bm_PlotResponseCurves <- function(bm.out
 }
 
 
-# Tools -----------------------------------------------------------------------
+###################################################################################################
 
 .as_ggdat <- function(list.dat, do.bivariate)
 {

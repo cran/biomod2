@@ -1,4 +1,4 @@
-# BIOMOD_Modeling ---------------------------------------------------------
+###################################################################################################
 ##' @name BIOMOD_Modeling
 ##' @author Wilfried Thuiller, Damien Georges, Robin Engler
 ##' 
@@ -15,7 +15,7 @@
 ##' @param modeling.id a \code{character} corresponding to the name (ID) of the simulation set 
 ##' (\emph{a random number by default})
 ##' @param models a \code{vector} containing model names to be computed, must be among 
-##' \code{ANN}, \code{CTA}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
+##' \code{ANN}, \code{CTA}, \code{DNN}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
 ##' \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{RFd}, \code{SRE}, \code{XGBOOST}
 ##' @param models.pa (\emph{optional, default} \code{NULL}) \cr 
 ##' A \code{list} containing for each model a \code{vector} defining which pseudo-absence datasets 
@@ -37,12 +37,12 @@
 ##' If \code{strategy = 'strat'} or \code{strategy = 'env'}, a \code{character} corresponding 
 ##' to how data will be balanced between partitions, must be either \code{presences} or
 ##' \code{absences} 
-##' @param CV.env.var (\emph{optional}) \cr If \code{strategy = 'env'}, a \code{character} 
-##' corresponding to the environmental variables used to build the partition. \code{k} partitions 
-##' will be built for each environmental variables. By default the function uses all 
-##' environmental variables available.
+##' @param CV.env.var (\emph{optional, default} \code{NULL}) \cr 
+##' If \code{strategy = 'env'}, a \code{character} corresponding to the environmental variables 
+##' used to build the partition (all available variables by default), and for which \code{CV.k} 
+##' partitions will be built
 ##' @param CV.strat (\emph{optional, default} \code{'both'}) \cr
-##' If \code{strategy = 'env'}, a \code{character} corresponding to how data will partitioned 
+##' If \code{strategy = 'strat'}, a \code{character} corresponding to how data will partitioned 
 ##' along gradient, must be among \code{x}, \code{y}, \code{both}
 ##' @param CV.user.table (\emph{optional, default} \code{NULL}) \cr
 ##' If \code{strategy = 'user.defined'}, a \code{matrix} or \code{data.frame} defining for each 
@@ -51,13 +51,7 @@
 ##' @param CV.do.full.models (\emph{optional, default} \code{TRUE}) \cr  
 ##' A \code{logical} value defining whether models should be also calibrated and validated over 
 ##' the whole dataset (and pseudo-absence datasets) or not
-##' @param nb.rep  \emph{deprecated}, now called \code{CV.nb.rep}
-##' @param data.split.perc \emph{deprecated}, now called \code{CV.perc}
-##' @param data.split.table \emph{deprecated}, now called \code{CV.user.table}
-##' @param do.full.models \emph{deprecated}, now called \code{CV.do.full.models}
 ##' 
-##' @param OPT.data.type a \code{character} corresponding to the data type to be used, must be 
-##' either \code{binary}, \code{binary.PA}, \code{abundance}, \code{compositional}
 ##' @param OPT.strategy a \code{character} corresponding to the method to select models' 
 ##' parameters values, must be either \code{default}, \code{bigboss}, \code{user.defined}, 
 ##' \code{tuned}
@@ -69,24 +63,28 @@
 ##' @param OPT.user (\emph{optional, default} \code{TRUE}) \cr  
 ##' A \code{\link{BIOMOD.models.options}} object returned by the \code{\link{bm_ModelingOptions}} 
 ##' function
-##' @param bm.options \emph{deprecated}, now called \code{OPT.user}
+##' 
+##' @param metric.eval a \code{vector} containing evaluation metric names to be used, must 
+##' be among \code{AUCroc}, \code{AUCprg}, \code{TSS}, \code{KAPPA}, \code{ACCURACY}, \code{BIAS}, \code{POD}, 
+##' \code{FAR}, \code{POFD}, \code{SR}, \code{CSI}, \code{ETS}, \code{OR}, \code{ORSS}, 
+##' \code{BOYCE}, \code{MPA} (\emph{binary data}), 
+##' \code{RMSE}, \code{MAE}, \code{MSE}, \code{Rsquared}, \code{Rsquared_aj}, \code{Max_error} 
+##' (\emph{abundance / count / relative data}), 
+##' \code{Accuracy}, \code{Recall}, \code{Precision}, \code{F1} (\emph{multiclass / ordinal data})
+##' @param var.import (\emph{optional, default} \code{NULL}) \cr 
+##' An \code{integer} corresponding to the number of permutations to be done for each variable to 
+##' estimate variable importance
 ##' 
 ##' @param weights (\emph{optional, default} \code{NULL}) \cr 
 ##' A \code{vector} of \code{numeric} values corresponding to observation weights (one per 
 ##' observation, see Details)
-##' @param prevalence (\emph{optional, default} \code{NULL}) \cr 
+##' @param prevalence (\emph{optional, default} \code{0.5}) \cr 
 ##' A \code{numeric} between \code{0} and \code{1} corresponding to the species prevalence to 
 ##' build '\emph{weighted response weights}' (see Details)
-##' @param metric.eval a \code{vector} containing evaluation metric names to be used, must 
-##' be among \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, \code{BIAS}, 
-##' \code{ROC}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, \code{CSI}, \code{ETS}, 
-##' \code{BOYCE}, \code{MPA}
-##' @param var.import (\emph{optional, default} \code{NULL}) \cr 
-##' An \code{integer} corresponding to the number of permutations to be done for each variable to 
-##' estimate variable importance
 ##' @param scale.models (\emph{optional, default} \code{FALSE}) \cr 
 ##' A \code{logical} value defining whether all models predictions should be scaled with a 
 ##' binomial GLM or not
+##' 
 ##' @param nb.cpu (\emph{optional, default} \code{1}) \cr 
 ##' An \code{integer} value corresponding to the number of computing resources to be used to 
 ##' parallelize the single models computation
@@ -126,10 +124,11 @@
 ##'   \itemize{
 ##'     \item \code{ANN} : Artificial Neural Network (\code{\link[nnet]{nnet}})
 ##'     \item \code{CTA} : Classification Tree Analysis (\code{\link[rpart]{rpart}})
+##'     \item \code{DNN} : Deep Neural Network (\code{\link[cito]{cito}})
 ##'     \item \code{FDA} : Flexible Discriminant Analysis (\code{\link[mda]{fda}})
 ##'     \item \code{GAM} : Generalized Additive Model (\code{\link[gam]{gam}}, \code{\link[mgcv]{gam}} 
 ##'     or \code{\link[mgcv]{bam}}) \cr 
-##'     (see \code{\link{bm_ModelingOptions} for details on algorithm selection})
+##'     (see \code{\link{bm_ModelingOptions}} for details on algorithm selection)
 ##'     \item \code{GBM} : Generalized Boosting Model, or usually called Boosted Regression Trees 
 ##'     (\code{\link[gbm]{gbm}})
 ##'     \item \code{GLM} : Generalized Linear Model (\code{\link[stats]{glm}})
@@ -141,7 +140,17 @@
 ##'     \item \code{RFd} : Random Forest downsampled (\code{\link[randomForest]{randomForest}})
 ##'     \item \code{SRE} : Surface Range Envelop or usually called BIOCLIM (\code{\link{bm_SRE}})
 ##'     \item \code{XGBOOST} : eXtreme Gradient Boosting Training (\code{\link[xgboost]{xgboost}})
-##'   }}
+##'   }
+##'   \tabular{rcccccccccccccc}{
+##'     \tab \strong{ANN} \tab \strong{CTA} \tab \strong{DNN} \tab \strong{FDA} \tab \strong{GAM} \tab \strong{GBM} 
+##'     \tab \strong{GLM} \tab \strong{MARS} \tab \strong{MAXENT} \tab \strong{MAXNET} 
+##'     \tab \strong{RF} \tab \strong{RFd} \tab \strong{SRE} \tab \strong{XGBOOST} \cr
+##'    binary \tab x \tab x \tab x \tab x \tab x \tab x \tab x \tab x \tab x \tab x \tab x \tab x \tab x \tab x \cr
+##'    multiclass \tab  \tab x \tab x \tab x \tab  \tab  \tab  \tab x \tab  \tab  \tab x \tab  \tab  \tab x \cr
+##'    ordinal \tab  \tab x \tab x \tab x \tab x \tab  \tab x \tab x \tab  \tab  \tab x \tab  \tab  \tab x \cr
+##'    abundance / count / relative \tab  \tab x \tab x \tab  \tab x \tab x \tab x \tab x \tab  \tab  \tab x \tab  \tab  \tab x 
+##'   }
+##'   }
 ##'   
 ##'   \item{models.pa}{Different models might respond differently to different numbers of 
 ##'   pseudo-absences. It is possible to create sets of pseudo-absences with different numbers 
@@ -154,8 +163,7 @@
 ##'   
 ##'   \item{OPT.[...] parameters}{Different methods are available to parameterize the 
 ##'   single models (see \code{\link{bm_ModelingOptions}} and 
-##'   \code{\link{BIOMOD.options.dataset}}). Note that only \code{binary} data type is 
-##'   allowed currently.
+##'   \code{\link{BIOMOD.options.dataset}}). 
 ##'   \itemize{
 ##'     \item \code{default} : only default parameter values of default parameters of the single 
 ##'     models functions are retrieved. Nothing is changed so it might not give good results.
@@ -169,26 +177,14 @@
 ##'     some default values
 ##'   }
 ##'   }
-##'   
-##'   \item{weights & prevalence}{More or less weight can be given to some specific observations.
-##'   \itemize{
-##'     \item If \code{weights = prevalence = NULL}, each observation (presence or absence) will 
-##'     have the same weight, no matter the total number of presences and absences.
-##'     \item If \code{prevalence = 0.5}, presences and absences will be weighted equally 
-##'     (\emph{i.e. the weighted sum of presences equals the weighted sum of absences}). 
-##'     \item If \code{prevalence} is set below (\emph{above}) \code{0.5}, more weight will be 
-##'     given to absences (\emph{presences}).
-##'     \item If \code{weights} is defined, \code{prevalence} argument will be ignored, and each 
-##'     observation will have its own weight.
-##'     \item If pseudo-absences have been generated (\code{PA.nb.rep > 0} in 
-##'     \code{\link{BIOMOD_FormatingData}}), weights are by default calculated such that 
-##'     \code{prevalence = 0.5}. \emph{Automatically created \code{weights} will be \code{integer} 
-##'     values to prevent some modeling issues.}
-##'     \item \emph{NOTE THAT \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{RFd} and \code{SRE} 
-##'     models do not take weights into account.}
-##'   }}
 ##' 
 ##'   \item{metric.eval}{
+##'   \emph{Please refer to  
+##'   \href{https://www.cawcr.gov.au/projects/verification/}{CAWRC website ("Methods for 
+##'   dichotomous forecasts")} to get detailed description (simple/complex metrics).} \cr
+##'   Several evaluation metrics can be selected. \cr
+##'   Optimal value of each method can be obtained with the \code{\link{get_optim_value}} 
+##'   function.
 ##'   \describe{
 ##'     \item{simple}{
 ##'     \itemize{
@@ -202,7 +198,8 @@
 ##'     }
 ##'     \item{complex}{
 ##'     \itemize{
-##'       \item \code{ROC} : Relative operating characteristic
+##'       \item \code{AUCroc} : Area Under Curve of Relative operating characteristic
+##'       \item \code{AUCprg} : Area Under Curve of Precision-Recall-Gain curve
 ##'       \item \code{TSS} : True skill statistic (Hanssen and Kuipers discriminant, Peirce's 
 ##'       skill score)
 ##'       \item \code{KAPPA} : Cohen's Kappa (Heidke skill score)
@@ -219,16 +216,31 @@
 ##'       presences)
 ##'     }
 ##'     }
+##'     \item{abundance / count / relative data}{
+##'     \itemize{
+##'       \item \code{RMSE} : Root Mean Square Error
+##'       \item \code{MSE} : Mean Square Error
+##'       \item \code{MAE} : Mean Absolute Error
+##'       \item \code{Rsquared} : R squared
+##'       \item \code{Rsquared_aj} : R squared adjusted
+##'       \item \code{Max_error} : Maximum error
+##'     }
+##'     }
+##'     \item{multiclass/ordinal data}{
+##'     \itemize{
+##'       \item \code{Accuracy} : Accuracy
+##'       \item \code{Recall} : Macro average Recall
+##'       \item \code{Precision} : Macro average Precision
+##'       \item \code{F1} : Macro F1 score
+##'     }
+##'     }
 ##'   }
-##'   Optimal value of each method can be obtained with the \code{\link{get_optim_value}} 
-##'   function. Several evaluation metrics can be selected. \emph{Please refer to the 
-##'   \href{https://www.cawcr.gov.au/projects/verification/}{CAWRC website (section "Methods for 
-##'   dichotomous forecasts")} to get detailed description of each metric.}
 ##'   Results after modeling can be obtained through the \code{\link{get_evaluations}} function. \cr 
 ##'   Evaluation metric are calculated on the calibrating data (column \code{calibration}), on 
 ##'   the cross-validation data (column \code{validation}) or on the evaluation data 
-##'   (column \code{evaluation}). \cr \emph{For cross-validation data, see \code{CV.[...]} 
-##'   parameters in \code{\link{BIOMOD_Modeling}} function ; for evaluation data, see 
+##'   (column \code{evaluation}). \cr 
+##'   \emph{For cross-validation data, see \code{CV.[...]} parameters in 
+##'   \code{\link{BIOMOD_Modeling}} function. \cr For evaluation data, see 
 ##'   \code{eval.[...]} parameters in \code{\link{BIOMOD_FormatingData}}.}
 ##'   }
 ##'   
@@ -236,13 +248,27 @@
 ##'   predictions can be calculated by randomizing the variable of interest and computing the 
 ##'   correlation between original and shuffled variables (see \code{\link{bm_VariablesImportance}}).}
 ##'   
-##'   \item{scale.models}{\bold{This parameter is quite experimental and it is recommended 
-##'   not to use it. It may lead to reduction in projection scale amplitude.} Some categorical 
-##'   models always have to be scaled (\code{FDA}, \code{ANN}), but it may be interesting to 
-##'   scale all computed models to ensure comparable predictions (\code{0-1000} range). It might 
-##'   be particularly useful when doing ensemble forecasting to remove the scale prediction effect 
-##'   (\emph{the more extended projections are, the more they influence ensemble forecasting 
-##'   results}).
+##'   \item{weights & prevalence}{
+##'   More or less weight can be given to some specific observations. \cr Automatically created 
+##'   \code{weights} will be \code{integer} values to prevent some modeling issues. \cr 
+##'   \emph{Note that \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{RFd} and \code{SRE} models 
+##'   do not take weights into account.}
+##'   \itemize{
+##'     \item If \code{prevalence = 0.5} (the default), presences and absences will be weighted equally 
+##'     (\emph{i.e. the weighted sum of presences equals the weighted sum of absences}). 
+##'     \item If \code{prevalence} is set below (\emph{above}) \code{0.5}, more weight will be 
+##'     given to absences (\emph{presences}).
+##'     \item If \code{weights} is defined, \code{prevalence} argument will be ignored 
+##'     (\emph{EXCEPT for \code{MAXENT}}).
+##'   }}
+##'   
+##'   \item{scale.models}{A binomial GLM is created to scale predictions from 0 to 1. \cr
+##'   \code{SRE} is never scaled, and \code{ANN} and \code{FDA} categorical models always are. \cr
+##'   \emph{Note that it may lead to reduction in projected scale amplitude.} \cr
+##'   \bold{This parameter is quite experimental and it is recommended not to use it.} It was 
+##'   developed in the idea to ensure comparable predictions by removing the scale prediction 
+##'   effect (\emph{the more extended projections are, the more they influence ensemble 
+##'   forecasting results}).
 ##'   }
 ##' }
 ##' 
@@ -252,7 +278,7 @@
 ##' 
 ##' @seealso \code{\link[stats]{glm}}, \code{\link[gam]{gam}},
 ##'   \code{\link[mgcv]{gam}}, \code{\link[mgcv]{bam}}, \code{\link[gbm]{gbm}},
-##'   \code{\link[rpart]{rpart}}, \code{\link[nnet]{nnet}},
+##'   \code{\link[rpart]{rpart}}, \code{\link[nnet]{nnet}}, \code{\link[cito]{cito}},
 ##'   \code{\link[mda]{fda}}, \code{\link[earth]{earth}},
 ##'   \code{\link[randomForest]{randomForest}}, \code{\link[maxnet]{maxnet}},
 ##'   \code{\link[xgboost]{xgboost}}, \code{\link{BIOMOD_FormatingData}},
@@ -292,10 +318,10 @@
 ##' 
 ##' # ---------------------------------------------------------------------------- #
 ##' # Format Data with true absences
-##' myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-##'                                      expl.var = myExpl,
+##' myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+##'                                      resp.var = myResp,
 ##'                                      resp.xy = myRespXY,
-##'                                      resp.name = myRespName)
+##'                                      expl.var = myExpl)
 ##' 
 ##' 
 ##' # ---------------------------------------------------------------------------- #
@@ -307,7 +333,7 @@
 ##'                                     CV.nb.rep = 2,
 ##'                                     CV.perc = 0.8,
 ##'                                     OPT.strategy = 'bigboss',
-##'                                     metric.eval = c('TSS','ROC'),
+##'                                     metric.eval = c('TSS','AUCroc'),
 ##'                                     var.import = 2,
 ##'                                     seed.val = 42)
 ##' myBiomodModelOut
@@ -346,11 +372,13 @@
 ##' @export
 ##' 
 ##' 
+###################################################################################################
+
 
 BIOMOD_Modeling <- function(bm.format,
                             modeling.id = as.character(format(Sys.time(), "%s")),
                             models = c('ANN', 'CTA', 'FDA', 'GAM', 'GBM', 'GLM', 'MARS'
-                                       , 'MAXENT', 'MAXNET', 'RF', 'SRE', 'XGBOOST'),
+                                       , 'MAXENT', 'MAXNET', 'RF', 'RFd', 'SRE', 'XGBOOST'),
                             models.pa = NULL,
                             CV.strategy = 'random',
                             CV.nb.rep = 1,
@@ -361,20 +389,14 @@ BIOMOD_Modeling <- function(bm.format,
                             CV.strat = NULL,
                             CV.user.table = NULL,
                             CV.do.full.models = TRUE,
-                            OPT.data.type = 'binary',
                             OPT.strategy = 'default',
                             OPT.user.val = NULL,
                             OPT.user.base = 'bigboss',
                             OPT.user = NULL,
-                            bm.options, ## deprecated
-                            nb.rep, ## deprecated
-                            data.split.perc, ## deprecated
-                            data.split.table, ## deprecated
-                            do.full.models, ## deprecated
-                            weights = NULL,
-                            prevalence = NULL,
-                            metric.eval = c('KAPPA', 'TSS', 'ROC'),
+                            metric.eval = c('KAPPA', 'TSS', 'AUCroc'),
                             var.import = 0,
+                            weights = NULL,
+                            prevalence = 0.5,
                             scale.models = FALSE,
                             nb.cpu = 1,
                             seed.val = NULL,
@@ -403,28 +425,13 @@ BIOMOD_Modeling <- function(bm.format,
   for (argi in names(args)) { assign(x = argi, value = args[[argi]]) }
   rm(args)
   
-  # check for obsolete arguments
-  args <- .BIOMOD_Modeling.check.args.obsolete(
-    bm.options = bm.options,
-    OPT.user = OPT.user,
-    CV.strategy = CV.strategy,
-    data.split.perc = data.split.perc,
-    CV.perc = CV.perc,
-    data.split.table = data.split.table,
-    CV.user.table = CV.user.table,
-    nb.rep = nb.rep,
-    CV.nb.rep = CV.nb.rep,
-    do.full.models = do.full.models,
-    CV.do.full.models = CV.do.full.models
-  )
-  for (argi in names(args)) { assign(x = argi, value = args[[argi]]) }
-  rm(args)
   
   ## 1. Create output object ----------------------------------------------------------------------
   models.out <- new('BIOMOD.models.out',
                     dir.name = bm.format@dir.name,
                     sp.name = bm.format@sp.name,
                     modeling.id = modeling.id,
+                    data.type = bm.format@data.type,
                     expl.var.names = colnames(bm.format@data.env.var),
                     has.evaluation.data = bm.format@has.data.eval,
                     scale.models = scale.models)
@@ -445,9 +452,9 @@ BIOMOD_Modeling <- function(bm.format,
                                     nb.rep = CV.nb.rep,
                                     perc = CV.perc,
                                     k = CV.k,
-                                    balance = CV.balance,
+                                    balance = ifelse(!is.null(CV.balance), CV.balance, "presences"),
                                     env.var = CV.env.var,
-                                    strat = CV.strat,
+                                    strat = ifelse(!is.null(CV.strat), CV.strat, "both"),
                                     user.table = CV.user.table,
                                     do.full.models = CV.do.full.models)
   models.out = .fill_BIOMOD.models.out("calib.lines", calib.lines, models.out
@@ -457,11 +464,17 @@ BIOMOD_Modeling <- function(bm.format,
   if (!is.null(OPT.user)) {
     ## Check for model names -----------
     if (sum(!(models %in% sapply(OPT.user@models, function(x) strsplit(x, "[.]")[[1]][1]))) > 0) {
-        stop(paste0("\n", "OPT.user", " must contain information for '",
-                    ifelse(length(models) > 1,
-                           paste0(paste0(models[1:(length(models) -1)], collapse = "', '"),
-                                  "' and '", models[length(models)])
-                           , paste0(models,"' models"))))
+      stop(paste0("\n", "OPT.user", " must contain information for '",
+                  ifelse(length(models) > 1,
+                         paste0(paste0(models[1:(length(models) -1)], collapse = "', '"),
+                                "' and '", models[length(models)])
+                         , paste0(models,"' models"))))
+    }
+    ## Check data.type coherence 
+    data.type.options <- strsplit(OPT.user@models[1],".", fixed = TRUE)[[1]][2]
+    if ((bm.format@data.type == "binary" & data.type.options != "binary") ||
+        (bm.format@data.type != "binary" & data.type.options == "binary")) {
+      stop("\n The data.type of OPT.user should match the data.type of your bm.format")
     }
     ## Check for calib.lines names -----
     for (mod in OPT.user@models) {
@@ -479,7 +492,7 @@ BIOMOD_Modeling <- function(bm.format,
           for (run in vals) {
             PA.set <- grep("PA|allData", unlist(strsplit(run, "_")), value = TRUE)
             if (is.null(OPT.user@options[[mod]]@args.values[[paste0("_", PA.set, "_allRun")]])) {
-              opt.default <- BIOMOD.options.dataset(mod = sep.name[1], typ = sep.name[2], pkg =sep.name[3], fun = sep.name[4]
+              opt.default <- BIOMOD.options.dataset(mod = sep.name[1], typ = sep.name[2], pkg = sep.name[3], fun = sep.name[4]
                                                     , strategy = "default", bm.format = bm.format, calib.lines = calib.lines)
               OPT.user@options[[mod]]@args.values[[run]] <- opt.default@args.values[["_allData_allRun"]]
             } else {
@@ -490,15 +503,15 @@ BIOMOD_Modeling <- function(bm.format,
         } else {
           stop(paste0("\n", "names(OPT.user@options[['", mod, "']]@args.values)", " must be '",
                       ifelse(length(vals) > 1,
-                             paste0(paste0(vals[1:(length(vals) -1)], collapse = "', '"),
+                             paste0(paste0(vals[1:(length(vals) - 1)], collapse = "', '"),
                                     "' and '", vals[length(vals)])
-                             , paste0(vals,"'"))))
+                             , paste0(vals, "'"))))
         }
       }
     }
     bm.options <- OPT.user
   } else {
-    bm.options <- bm_ModelingOptions(data.type = OPT.data.type,
+    bm.options <- bm_ModelingOptions(data.type = bm.format@data.type,
                                      models = models,
                                      strategy = OPT.strategy,
                                      user.val = OPT.user.val,
@@ -515,18 +528,19 @@ BIOMOD_Modeling <- function(bm.format,
                                        , inMemory = TRUE, nameFolder = name.BIOMOD_DATA)
   
   ## 4. Print modeling summary in console ---------------------------------------------------------
-  .BIOMOD_Modeling.summary(bm.format, calib.lines, models, models.pa)
+  .BIOMOD_Modeling.summary(bm.format, calib.lines, models, models.pa, CV.do.full.models)
+  
   
   ## 5. Run models with loop over PA --------------------------------------------------------------
   mod.out <- bm_RunModelsLoop(bm.format = bm.format,
-                              weights = weights,
-                              calib.lines = calib.lines,
                               modeling.id = models.out@modeling.id,
                               models = models,
                               models.pa = models.pa,
+                              calib.lines = calib.lines,
                               bm.options = bm.options,
-                              var.import = var.import,
                               metric.eval = metric.eval,
+                              var.import = var.import,
+                              weights = weights,
                               scale.models = scale.models,
                               nb.cpu = nb.cpu,
                               seed.val = seed.val,
@@ -536,7 +550,7 @@ BIOMOD_Modeling <- function(bm.format,
   models.out@models.computed <- .transform_outputs_list("mod", mod.out, out = "model")
   models.out@models.failed <- .transform_outputs_list("mod", mod.out, out = "calib.failure")
   
-  if(length(models.out@models.computed) == 1 && models.out@models.computed == "none"){
+  if (length(models.out@models.computed) == 1 && models.out@models.computed == "none") {
     cat("\n! All models failed")
     return(models.out)
   }
@@ -569,9 +583,10 @@ BIOMOD_Modeling <- function(bm.format,
   ## 6. SAVE MODEL OBJECT ON HARD DRIVE ----------------------------
   name.OUT = paste0(models.out@sp.name, '.', models.out@modeling.id, '.models.out')
   models.out@link <- file.path(models.out@dir.name, models.out@sp.name, name.OUT)
+  models.out@call <- match.call()
   assign(x = name.OUT, value = models.out)
   save(list = name.OUT, file = models.out@link)
- 
+  
   # if (.getOS() == "windows" && "MAXENT" %in% models){
   #   env <- foreach:::.foreachGlobals
   #   rm(list=ls(name=env), pos=env)
@@ -582,18 +597,7 @@ BIOMOD_Modeling <- function(bm.format,
 }
 
 
-# ---------------------------------------------------------------------------- #
-
-.BIOMOD_Modeling.prepare.workdir <- function(dir.name, sp.name, modeling.id)
-{
-  cat("\nCreating suitable Workdir...\n")
-  dir.create(file.path(dir.name, sp.name), showWarnings = FALSE, recursive = TRUE)
-  dir.create(file.path(dir.name, sp.name, ".BIOMOD_DATA", modeling.id), showWarnings = FALSE, recursive = TRUE)
-  dir.create(file.path(dir.name, sp.name, "models", modeling.id), showWarnings = FALSE, recursive = TRUE)
-}
-
-
-# ---------------------------------------------------------------------------- #
+###################################################################################################
 
 .BIOMOD_Modeling.check.args <- function(bm.format, modeling.id, models, models.pa, OPT.user
                                         , CV.user.table, CV.do.full.models
@@ -608,29 +612,13 @@ BIOMOD_Modeling <- function(bm.format,
   .fun_testIfInherits(TRUE, "bm.format", bm.format, c("BIOMOD.formated.data", "BIOMOD.formated.data.PA"))
   if (!is.character(models)) { stop("models must be a 'character' vector") }
   
-  # Support for old names in models
-  # Deprecated MAXENT.Phillips/MAXENT.Phillips.2
-  if (any(models == "MAXENT.Phillips")) {
-    models[which(models == "MAXENT.Phillips")] <- "MAXENT"
-    cat(paste0("\n\t! 'MAXENT.Phillips' model name is deprecated, please use 'MAXENT' instead."))
-  }
-  if (any(models == "MAXENT.Phillips.2")) {
-    models[which(models == "MAXENT.Phillips.2")] <- "MAXNET"
-    cat(paste0("\n\t! 'MAXENT.Phillips.2' model name is deprecated, please use 'MAXNET' instead."))
-  }
-  ## Deprecated MAXENT.Tsuruoka 
-  ## because of package maintaining issue (request from B Ripley 03-2019)
-  if ('MAXENT.Tsuruoka' %in% models) {
-    models.switch.off <- unique(c(models.switch.off, "MAXENT.Tsuruoka"))
-    models <- setdiff(models, models.switch.off)
-    warning('MAXENT.Tsuruoka has been disabled because of package maintaining issue (request from cran team 03-2019)')
-  }
   models <- unique(models)
   models.switch.off <- NULL
   
   ## check if model is supported
-  avail.models.list <- c('ANN', 'CTA', 'FDA', 'GAM', 'GBM', 'GLM', 'MARS', 'MAXENT', 'MAXNET', 'RF','RFd', 'SRE', 'XGBOOST')
-  .fun_testIfIn(TRUE, "models", models, avail.models.list)
+  avail.models.list <- .avail.models.list(bm.format@data.type)
+  .fun_testIfIn(TRUE, paste0("models with ", bm.format@data.type, " data type"), models, avail.models.list)
+  
   
   ## Specific case of one variable with GBM / MAXNET
   if ('GBM' %in% models && ncol(bm.format@data.env.var) == 1) {
@@ -638,6 +626,14 @@ BIOMOD_Modeling <- function(bm.format,
   }
   if ('MAXNET' %in% models && ncol(bm.format@data.env.var) == 1) {
     warning('MAXNET might have issues when only one variable is used. Please be sure to install the following version : devtools::install_github("mrmaxent/maxnet")')
+  }
+  
+  ## Specific case of cito
+  if ('DNN' %in% models) {
+    if (!requireNamespace("torch")) {
+      stop("Package `torch` is missing. It necessary for DNN model. Please install it with `install.packages('torch')`.")
+    }
+    # if(!torch::torch_is_installed()) torch::install_torch() ## ? 
   }
   
   ## 1.1 Remove models not supporting categorical variables --------------------
@@ -684,8 +680,8 @@ BIOMOD_Modeling <- function(bm.format,
   # }
   
   ## 4. Check CV.user.table
-  if (!is.null(CV.user.table)){
-    if(!("_allData_allRun" %in% colnames(CV.user.table)) & CV.do.full.models == T){ 
+  if (!is.null(CV.user.table)) {
+    if (!("_allData_allRun" %in% colnames(CV.user.table)) && CV.do.full.models == TRUE) { 
       CV.do.full.models = FALSE
       warning("CV.do.full.model has been disabled because '_allData_allRun' is not provided in CV.user.table")
     }
@@ -696,11 +692,13 @@ BIOMOD_Modeling <- function(bm.format,
     .fun_testIf01(TRUE, "prevalence", prevalence)
   } else {
     prevalence = 0.5
+    warning("Prevalence have been set to 0.5.")
   }
   
   ## 6. Check weights arguments -----------------------------------------------
   if (is.null(weights)) {
-    if (!is.null(prevalence)) {
+
+    if (!is.null(prevalence) && !(bm.format@data.type %in% c("ordinal", "multiclass"))) {
       cat("\n\t> Automatic weights creation to rise a", prevalence, "prevalence")
       data.sp <- as.numeric(bm.format@data.species)
       if (inherits(bm.format, "BIOMOD.formated.data.PA")) {
@@ -709,7 +707,7 @@ BIOMOD_Modeling <- function(bm.format,
             ind.PA <- which(bm.format@PA.table[, pa] == TRUE)
             data.sp_pa <- data.sp[ind.PA]
             data.sp_pa[which(is.na(data.sp_pa))] <- 0
-            weights <- .automatic_weights_creation(data.sp_pa, prev = prevalence)
+            weights <- .automatic_weights_creation(resp = data.sp_pa, prev = prevalence)
             
             wei <- rep(NA, length(data.sp))
             wei[ind.PA] <- weights
@@ -719,15 +717,14 @@ BIOMOD_Modeling <- function(bm.format,
         colnames(weights.pa) <- c(colnames(bm.format@PA.table), "allData")
         weights <- weights.pa
       } else {
-        weights <- .automatic_weights_creation(data.sp, prev = prevalence)
+        weights <- .automatic_weights_creation(resp = data.sp, prev = prevalence)
         weights <- matrix(weights, nrow = length(weights), ncol = 1)
         colnames(weights) <- "allData"
       }
+    } else { ## NEVER OCCURRING NO ?? --> now happen with the abundance
+      cat("\n\t> No weights : all observations will have the same weight\n")
+      #weights <- rep(1, length(bm.format@data.species)) ##TODO il faut decommenter ça du coup non ?
     }
-    # else { ## NEVER OCCURRING NO ??
-    #   cat("\n\t> No weights : all observations will have the same weight")
-    #   weights <- rep(1, length(bm.format@data.species))
-    # }
   } else {
     if (!is.numeric(weights)) { stop("weights must be a numeric vector") }
     if (length(weights) != length(bm.format@data.species)) {
@@ -749,21 +746,22 @@ BIOMOD_Modeling <- function(bm.format,
     }
   }
   
+  
   ## 7. Check metric.eval arguments -------------------------------------------
   metric.eval <- unique(metric.eval)
-  avail.eval.meth.list <- c('POD', 'FAR', 'POFD', 'SR', 'ACCURACY', 'BIAS'
-                            , 'ROC', 'TSS', 'KAPPA', 'OR', 'ORSS', 'CSI'
-                            , 'ETS', 'BOYCE', 'MPA')
-  .fun_testIfIn(TRUE, "metric.eval", metric.eval, avail.eval.meth.list)
   
-  
-  if (!is.null(seed.val)) {
-    set.seed(seed.val)
+  if (any(grepl("^ROC", metric.eval))){
+    warning("The metric 'ROC' will be switch to 'AUCroc'.")
+    metric.eval <- sub("^ROC", "AUCroc", metric.eval)
+    metric.eval <- unique(metric.eval)
   }
   
-  if (is.null(var.import)) {
-    var.import = 0
-  }
+  avail.eval.meth.list <- .avail.eval.meth.list(bm.format@data.type)
+  .fun_testIfIn(TRUE, paste0("metric.eval with ", bm.format@data.type, " data type"), metric.eval, avail.eval.meth.list)
+  
+  
+  if (!is.null(seed.val)) { set.seed(seed.val) }
+  if (is.null(var.import)) { var.import = 0 }
   
   return(list(models = models,
               models.pa = models.pa,
@@ -777,134 +775,55 @@ BIOMOD_Modeling <- function(bm.format,
 }
 
 
-# Obsolete argument Check -------------------------------------------------------
+###################################################################################################
 
-
-.BIOMOD_Modeling.check.args.obsolete <- function(bm.options,
-                                                 OPT.user,
-                                                 CV.strategy,
-                                                 data.split.perc,
-                                                 CV.perc,
-                                                 data.split.table,
-                                                 CV.user.table,
-                                                 nb.rep,
-                                                 CV.nb.rep,
-                                                 do.full.models,
-                                                 CV.do.full.models)
+.BIOMOD_Modeling.prepare.workdir <- function(dir.name, sp.name, modeling.id)
 {
-  ## bm.options ------------------------------
-  if (!missing(bm.options)) {
-    if (!is.null(OPT.user)) {
-      cat("\n! ignored obsolete argument 'bm.options' as 'OPT.user' was also given")
-    } else {
-      OPT.user <- bm.options
-      cat("\n!!! argument 'bm.options' is obsolete, please use 'OPT.user' instead")
-    }
-  }
-  
-  ## do.full.models ------------------------------
-  if (!missing(do.full.models)) {
-    if (!is.null(CV.do.full.models)) {
-      cat("\n! ignored obsolete argument 'do.full.models' as 'CV.do.full.models' was also given")
-    } else {
-      CV.do.full.models <- do.full.models
-      cat("\n!!! argument 'do.full.models' is obsolete, please use 'CV.do.full.models' instead")
-    }
-  }
-  
-  ## data.split.perc --------------------------
-  if (!missing(data.split.perc)) {
-    if (CV.strategy != "random") {
-      cat("\n! ignored obsolete argument 'data.split.perc' as 'CV.strategy' was not set to 'random'")
-    } else if (!is.null(CV.perc)) {
-      cat("\n! ignored obsolete argument 'data.split.perc' as 'CV.perc' was also given")
-    } else {
-      CV.perc <- data.split.perc/100
-      cat("\n!!! argument 'do.full.models' is obsolete, please use 'CV.perc' instead.
-          \n /!\ 'CV.perc' is on a scale 0-1 and was set to data.split.perc/100 =",CV.perc)
-    }
-  }
-  
-  ## nb.rep --------------------------
-  if (!missing(nb.rep)) {
-    if (! CV.strategy %in% c("random", "kfold")) {
-      cat("\n! ignored obsolete argument 'nb.rep' as 'CV.strategy' was not set to 'random' or 'kfold'")
-    } else if (!is.null(CV.nb.rep)) {
-      cat("\n! ignored obsolete argument 'nb.rep' as 'CV.nb.rep' was also given")
-    } else {
-      CV.nb.rep <- nb.rep
-      cat("\n!!! argument 'nb.rep' is obsolete, please use 'CV.nb.rep' instead.")
-    }
-  }
-  
-  
-  ## data.split.table --------------------------
-  if (!missing(data.split.table)) {
-    if (! CV.strategy %in% c("user.defined")) {
-      cat("\n! ignored obsolete argument 'data.split.table' as 'CV.strategy' was not set to 'user.defined'")
-    } else if (!is.null(CV.user.table)) {
-      cat("\n! ignored obsolete argument 'data.split.table' as 'CV.user.table' was also given")
-    } else {
-      CV.user.table <- data.split.table
-      cat("\n!!! argument 'data.split.table' is obsolete, please use 'CV.user.table' instead.")
-    }
-  }
-  return(list(
-    CV.perc = CV.perc,
-    CV.user.table = CV.user.table,
-    CV.nb.rep = CV.nb.rep,
-    CV.do.full.models = CV.do.full.models))
+  cat("\nCreating suitable Workdir...\n")
+  dir.create(file.path(dir.name, sp.name), showWarnings = FALSE, recursive = TRUE)
+  dir.create(file.path(dir.name, sp.name, ".BIOMOD_DATA", modeling.id), showWarnings = FALSE, recursive = TRUE)
+  dir.create(file.path(dir.name, sp.name, "models", modeling.id), showWarnings = FALSE, recursive = TRUE)
 }
 
-## 0. Check bm.format and models arguments ----------------------------------
-cat('\n\nChecking Models arguments...\n')
+# ----------------------------------------------------------------------------------------------- #
 
-# ---------------------------------------------------------------------------- #
-
-.BIOMOD_Modeling.summary <- function(bm.format, calib.lines, models, models.pa = NULL)
+.BIOMOD_Modeling.summary <- function(bm.format, calib.lines, models, models.pa = NULL, do.full.models)
 {
   cat("\n\n")
   .bm_cat(paste(bm.format@sp.name, "Modeling Summary"))
-  cat("\n", ncol(bm.format@data.env.var), " environmental variables (", colnames(bm.format@data.env.var), ")")
-  nb.eval.rep <- 
-    ncol(calib.lines) /
-    ifelse(inherits(bm.format, "BIOMOD.formated.data.PA"),
-           ncol(bm.format@PA.table), 1)
-  cat("\nNumber of evaluation repetitions :", nb.eval.rep)
-  cat("\nModels selected :", models, "\n")
+  cat("\n>", ncol(bm.format@data.env.var), "environmental variables (", colnames(bm.format@data.env.var), ")")
+  
+  if (inherits(bm.format, "BIOMOD.formated.data.PA")){
+    cat("\n\n> Number of PA datasets :", ncol(bm.format@PA.table))
+    nb.PA <- ncol(bm.format@PA.table)
+  } else {
+    nb.PA <- 0
+  }
+  
+  if (do.full.models){
+    nb.full.models <- nb.PA + 1
+    nb.eval.rep <- (ncol(calib.lines) - nb.full.models) / ifelse(inherits(bm.format, "BIOMOD.formated.data.PA"), ncol(bm.format@PA.table), 1)
+    cat("\n\n> Number of calibration/validation splits :", nb.eval.rep)
+    cat("\n CV.do.full.models activated: +", nb.full.models,  "models")
+    nb.eval.rep <- nb.eval.rep +1 #for models.pa
+  } else {
+    nb.eval.rep <- ncol(calib.lines) / ifelse(inherits(bm.format, "BIOMOD.formated.data.PA"), ncol(bm.format@PA.table), 1)
+    cat("\n\n> Number of calibration/validation splits :", nb.eval.rep)
+  }
+  
+  cat("\n\n> Algorithms selected :", models)
   if (is.null(models.pa)) {
     nb.runs = ncol(calib.lines) * length(models)
+    cat("\n", ncol(calib.lines), "models for each algorithm")
   } else {
-    nb.runs = 
-      length(which(
-        sapply(unlist(models.pa), function(x) grepl(colnames(calib.lines), pattern = x))
-      ))
+    nb.runs = length(which(
+      sapply(unlist(models.pa), function(x) grepl(colnames(calib.lines), pattern = x))
+    ))
+    for (algo in names(models.pa)){
+      cat("\n\t", algo, ":", length(models.pa[[algo]]) * nb.eval.rep , " models")
+    }
   }
-  cat("\nTotal number of model runs:", nb.runs, "\n")
+  cat("\n\nTotal number of model runs:", nb.runs, "\n")
   .bm_cat()
-}
-
-# ---------------------------------------------------------------------------- #
-
-.automatic_weights_creation <- function(resp, prev = 0.5, subset = NULL)
-{
-  if (is.null(subset)) { subset <- rep(TRUE, length(resp)) }
-  
-  nbPres <- sum(resp[subset], na.rm = TRUE)
-  # The number of true absences + pseudo absences to maintain true value of prevalence
-  nbAbsKept <- sum(subset, na.rm = TRUE) - sum(resp[subset], na.rm = TRUE)
-  weights <- rep(1, length(resp))
-  
-  if (nbAbsKept > nbPres) {
-    # code absences as 1
-    weights[which(resp > 0)] <- (prev * nbAbsKept) / (nbPres * (1 - prev))
-  } else {
-    # code presences as 1
-    weights[which(resp == 0 | is.na(resp))] <- (nbPres * (1 - prev)) / (prev * nbAbsKept)
-  }
-  weights = round(weights[])
-  weights[!subset] <- 0
-  
-  return(weights)
 }
 

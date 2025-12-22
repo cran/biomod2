@@ -14,6 +14,136 @@ vignette: >
 
 ### <i class="fas fa-pen-alt"></i> 2025
 
+##### Bugfix
+
+- 4.3-4-3 :
+  + split *Main functions* example in 2 : *binary* and *abund*
+  + add `DataSTOC` data set
+  + fix tuning function for DNN
+  + fix `biomod2_template_report.Rmd` to adapt to last plot changes and abundance data
+  + fix `plot` function for `BIOMOD.formated.data` with `plot.type == "raster" & plot.valid` for `_allData_allRun` case
+  + fix `metric.eval` in `plot.Rscore` in `bm_ModelAnalysis` function
+- 4.3-4-2 :
+  + merge `BIOMOD.formated.data` `plot` functions to deal with all data types, add `plot.valid` parameter
+  + reformat `bm_ModelAnalysis` function
+- 4.3-4-1 : change `color` to `fill`, and add `filtered.by` in `bm_Plot[...]Boxplot` functions (*Eval* and *VarImp*)
+
+#### 4.3-4 DNN model (2025-06-04) 
+
+- Add `DNN` : Deep Neural Network with `cito` package
+- New `ModelsTable` and `OptionsBigBoss` 
+- Tuning made with the `tune` function of `cito` package
+
+##### Bugfix
+
+- Fix `EMwmean` when only one model selected
+- Fix `bm_RunModelsLoop` output list
+- Fix plot function of `BIOMOD.projection.out` object
+
+#### 4.3-3 Multiclass datatype (2025-05-20) 
+
+##### Major Changes
+
+- In _biomod2_classes_0_ file :
+  + add new data type : _"multiclass"_
+  + adaptation of `.BIOMOD.options.default.correct` function 
+- In _biomod2_classes_1_ file :
+  + adaptation of `plot` method for `BIOMOD.projection.out` object 
+- In _biomod2_classes_3_ file :
+  + adaptation of `.BIOMOD.formated.data.check_data`, `.plot.BIOMOD.formated.data.abundance`, `summary` and `show` function 
+- In _biomod2_classes_4_ file :
+  + `factor_levels` slot for `biomod2_model` class
+  + update all `predict2` functions for single models to deal with the different data types
+- In `bm_RunModelsLoop`, `BIOMOD_Projection`, `BIOMOD_EnsembleModeling` and `BIOMOD_EnsembleForecasting` functions :
+  + management of model predictions format, in particular for _"ordinal"_ and _"multiclass"_ cases
+- In _biomod2_classes_5_ file :
+  + definition of `EMmode` and `EMfreq` with `predict` methods
+
+##### Bugfix
+
+- 4.3-2-3 : fix `data.type` in `bm_ModelingOptions`
+- 4.3-2-2 : 
+  + change the name of the metric `ROC` to `AUCroc`. It will switch automatically if you use `ROC`
+  + add the metric `AUCprg` : Area Under Curve of the Precision-Recall-Gain curve
+
+- 4.3-2-1 :
+  + add `togglelayerselected`, `maximumbackground`, `maximumiterations`, `convergencethreshold`, `autofeature`, `jackknife`, `writeclampgrid`, `writemess`, `logfile` and `verbose` parameters in `MAXENT` parameters
+  + fix `.check_calib.lines_names` for `BIOMOD.formated.data.PA` object in `bm_CrossValidation_user.defined`
+  + merge `binary` and `nonbinary` models into `OptionsBigboss`
+  + set `data.type = 'binary'` by default in `bm_ModelingOptions`
+  + correct `.BIOMOD_Modeling.summary` 
+  + remove `gam::` in `bm_MakeFormula`
+
+
+#### 4.3-2 Report (2025-03-11)
+
+- Add `call` slot for `BIOMOD.formated.data` and `BIOMOD.formated.data.PA`, `BIOMOD.models.out`, `BIOMOD.projection.out`, and `BIOMOD.ensemble.models.out` classes
+- Add `BIOMOD_Report` function
+- Add `.Rmd` templates in `inst/rmd/` folder (for _report_, _ODMAP_ and _code_)
+
+#### 4.3-1 RangeSize (2025-03-03)
+
+- Change `BIOMOD_RangeSize` to `bm_RangeSize`
+- Change `BIOMOD_RangeSize` inputs to `BIOMOD.projection.out` objects
+- Add new class `BIOMOD.rangesize.out`
+- Change `bm_PlotRangeSize` input to `BIOMOD.rangesize.out` objects, and project maps with coordinates of `BIOMOD.projection.out` object
+- Fix `show` outputs of `BIOMOD.[...].out` objects
+
+
+#### 4.3-0 Abundance (2025-01-30)
+
+##### Major Changes
+
+- In _biomod2_classes_0_ file :
+  + add new data types : _"binary"_, _"abundance"_, _"count"_, _"ordinal"_, _"relative"_, _"nonbinary"_
+  + add `data.type`, `has.filter.raster` and `biomod2.version` slot for `BIOMOD.formated.data` and `BIOMOD.formated.data.PA` classes
+  + add `.BIOMOD.options.default.correct` function (default changes and corrections depending on the data type (mainly for `type`, `method`, `family` and `distribution` options) to `BIOMOD.options.dataset`)
+- In _biomod2_classes_1_ file :
+  + add `.BIOMOD.formated.data.check_data` function (routine that can be applied to both original and evaluation datasets)
+  + add `.plot.BIOMOD.formated.data.abundance` function (to plot formated data when data type is not binary)
+  + update `BIOMOD.formated.data` summary to the different data types
+- In _biomod2_classes_3_ file :
+  + add `data.type` slot for `BIOMOD.models.out` class
+  + add `set_new_dirname` and `set_new_dirname.models` functions (to recursively modify the `dir.name` slot in all biomod2 objects of an existing simulation directory)
+- In _biomod2_classes_4_ file :
+  + add `model_type` and `thresholds_ordinal` slot for `biomod2_model` class
+  + update all `predict2` functions for single models to deal with the different data types (mainly between _binary_, _ordinal_ and the others)
+
+- In `bm_CrossValidation` function :
+  + split `.sample_mat` function into `.sample_num` and `.sample_class` functions
+  + update all functions to deal with the different data types (mainly between _ordinal_ and the others)
+- In `bm_FindOptimStat` function :
+  + add new evaluation metrics : _"RMSE"_, _"MAE"_, _"MSE"_, _"Rsquared"_, _"Rsquared_aj"_, _"Max_error"_ (for abundance/count/relative data) and _"Accuracy"_, _"Recall"_, _"Precision"_, _"F1"_ (for ordinal data)
+  + add `k` parameter
+  + add `.contingency_table_ordinal` function
+  + split `bm_CalculateStat` function into `bm_CalculateStatBin` and `bm_CalculateStatAbun` functions
+- In `bm_VariablesImportance` function :
+  + use _Spearman_ correlation for _ordinal_, _Pearson_ otherwise
+- Use either `on_0_1000` or `on_1_1000` when making projections
+- Correct and adapt tuning
+- Add `bm_ModelAnalysis` function (_to analyse the residuals of single models_)
+
+##### Minor Changes
+
+- Update `ModelsTable` data with `nonbinary` data type
+- Update `OptionsBigboss` data with all _nonbinary_ single models options
+- Change `dir.name` slot within `BIOMOD.formated.data` into absolute one instead of relative by default
+- Change `aes_string` to [`aes` + `.data`] in `bm_Plot[...]` functions
+- Add `digits` and `overwrite` parameters in `BIOMOD_Projection` function
+- Change `get_var_type` and `get_var_range` to internal functions (`.get_var_type` and `.get_var_range`)
+<!-- - Remove `raster` dependency -->
+- Remove deprecated functions and corresponding documentation
+- Add vignette for abundance (_to help you navigate through the new datatypes available_)
+- Update examples and documentation
+
+##### Bugfix
+
+- Fix stratified cross-validation strategy in `bm_CrossValidation` (partitions not being balanced correctly)
+- Fix selection of metrics in `bm_PlotEvalMean`
+- Fix formula when given by user in `bm_Tuning` (to be able to run the step AIC with the user formula)
+- Change `scale.models = FALSE` by default in `BIOMOD_Modeling` and `bm_RunModelsLoop`
+
+
 ### <i class="fas fa-pencil-alt"></i> 2024
 
 ##### Bugfix
@@ -50,8 +180,6 @@ vignette: >
 
 
 #### 4.2-5 Modeling options and Tuning (2024-05-02)
-
-- Submitted on CRAN
 
 ##### Major Changes
 

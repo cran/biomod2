@@ -30,6 +30,8 @@ simulation set}
 \item{\code{expl.var.names}}{a \code{vector} containing names of explanatory
 variables}
 
+\item{\code{data.type}}{a \code{character} corresponding to the data type}
+
 \item{\code{models.out}}{a \code{\link{BIOMOD.stored.models.out-class}} object
 containing informations from \code{\link{BIOMOD_Modeling}} object}
 
@@ -57,6 +59,8 @@ containing models predictions}
 object containing models predictions for evaluation data}
 
 \item{\code{link}}{a \code{character} containing the file name of the saved object}
+
+\item{\code{call}}{a \code{language} object corresponding to the call used to obtain the object}
 }}
 
 \examples{
@@ -95,10 +99,10 @@ if (file.exists(file.out)) {
 } else {
 
   # Format Data with true absences
-  myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-                                       expl.var = myExpl,
+  myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+                                       resp.var = myResp,
                                        resp.xy = myRespXY,
-                                       resp.name = myRespName)
+                                       expl.var = myExpl)
 
   # Model single models
   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
@@ -108,7 +112,7 @@ if (file.exists(file.out)) {
                                       CV.nb.rep = 2,
                                       CV.perc = 0.8,
                                       OPT.strategy = 'bigboss',
-                                      metric.eval = c('TSS','ROC'),
+                                      metric.eval = c('TSS', 'AUCroc'),
                                       var.import = 3,
                                       seed.val = 42)
 }
@@ -122,7 +126,7 @@ myBiomodEM <- BIOMOD_EnsembleModeling(bm.mod = myBiomodModelOut,
                                       em.algo = c('EMmean', 'EMca'),
                                       metric.select = c('TSS'),
                                       metric.select.thresh = c(0.7),
-                                      metric.eval = c('TSS', 'ROC'),
+                                      metric.eval = c('TSS', 'AUCroc'),
                                       var.import = 3,
                                       seed.val = 42)
 myBiomodEM
@@ -143,6 +147,7 @@ Other Toolbox objects:
 \code{\link{BIOMOD.options.dataset}},
 \code{\link{BIOMOD.options.default}},
 \code{\link{BIOMOD.projection.out}},
+\code{\link{BIOMOD.rangesize.out}},
 \code{\link{BIOMOD.stored.data}},
 \code{\link{biomod2_ensemble_model}},
 \code{\link{biomod2_model}}

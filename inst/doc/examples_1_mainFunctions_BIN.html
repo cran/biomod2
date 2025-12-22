@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="generator" content="litedown 0.7">
+<title>Main functions: binary data</title>
+<style type="text/css">
+body {
+  font-family: sans-serif;
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 1.5;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+body, .abstract, code, .footnotes, footer, #refs, .caption { font-size: .9em; }
+li li { font-size: .95em; }
+ul:has(li > input[type="checkbox"]) { list-style: none; padding-left: 1em; }
+*, :before, :after { box-sizing: border-box; }
+a { color: steelblue; }
+pre, img { max-width: 100%; }
+pre { white-space: pre-wrap; word-break: break-word; }
+pre code { display: block; padding: 1em; overflow-x: auto; }
+code { font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace; }
+:not(pre, th) > code, code[class], div > .caption { background: #f8f8f8; }
+pre > code:is(:not([class]), .language-plain, .language-none, .plain), .box, .figure, .table { background: inherit; border: 1px solid #eee; }
+pre > code {
+  &.message { border-color: #9eeaf9; }
+  &.warning { background: #fff3cd; border-color: #fff3cd; }
+  &.error { background: #f8d7da; border-color: #f8d7da; }
+}
+.fenced-chunk { border-left: 1px solid #666; }
+.code-fence {
+  opacity: .4;
+  border: 1px dashed #666;
+  border-left: 2px solid;
+  &:hover { opacity: inherit; }
+}
+.box, .figure, .table, table { margin: 1em auto; }
+div > .caption { padding: 1px 1em; }
+.figure { p:has(img, svg), pre:has(svg) { text-align: center; } }
+.flex-col { display: flex; justify-content: space-between; }
+table {
+  &:only-child:not(.table > *) { margin: auto; }
+  th, td { padding: 5px; font-variant-numeric: tabular-nums; }
+  thead, tfoot, tr:nth-child(even) { background: whitesmoke; }
+  thead th { border-bottom: 1px solid #ddd; }
+  &:not(.datatable-table) {
+    border-top: 1px solid #666;
+    border-bottom: 1px solid #666;
+  }
+}
+blockquote {
+  color: #666;
+  margin: 0;
+  padding: 1px 1em;
+  border-left: .5em solid #eee;
+}
+hr, .footnotes::before { border: 1px dashed #ddd; }
+.frontmatter { text-align: center; }
+#TOC {
+  a { text-decoration: none; }
+  ul { list-style: none; padding-left: 1em; }
+  & > ul { padding: 0; }
+  ul ul { border-left: 1px solid lightsteelblue; }
+}
+.body h2 { border-bottom: 1px solid #666; }
+.body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
+.main-number::after { content: "."; }
+span[class^="ref-number-"] { font-weight: bold; }
+.ref-number-fig::after, .ref-number-tab::after { content: ":"; }
+.cross-ref-chp::before { content: "Chapter "; }
+.cross-ref-sec::before { content: "Section "; }
+.cross-ref-fig::before, .ref-number-fig::before { content: "Figure "; }
+.cross-ref-tab::before, .ref-number-tab::before { content: "Table "; }
+.cross-ref-eqn::before, .MathJax_ref:has(mjx-mtext > mjx-c + mjx-c)::before { content: "Equation "; }
+.abstract, #refs {
+  &::before { display: block; margin: 1em auto; font-weight: bold; }
+}
+.abstract::before { content: "Abstract"; text-align: center; }
+#refs::before { content: "Bibliography"; font-size: 1.5em; }
+.ref-paren-open::before { content: "("; }
+.ref-paren-close::after { content: ")"; }
+.ref-semicolon::after { content: "; "; }
+.ref-and::after { content: " and "; }
+.ref-et-al::after { content: " et al."; font-style: italic; }
+.footnote-ref a {
+  &::before { content: "["; }
+  &::after { content: "]"; }
+}
+section.footnotes {
+  margin-top: 2em;
+  &::before { content: ""; display: block; max-width: 20em; }
+}
+.fade {
+  background: repeating-linear-gradient(135deg, white, white 30px, #ddd 32px, #ddd 32px);
+  opacity: 0.6;
+}
+
+@media print {
+  body { max-width: 100%; }
+  tr, img { break-inside: avoid; }
+}
+@media only screen and (min-width: 992px) {
+  body:not(.pagesjs) pre:has(.line-numbers):not(:hover) { white-space: pre; }
+}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.14/css/prism-xcode.min.css">
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>
+</head>
+<body>
+<div class="frontmatter">
+<div class="title"><h1>Main functions: binary data</h1></div>
+</div>
+<div class="body">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+<h2 id="sec:complete-code-example"><i class="fa-solid fa-code"></i> Complete code example</h2>
+<p>Here are presented, in a full and complete example, all main functions (starting with <code>BIOMOD_[...]</code>) of <code>biomod2</code>.</p>
+<p>The data set used is the <a href="../reference/DataSpecies.html">DataSpecies</a> containing presence/absence data. <br/> Similar examples are presented for count data on the <a href="examples_1_mainFunctions_AB.html">Main functions (abund) webpage</a>.</p>
+<p><br/><br/></p>
+<h3 id="sec:load-dataset-and-variables"><i class="fa-solid fa-truck-ramp-box"></i> Load dataset and variables</h3>
+<pre><code class="language-R">library(biomod2)
+library(terra)
+
+# Load species occurrences (6 species available)
+data('DataSpecies')
+head(DataSpecies)
+
+# Select the name of the studied species
+myRespName &lt;- 'GuloGulo'
+
+# Get corresponding presence/absence data
+myResp &lt;- as.numeric(DataSpecies[, myRespName])
+
+# Get corresponding XY coordinates
+myRespXY &lt;- DataSpecies[, c('X_WGS84', 'Y_WGS84')]
+
+# Load environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 &amp; bio_12)
+data('bioclim_current')
+myExpl &lt;- rast(bioclim_current)
+</code></pre>
+<p><br/><br/></p>
+<h3 id="sec:prepare-data-amp-parameters"><i class="fa-solid fa-list-check"></i> Prepare data &amp; parameters</h3>
+<h4 id="sec:format-data-observations-amp-explanatory-variables"><i class="fa-solid fa-spell-check"></i> Format data (observations &amp; explanatory variables)</h4>
+<pre><code class="language-R"># Format data with true absences
+myBiomodData &lt;- BIOMOD_FormatingData(resp.name = myRespName,
+                                     resp.var = myResp,
+                                     resp.xy = myRespXY,
+                                     expl.var = myExpl)
+myBiomodData
+plot(myBiomodData)
+</code></pre>
+<h4 id="sec:pseudo-absences-extraction"><i class="fa-solid fa-shuffle"></i> Pseudo-absences extraction</h4>
+<p>Single or multiple set of pseudo-absences can be selected with the <a href="../reference/BIOMOD_FormatingData.html"><code>BIOMOD_FormatingData</code></a> function, which calls the <a href="../reference/bm_PseudoAbsences.html"><code>bm_PseudoAbsences</code></a> function to do so. More examples are presented on the <a href="examples_2_auxiliaryFunctions.html">Auxiliary functions webpage</a>.</p>
+<pre><code class="language-R"># # Transform true absences into potential pseudo-absences
+# myResp.PA &lt;- ifelse(myResp == 1, 1, NA)
+# 
+# # Format data with pseudo-absences : random method
+# myBiomodData.r &lt;- BIOMOD_FormatingData(resp.var = myResp.PA,
+#                                        expl.var = myExpl,
+#                                        resp.xy = myRespXY,
+#                                        resp.name = myRespName,
+#                                        PA.nb.rep = 4,
+#                                        PA.nb.absences = 1000,
+#                                        PA.strategy = 'random')
+# 
+# myBiomodData.r
+# plot(myBiomodData.r)
+</code></pre>
+<pre><code class="language-R"># # Select multiple sets of pseudo-absences
+#
+# # Transform true absences into potential pseudo-absences
+# myResp.PA &lt;- ifelse(myResp == 1, 1, NA)
+# 
+# # Format Data with pseudo-absences : random method
+# myBiomodData.multi &lt;- BIOMOD_FormatingData(resp.var = myResp.PA,
+#                                            expl.var = myExpl,
+#                                            resp.xy = myRespXY,
+#                                            resp.name = myRespName,
+#                                            PA.nb.rep = 4,
+#                                            PA.nb.absences = c(1000, 500, 500, 200),
+#                                            PA.strategy = 'random')
+# myBiomodData.multi
+# summary(myBiomodData.multi)
+# plot(myBiomodData.multi)
+</code></pre>
+<h4 id="sec:cross-validation-datasets"><i class="fa-solid fa-scissors"></i> Cross-validation datasets</h4>
+<p>Several cross-validation methods are available and can be selected with the <a href="../reference/BIOMOD_Modeling.html"><code>BIOMOD_Modeling</code></a> function, which calls the <a href="../reference/bm_CrossValidation.html"><code>bm_CrossValidation</code></a> function to do so. More examples are presented on the <a href="examples_2_auxiliaryFunctions.html">Auxiliary functions webpage</a>.</p>
+<pre><code class="language-R"># # k-fold selection
+# cv.k &lt;- bm_CrossValidation(bm.format = myBiomodData,
+#                            strategy = 'kfold',
+#                            nb.rep = 2,
+#                            k = 3)
+# 
+# # stratified selection (geographic)
+# cv.s &lt;- bm_CrossValidation(bm.format = myBiomodData,
+#                            strategy = 'strat',
+#                            k = 2,
+#                            balance = 'presences',
+#                            strat = 'x')
+# head(cv.k)
+# head(cv.s)
+</code></pre>
+<h4 id="sec:retrieve-modeling-options"><i class="fa-solid fa-rectangle-list"></i> Retrieve modeling options</h4>
+<p>Modeling options are automatically retrieved from selected models within the <a href="../reference/BIOMOD_Modeling.html"><code>BIOMOD_Modeling</code></a> function, which calls the <a href="../reference/bm_ModelingOptions.html"><code>bm_ModelingOptions</code></a> function to do so. Model parameters can also be automatically tuned to a specific dataset, by calling the <a href="../reference/bm_Tuning.html"><code>bm_Tuning</code></a> function, however it can be quite long. More examples are presented on the <a href="examples_2_auxiliaryFunctions.html">Auxiliary functions webpage</a>.</p>
+<pre><code class="language-R"># # bigboss parameters
+# opt.b &lt;- bm_ModelingOptions(data.type = 'binary',
+#                             models = c('SRE', 'XGBOOST'),
+#                             strategy = 'bigboss')
+# 
+# # tuned parameters with formated data
+# opt.t &lt;- bm_ModelingOptions(data.type = 'binary',
+#                             models = c('SRE', 'XGBOOST'),
+#                             strategy = 'tuned',
+#                             bm.format = myBiomodData)
+# 
+# opt.b
+# opt.t
+</code></pre>
+<p><br/><br/></p>
+<h3 id="sec:run-modeling"><i class="fa-solid fa-gear"></i> Run modeling</h3>
+<h4 id="sec:single-models_1"><i class="fa-solid fa-virus"></i> Single models</h4>
+<pre><code class="language-R"># Model single models
+myBiomodModelOut &lt;- BIOMOD_Modeling(bm.format = myBiomodData,
+                                    modeling.id = 'AllModels',
+                                    CV.strategy = 'random',
+                                    CV.nb.rep = 2,
+                                    CV.perc = 0.8,
+                                    OPT.strategy = 'bigboss',
+                                    metric.eval = c('TSS', 'AUCroc', 'BOYCE'),
+                                    var.import = 3)
+                                    # seed.val = 123)
+                                    # nb.cpu = 8)
+myBiomodModelOut
+
+# Get evaluation scores &amp; variables importance
+get_evaluations(myBiomodModelOut)
+get_variables_importance(myBiomodModelOut)
+
+# Represent evaluation scores &amp; variables importance
+bm_PlotEvalMean(bm.out = myBiomodModelOut, dataset = 'calibration')
+bm_PlotEvalMean(bm.out = myBiomodModelOut, dataset = 'validation')
+bm_PlotEvalBoxplot(bm.out = myBiomodModelOut, dataset = 'calibration', group.by = c('algo', 'algo'))
+bm_PlotEvalBoxplot(bm.out = myBiomodModelOut, dataset = 'calibration', group.by = c('algo', 'run'))
+bm_PlotVarImpBoxplot(bm.out = myBiomodModelOut, group.by = c('expl.var', 'algo', 'algo'))
+bm_PlotVarImpBoxplot(bm.out = myBiomodModelOut, group.by = c('expl.var', 'algo', 'run'))
+bm_PlotVarImpBoxplot(bm.out = myBiomodModelOut, group.by = c('algo', 'expl.var', 'run'))
+
+# Represent response curves
+bm_PlotResponseCurves(bm.out = myBiomodModelOut, 
+                      models.chosen = get_built_models(myBiomodModelOut)[c(1, 4, 8, 10, 13)],
+                      fixed.var = 'median')
+bm_PlotResponseCurves(bm.out = myBiomodModelOut, 
+                      models.chosen = get_built_models(myBiomodModelOut)[c(1, 4, 8, 10, 13)],
+                      fixed.var = 'min')
+bm_PlotResponseCurves(bm.out = myBiomodModelOut, 
+                      models.chosen = get_built_models(myBiomodModelOut)[4],
+                      fixed.var = 'median',
+                      do.bivariate = TRUE)
+                      
+# Explore models' outliers &amp; residuals
+bm_ModelAnalysis(bm.mod = myBiomodModelOut,
+                 models.chosen = get_built_models(myBiomodModelOut)[c(1, 4, 8, 10, 13)])
+</code></pre>
+<h4 id="sec:ensemble-models_1"><i class="fa-solid fa-viruses"></i> Ensemble models</h4>
+<pre><code class="language-R"># Model ensemble models
+myBiomodEM &lt;- BIOMOD_EnsembleModeling(bm.mod = myBiomodModelOut,
+                                      models.chosen = 'all',
+                                      em.by = 'all',
+                                      em.algo = c('EMmedian', 'EMmean', 'EMwmean',
+                                                  'EMca', 'EMci', 'EMcv'),
+                                      metric.select = c('TSS'),
+                                      metric.select.thresh = c(0.7),
+                                      metric.eval = c('TSS', 'AUCroc', 'BOYCE'),
+                                      var.import = 3,
+                                      EMci.alpha = 0.05,
+                                      EMwmean.decay = 'proportional')
+myBiomodEM
+
+# Get evaluation scores &amp; variables importance
+get_evaluations(myBiomodEM)
+get_variables_importance(myBiomodEM)
+
+# Represent evaluation scores &amp; variables importance
+bm_PlotEvalMean(bm.out = myBiomodEM, dataset = 'calibration', group.by = 'full.name')
+bm_PlotEvalBoxplot(bm.out = myBiomodEM, dataset = 'calibration', group.by = c('full.name', 'full.name'))
+bm_PlotVarImpBoxplot(bm.out = myBiomodEM, group.by = c('expl.var', 'full.name', 'full.name'))
+bm_PlotVarImpBoxplot(bm.out = myBiomodEM, group.by = c('expl.var', 'algo', 'merged.by.run'))
+bm_PlotVarImpBoxplot(bm.out = myBiomodEM, group.by = c('algo', 'expl.var', 'merged.by.run'))
+
+# Represent response curves
+bm_PlotResponseCurves(bm.out = myBiomodEM, 
+                      models.chosen = get_built_models(myBiomodEM)[c(1, 6, 7)],
+                      fixed.var = 'median')
+bm_PlotResponseCurves(bm.out = myBiomodEM, 
+                      models.chosen = get_built_models(myBiomodEM)[c(1, 6, 7)],
+                      fixed.var = 'min')
+bm_PlotResponseCurves(bm.out = myBiomodEM, 
+                      models.chosen = get_built_models(myBiomodEM)[7],
+                      fixed.var = 'median',
+                      do.bivariate = TRUE)
+</code></pre>
+<p><br/><br/></p>
+<h3 id="sec:project-models"><i class="fa-solid fa-earth-europe"></i> Project models</h3>
+<h4 id="sec:single-models_2"><i class="fa-solid fa-virus"></i> Single models</h4>
+<pre><code class="language-R"># Project single models
+myBiomodProj &lt;- BIOMOD_Projection(bm.mod = myBiomodModelOut,
+                                  proj.name = 'Current',
+                                  new.env = myExpl,
+                                  models.chosen = 'all',
+                                  metric.binary = 'all',
+                                  metric.filter = 'all',
+                                  build.clamping.mask = TRUE)
+myBiomodProj
+plot(myBiomodProj)
+</code></pre>
+<h4 id="sec:ensemble-models_2"><i class="fa-solid fa-viruses"></i> Ensemble models</h4>
+<pre><code class="language-R"># Project ensemble models (from single projections)
+myBiomodEMProj &lt;- BIOMOD_EnsembleForecasting(bm.em = myBiomodEM, 
+                                             bm.proj = myBiomodProj,
+                                             models.chosen = 'all',
+                                             metric.binary = 'all',
+                                             metric.filter = 'all')
+                                             
+# Project ensemble models (building single projections)
+myBiomodEMProj &lt;- BIOMOD_EnsembleForecasting(bm.em = myBiomodEM,
+                                             proj.name = 'CurrentEM',
+                                             new.env = myExpl,
+                                             models.chosen = 'all',
+                                             metric.binary = 'all',
+                                             metric.filter = 'all')
+myBiomodEMProj
+plot(myBiomodEMProj)
+</code></pre>
+<p><br/><br/></p>
+<h3 id="sec:compare-range-sizes"><i class="fa-solid fa-ruler-combined"></i> Compare range sizes</h3>
+<pre><code class="language-R"># Load environmental variables extracted from BIOCLIM (bio_3, bio_4, bio_7, bio_11 &amp; bio_12)
+data('bioclim_future')
+myExplFuture = rast(bioclim_future)
+
+# Project onto future conditions
+myBiomodProjFuture &lt;- BIOMOD_Projection(bm.mod = myBiomodModelOut,
+                                              proj.name = 'Future',
+                                              new.env = myExplFuture,
+                                              models.chosen = 'all',
+                                              metric.binary = 'TSS',
+                                              build.clamping.mask = TRUE)
+
+# Compute differences
+myBiomodRangeSize &lt;- BIOMOD_RangeSize(proj.current = myBiomodProj, 
+                                      proj.future = myBiomodProjFuture,
+                                      metric.binary = 'TSS')
+
+myBiomodRangeSize@Compt.By.Models
+plot(myBiomodRangeSize@Diff.By.Pixel)
+
+# Represent main results 
+bm_PlotRangeSize(bm.range = myBiomodRangeSize, 
+                 do.count = TRUE,
+                 do.perc = TRUE,
+                 do.maps = TRUE,
+                 do.mean = TRUE)
+</code></pre>
+<p><br/><br/></p>
+</div>
+</body>
+</html>

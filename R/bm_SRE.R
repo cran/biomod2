@@ -126,6 +126,7 @@
 ##' 
 ###################################################################################################
 
+
 ## Remi 20/10/2022
 ## This function seems to have support for multispecies resp.var although
 ## the rest of the package do not.
@@ -140,7 +141,7 @@ bm_SRE <- function(resp.var = NULL,
   args <- .bm_SRE.check.args(resp.var, expl.var, new.env, quant)
   for (argi in names(args)) { assign(x = argi, value = args[[argi]]) }
   rm(args)
-
+  
   ## 1. Determine suitable conditions and make the projection --------------
   lout <- list()
   if (is.data.frame(resp.var) | is.matrix(resp.var)) {
@@ -163,7 +164,7 @@ bm_SRE <- function(resp.var = NULL,
     nb.resp <- nlyr(resp.var)
     resp.names <- names(resp.var)
     for (j in 1:nb.resp) {
-      extrem.cond <- global(mask(expl.var, subset(resp.var, j), maskvalues = c(0,NA)),
+      extrem.cond <- global(mask(expl.var, subset(resp.var, j), maskvalues = c(0, NA)),
                             fun = quantile,
                             probs = c(0 + quant, 1 - quant),
                             na.rm = TRUE)
@@ -217,9 +218,7 @@ bm_SRE <- function(resp.var = NULL,
       colnames(lout) <- resp.names
     } else if (inherits(new.env, 'SpatRaster')) {
       lout <- rast(lout)
-      if (nlyr(lout) == 1) {
-        lout <- subset(lout, 1)
-      }
+      if (nlyr(lout) == 1) { lout <- subset(lout, 1) }
       names(lout) <- resp.names
     }
     return(lout)
@@ -227,14 +226,14 @@ bm_SRE <- function(resp.var = NULL,
 }
 
 
-## SRE Argument check ---------------------------------------------------------
+###################################################################################################
 
 .bm_SRE.check.args <- function(resp.var = NULL, expl.var = NULL, new.env = NULL, quant = 0.025)
 {
   ## 0. Check compatibility between resp.var and expl.var arguments -----------
   if (is.vector(resp.var) || inherits(resp.var, c("matrix","data.frame"))) {
     resp.var <- as.data.frame(resp.var)
-    if (!is.vector(expl.var) && !inherits(expl.var, c("matrix","data.frame",'SpatVector')))  {
+    if (!is.vector(expl.var) && !inherits(expl.var, c("matrix","data.frame",'SpatVector'))) {
       stop("\n resp.var and expl.var arguments must be of same type (both vector, both matrix, etc)")
     } else {
       if (inherits(expl.var, 'SpatVector')) {
@@ -271,13 +270,13 @@ bm_SRE <- function(resp.var = NULL,
     nb.expl.vars <- nlyr(expl.var)
     names.expl.vars <- names(expl.var)
   }
-
+  
   ## 1. Check expl.var argument -----------------------------------------------
   if ((inherits(expl.var, 'data.frame') && any(sapply(expl.var, is.factor))) ||
       (inherits(expl.var, c('SpatRaster')) && any(is.factor(expl.var)))) {
     stop("SRE algorithm does not handle factorial variables")
   }
-
+  
   
   ## 2. Check new.env argument ------------------------------------------------
   if (is.null(new.env)) { ## if no new.env, projection done on expl.var variables
@@ -317,9 +316,10 @@ bm_SRE <- function(resp.var = NULL,
 }
 
 
-# SRE Projection  ----------------------------------------------------------
+###################################################################################################
 
-.sre_projection <- function(new.env, extrem.cond, mod.name = NULL) {
+.sre_projection <- function(new.env, extrem.cond, mod.name = NULL)
+{
   if (is.data.frame(new.env) || is.matrix(new.env)) {
     out <- rep(1, nrow(new.env))
     for (this.var in rownames(extrem.cond)) {

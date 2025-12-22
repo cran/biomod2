@@ -2,81 +2,79 @@
 % Please edit documentation in R/BIOMOD_RangeSize.R
 \name{BIOMOD_RangeSize}
 \alias{BIOMOD_RangeSize}
-\alias{BIOMOD_RangeSize,data.frame,data.frame-method}
-\alias{BIOMOD_RangeSize,SpatRaster,SpatRaster-method}
 \title{Analyze the range size differences between projections of species distribution models}
 \usage{
-BIOMOD_RangeSize(proj.current, proj.future)
-
-\S4method{BIOMOD_RangeSize}{data.frame,data.frame}(proj.current, proj.future)
-
-\S4method{BIOMOD_RangeSize}{SpatRaster,SpatRaster}(proj.current, proj.future)
+BIOMOD_RangeSize(
+  proj.current,
+  proj.future,
+  models.chosen = "all",
+  metric.binary = NULL
+)
 }
 \arguments{
-\item{proj.current}{a \code{data.frame}, \code{\link[raster:stack]{RasterLayer}}
-or \code{\link[terra:rast]{SpatRaster}} object containing the initial binary projection(s)
+\item{proj.current}{a \code{BIOMOD.projection.out} object containing the initial projection(s) 
 of the (ensemble) species distribution model(s)}
 
-\item{proj.future}{a \code{data.frame}, \code{\link[raster:stack]{RasterLayer}}
-or \code{\link[terra:rast]{SpatRaster}} object containing the final binary projection(s)
+\item{proj.future}{a \code{BIOMOD.projection.out} object containing the final binary projection(s) 
 of the (ensemble) species distribution model(s)}
+
+\item{models.chosen}{a \code{vector} containing model names to be kept, must be either 
+\code{all} or a sub-selection of model names that can be obtained with the 
+\code{\link{get_projected_models}} function}
+
+\item{metric.binary}{(\emph{optional, default} \code{NULL}) \cr 
+A \code{vector} containing evaluation metric selected to transform predictions into binary 
+values, must be among \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, 
+\code{BIAS}, \code{AUCroc}, \code{AUCprg}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, \code{CSI}, 
+\code{ETS}, \code{BOYCE}, \code{MPA}}
 }
 \value{
-A \code{list} containing two objects :
+A \code{BIOMOD.rangesize.out} containing principaly two objects :
 \describe{
-\item{Compt.By.Species}{a \code{data.frame} containing the summary of range change for each
-comparison
-\itemize{
-\item \code{Loss} : number of pixels predicted to be lost
-\item \code{Stable0} : number of pixels not currently occupied and not predicted to be
-\item \code{Stable1} : number of pixels currently occupied and predicted to remain
-occupied
-\item \code{Gain} : number of pixels predicted to be gained
-\item \code{PercLoss} : percentage of pixels currently occupied and predicted to be lost
-(\code{Loss / (Loss + Stable1)})
-\item \code{PercGain} : percentage of pixels predicted to be gained compare to the
-number of pixels currently occupied (\code{Gain / (Loss + Stable1)})
-\item \code{SpeciesRangeChange} : percentage of pixels predicted to change (loss or gain)
-compare to the number of pixels currently occupied (\code{PercGain - PercLoss})
-\item \code{CurrentRangeSize} : number of pixels currently occupied
-\item \code{FutureRangeSize0Disp} : number of pixels predicted to be occupied, assuming
-no migration
-\item \code{FutureRangeSize1Disp} : number of pixels predicted to be occupied, assuming
-migration
-}
-}
-\item{Diff.By.Pixel}{an object in the same form than the input data (\code{proj.current} and
-\code{proj.future}) and containing a value for each point/pixel of each comparison among :
-\itemize{
-\item \code{-2} : predicted to be lost
-\item \code{-1} : predicted to remain occupied
-\item \code{0} : predicted to remain unoccupied
-\item \code{1} : predicted to be gained
-}
-}
+  \item{Compt.By.Species}{a \code{data.frame} containing the summary of range change for each 
+  comparison
+  \itemize{
+    \item \code{Loss} : number of pixels predicted to be lost
+    \item \code{Stable_Abs} : number of pixels not currently occupied and not predicted to be
+    \item \code{Stable_Pres} : number of pixels currently occupied and predicted to remain 
+    occupied
+    \item \code{Gain} : number of pixels predicted to be gained
+    \item \code{PercLoss} : percentage of pixels currently occupied and predicted to be lost 
+    (\code{Loss / (Loss + Stable_Pres)})
+    \item \code{PercGain} : percentage of pixels predicted to be gained compare to the 
+    number of pixels currently occupied (\code{Gain / (Loss + Stable_Pres)})
+    \item \code{SpeciesRangeChange} : percentage of pixels predicted to change (loss or gain) 
+    compare to the number of pixels currently occupied (\code{PercGain - PercLoss})
+    \item \code{CurrentRangeSize} : number of pixels currently occupied
+    \item \code{FutureRangeSize0Disp} : number of pixels predicted to be occupied, assuming 
+    no migration
+    \item \code{FutureRangeSize1Disp} : number of pixels predicted to be occupied, assuming 
+    migration
+  }
+  }
+  \item{loss.gain}{an object in the same form than the input data (\code{proj.current} and 
+  \code{proj.future}) and containing a value for each point/pixel of each comparison among :
+  \itemize{
+    \item \code{-2} : predicted to be lost
+    \item \code{-1} : predicted to remain occupied
+    \item \code{0} : predicted to remain unoccupied
+    \item \code{1} : predicted to be gained
+  }
+  }
+  \item{Diff.By.Pixel}{an object in the same form than the input data (\code{proj.current} and 
+  \code{proj.future}) and containing a value for each point/pixel of each comparison obtain with :
+  \itemize{
+  \item \code{Future - 2* Current} for binary data
+  \item \code{Future - Current} for nonbinary after rescaling Future and Current from 0 to 1.
+  }
+  }
 }
 }
 \description{
-This function allows to calculate the absolute number of locations (pixels) lost,
-stable and gained, as well as the corresponding relative proportions, between two (or more)
-binary projections of (ensemble) species distribution models (\emph{which can represent new
+This function allows to calculate the absolute number of locations (pixels) lost, 
+stable and gained, as well as the corresponding relative proportions, between two (or more) 
+binary projections of (ensemble) species distribution models (\emph{which can represent new 
 time scales or environmental scenarios for example}).
-}
-\details{
-Note that \bold{this function is only relevant to compare binary projections, made on the
-same area with the same resolution}. \cr
-
-Comparison between \code{proj.current} and \code{proj.future} depends
-on the number of projection in both objects:\tabular{lll}{
-   \code{proj.current} \tab \code{proj.future} \tab \bold{Comparison} \cr
-   \bold{1 projection} (\emph{e.g. data.frame with 1 column, SpatRaster with 1 layer}) \tab \bold{1 projection}  (\emph{e.g. data.frame with 1 column, SpatRaster with 1 layer}) \tab comparison of both projection  (\emph{e.g. current vs future conditions for the same model ; current vs current condition for two different models}) \cr
-   \bold{\code{n} projections}  (\emph{e.g. data.frame with n column, SpatRaster with n layer}) \tab \bold{\code{n} projections}  (\emph{e.g. data.frame with n column, SpatRaster with n layer}) \tab comparing projection \code{i} in \code{proj.current} to projection \code{i} in \code{proj.future}  (\emph{e.g. comparing current vs future condition for n models}) \cr
-   \bold{\code{1} projection}   (\emph{e.g. data.frame with 1 column, SpatRaster with 1 layer}) \tab \bold{\code{n} projections}  (\emph{e.g. data.frame with n column, SpatRaster with n layer}) \tab comparing projection in \code{proj.current} to each projection in \code{proj.future}  (\emph{e.g. comparing current vs n different future condition (e.g. climate change scenario) for 1 model}) \cr
-}
-
-
-\code{Diff.By.Pixel} object is obtained by applying the simple following formula :
-\deqn{proj.future - 2 * proj.current}
 }
 \examples{
 library(terra)
@@ -110,10 +108,10 @@ if (file.exists(file.out)) {
 } else {
 
   # Format Data with true absences
-  myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-                                       expl.var = myExpl,
+  myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+                                       resp.var = myResp,
                                        resp.xy = myRespXY,
-                                       resp.name = myRespName)
+                                       expl.var = myExpl)
 
   # Model single models
   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
@@ -123,7 +121,7 @@ if (file.exists(file.out)) {
                                       CV.nb.rep = 2,
                                       CV.perc = 0.8,
                                       OPT.strategy = 'bigboss',
-                                      metric.eval = c('TSS','ROC'),
+                                      metric.eval = c('TSS', 'AUCroc'),
                                       var.import = 3,
                                       seed.val = 42)
 }
@@ -152,27 +150,21 @@ myBiomodProjectionFuture <- BIOMOD_Projection(bm.mod = myBiomodModelOut,
                                               new.env = myExplFuture,
                                               models.chosen = models.proj,
                                               metric.binary = 'TSS')
-
-# Load current and future binary projections
-CurrentProj <- get_predictions(myBiomodProj,
-                               metric.binary = "TSS",
-                               model.as.col = TRUE)
-FutureProj <- get_predictions(myBiomodProjectionFuture,
-                               metric.binary = "TSS",
-                               model.as.col = TRUE)
+                                              
 # Compute differences
-myBiomodRangeSize <- BIOMOD_RangeSize(proj.current = CurrentProj, proj.future = FutureProj)
+myBiomodRangeSize <- BIOMOD_RangeSize(proj.current = myBiomodProj,
+                                      proj.future = myBiomodProjectionFuture,
+                                      metric.binary = "TSS")
 
-myBiomodRangeSize$Compt.By.Models
-plot(myBiomodRangeSize$Diff.By.Pixel)
 
-# Represent main results 
+# Represent main results
 bm_PlotRangeSize(bm.range = myBiomodRangeSize)
+
 
 
 }
 \seealso{
-\code{\link{BIOMOD_Projection}}, \code{\link{BIOMOD_EnsembleForecasting}},
+\code{\link{BIOMOD_Projection}}, \code{\link{BIOMOD_EnsembleForecasting}}, 
 \code{\link{bm_PlotRangeSize}}
 
 Other Main functions: 
@@ -184,7 +176,7 @@ Other Main functions:
 \code{\link{BIOMOD_Projection}()}
 }
 \author{
-Wilfried Thuiller, Damien Georges, Bruno Lafourcade
+Maya Guéguen, Hélène Blancheteau
 }
 \concept{Main functions}
 \keyword{"species}

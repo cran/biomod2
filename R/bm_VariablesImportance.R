@@ -93,6 +93,7 @@
 ##' 
 ###################################################################################################
 
+
 bm_VariablesImportance <- function(bm.model, 
                                    expl.var,
                                    variables = NULL,
@@ -102,17 +103,31 @@ bm_VariablesImportance <- function(bm.model,
                                    do.progress = TRUE,
                                    temp.workdir = NULL)
 {
-  args <- .bm_VariablesImportance.check.args(bm.model, expl.var, variables, method, nb.rep, seed.val, do.progress, temp.workdir)
+  args <- .bm_VariablesImportance.check.args(bm.model, expl.var, variables, method, temp.workdir)
   for (argi in names(args)) { assign(x = argi, value = args[[argi]]) }
   rm(args)
+  
   ## Test if prediction is computable
   ref <- try(
     predict(bm.model,
             newdata = expl.var,
             temp_workdir = temp.workdir,
             seedval = seed.val)
-    )
+  )
+  
   if (inherits(ref, "try-error")) { stop("Unable to make model prediction") }
+  
+  if (model_type == "ordinal") {
+    if (!(bm.model@model_name %in% c("GLM", "GAM", "XGBOOST"))) { ## keep numeric values for these 3 models
+      ref <- as.numeric(factor(ref, ordered = TRUE))
+    }
+  }
+  
+  if (model_type == "multiclass") {
+    if (!(bm.model@model_name == "XGBOOST")) { 
+      ref <- as.numeric(factor(ref))
+    }
+  }
   
   ## Make randomisation
   cat('\n')
@@ -125,8 +140,20 @@ bm_VariablesImportance <- function(bm.model,
     {
       data_rand <- .randomise_data(expl.var, v, method) #, seedval = seed.val)
       shuffled.pred <- predict(bm.model, data_rand, temp_workdir = temp.workdir, seedval = seed.val)
+      
+      if (model_type == "ordinal") {
+        if (!(bm.model@model_name %in% c("GLM", "GAM", "XGBOOST"))) { ## keep numeric values for these 3 models
+          shuffled.pred <- as.numeric(factor(shuffled.pred, ordered = TRUE))
+        }
+      }
+      if (model_type == "multiclass") {
+        if (!(bm.model@model_name == "XGBOOST")) { 
+          shuffled.pred <- as.numeric(factor(shuffled.pred))
+        }
+      }
+      method_cor <- ifelse(model_type %in% c("ordinal", "multiclass"), "pearson", "spearman")
       out_vr <- 1 - max(round(
-        cor(x = ref, y = shuffled.pred, use = "pairwise.complete.obs", method = "pearson")
+        cor(x = ref, y = shuffled.pred, use = "pairwise.complete.obs", method = method_cor)
         , digits = 6), 0, na.rm = TRUE)
       if (do.progress) {
         i.iter = i.iter + 1
@@ -142,18 +169,19 @@ bm_VariablesImportance <- function(bm.model,
 
 ###################################################################################################
 
-
-.bm_VariablesImportance.check.args <- function(bm.model, expl.var, variables, method, nb.rep, seed.val, do.progress, temp.workdir)
+.bm_VariablesImportance.check.args <- function(bm.model, expl.var, variables, method, temp.workdir)
 {
   # test that input data is supported
   .fun_testIfInherits(TRUE, "bm.model", bm.model, c("biomod2_model", "nnet", "rpart", "fda", "gam"
                                                     , "glm", "lm", "gbm", "mars", "randomForest"))
   
-  # test method is supported
-  .fun_testIfIn(TRUE, "method", method, c('full_rand'))
+  model_type <- ifelse(inherits(bm.model, "biomod2_model"), bm.model@model_type, "binary")
   
   # get variables names
   if (is.null(variables)) { variables <- colnames(expl.var) }
+  
+  # test method is supported
+  .fun_testIfIn(TRUE, "method", method, c('full_rand'))
   
   if(missing(temp.workdir)){ temp.workdir <- NULL }
   
@@ -161,8 +189,8 @@ bm_VariablesImportance <- function(bm.model,
               , expl.var = expl.var
               , method = method
               , variables = variables
-              , seed.val = seed.val
-              , temp.workdir = temp.workdir))
+              , temp.workdir = temp.workdir
+              , model_type = model_type))
 }
 
 

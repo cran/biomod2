@@ -5,7 +5,7 @@
 
 ##' @name BIOMOD.options.default
 ##' @aliases BIOMOD.options.default-class
-##' @author Maya Gueguen
+##' @author Maya Guéguen
 ##' 
 ##' @title \code{\link{bm_ModelingOptions}} output object class
 ##' 
@@ -15,7 +15,7 @@
 ##' 
 ##' 
 ##' @param mod a \code{character} corresponding to the model name to be computed, must be either 
-##' \code{ANN}, \code{CTA}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
+##' \code{ANN}, \code{CTA}, \code{DNN}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
 ##' \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{SRE}, \code{XGBOOST}
 ##' @param typ a \code{character} corresponding to the data type to be used, must be either 
 ##' \code{binary}, \code{binary.PA}, \code{abundance}, \code{compositional}
@@ -75,12 +75,11 @@ setGeneric("BIOMOD.options.default", def = function(mod, typ, pkg, fun) { standa
 .BIOMOD.options.default.check.args <- function(mod, typ, pkg, fun)
 {
   ## check if model is supported
-  avail.models.list <- c('ANN', 'CTA', 'FDA', 'GAM', 'GBM', 'GLM', 'MARS', 'MAXENT', 'MAXNET', 'RF','RFd', 'SRE', 'XGBOOST')
+  avail.models.list <- c('ANN', 'CTA', 'DNN', 'FDA', 'GAM', 'GBM', 'GLM', 'MARS', 'MAXENT', 'MAXNET', 'RF','RFd', 'SRE', 'XGBOOST')
   .fun_testIfIn(TRUE, "mod", mod, avail.models.list)
   
   ## check if type is supported
-  # avail.types.list <- c('binary', 'binary.PA', 'abundance', 'compositional')
-  avail.types.list <- c('binary')
+  avail.types.list <- c('binary', 'abundance', 'count', 'multiclass', 'ordinal', 'relative')
   .fun_testIfIn(TRUE, "typ", typ, avail.types.list)
   
   if (mod != 'MAXENT') {
@@ -130,6 +129,7 @@ setMethod('BIOMOD.options.default', signature(mod = 'character', typ = 'characte
                                    initial_heap_size = NULL,
                                    max_heap_size = NULL,
                                    background_data_dir = 'default',
+                                   ## since forever :
                                    visible = FALSE,
                                    linear = TRUE,
                                    quadratic = TRUE,
@@ -144,7 +144,18 @@ setMethod('BIOMOD.options.default', signature(mod = 'character', typ = 'characte
                                    beta_lqp = -1.0,
                                    beta_hinge = -1.0,
                                    betamultiplier = 1,
-                                   defaultprevalence = 0.5)
+                                   defaultprevalence = 0.5,
+                                   ## newly added :
+                                   togglelayerselected = NULL,
+                                   maximumbackground = 10000,
+                                   maximumiterations = 500,
+                                   convergencethreshold = 0.00005,
+                                   autofeature = TRUE,
+                                   jackknife = FALSE,
+                                   writeclampgrid = FALSE,
+                                   writemess = FALSE,
+                                   logfile = 'maxent.log',
+                                   verbose = FALSE)
               
               BOM <- new(
                 'BIOMOD.options.default',
@@ -160,6 +171,116 @@ setMethod('BIOMOD.options.default', signature(mod = 'character', typ = 'characte
           }
 )
 
+### default options according to data.type ------------------------------------
+##' 
+##' @importFrom stats binomial gaussian poisson quasibinomial
+##' 
+
+.BIOMOD.options.default.correct <- function(mod, typ, pkg, argstmp)
+{
+  ## Define type / method / family / distribution according to data.type
+  if (typ == "binary") {
+    RFtype <- "classification"
+    MODfamily <- binomial(link = 'logit')
+    CTAmethod <- "class"
+    GBMdistribution <- "bernoulli"
+    FDAmethod <- "mars"
+    XGBOOSTobjective <- "binary:logistic"
+    DNNloss <- "binomial"
+  } else if(typ == "count") {
+    RFtype <- "regression"
+    MODfamily <- poisson(link = "log")
+    CTAmethod <- "poisson"
+    GBMdistribution <- "poisson"
+    FDAmethod <- NULL
+    XGBOOSTobjective <- "count:poisson"
+    DNNloss <- "mse"
+  } else if (typ == "multiclass") {
+    RFtype <- "classification"
+    MODfamily <- quasibinomial() #for MARS
+    CTAmethod <- "class"
+    GBMdistribution <- "multinomial"
+    FDAmethod <- "mars"
+    XGBOOSTobjective <- NULL
+    DNNloss <- "softmax"
+  } else if (typ == "ordinal") {
+    RFtype <- "classification"
+    MODfamily <- quasibinomial() 
+    CTAmethod <- "class"
+    GBMdistribution <- "multinomial"
+    FDAmethod <- "mars"
+    XGBOOSTobjective <- NULL
+    DNNloss <- "softmax"
+  } else if (typ == "relative") {
+    RFtype <- "regression"
+    MODfamily <- quasibinomial(link = 'logit')
+    #GAMfamily <- betar(link="logit")
+    CTAmethod <- "poisson"
+    GBMdistribution <- "gaussian"
+    FDAmethod <- NULL
+    XGBOOSTobjective <- "reg:squarederror"
+    DNNloss <- "mse"
+  } else { # data.type = nonbinary or data.type = abundance
+    RFtype <- "regression"
+    MODfamily <- gaussian(link = 'identity')
+    CTAmethod <- "poisson" #??
+    GBMdistribution <- "gaussian"
+    FDAmethod <- NULL
+    XGBOOSTobjective <- "reg:squarederror"
+    DNNloss <- "mse"
+  }
+  
+  ## Correct default options
+  if (mod == "ANN") { 
+    argstmp[["x"]] = NULL
+    argstmp$size = 2
+  }
+  if (mod == "CTA") { argstmp$method <- CTAmethod }
+  if (mod == "DNN") { 
+    argstmp$loss = DNNloss
+    argstmp$plot = FALSE
+    argstmp$verbose = FALSE
+  }
+  if (mod == "FDA") {
+    argstmp$dimension = NULL
+    argstmp$keep.fitted = NULL
+    argstmp$method = FDAmethod
+  }
+  if (mod == "GAM") {
+    argstmp[["x"]] = NULL
+    argstmp[["y"]] = NULL
+    argstmp$family = MODfamily
+    if (pkg == "gam") { argstmp$control = gam::gam.control() }
+    if (pkg == "mgcv") {
+      argstmp$method = "GCV.Cp"
+      argstmp$control = mgcv::gam.control()
+    }
+  }
+  if (mod == "GBM"){
+    argstmp$distribution = GBMdistribution
+  }
+  if (mod == "GLM") {
+    argstmp$family = MODfamily
+    argstmp$control = list()
+  }
+  if (mod == "MAXNET") { argstmp[["f"]] = NULL }
+  if (mod == "MARS") { argstmp$glm = list(family = MODfamily)}
+  if (mod == "RF" || mod == "RFd") {
+    argstmp[["x"]] = NULL
+    argstmp$mtry = 1
+    argstmp$type <- RFtype
+  }
+  if (mod == "XGBOOST") { 
+    argstmp$nrounds = 4
+    argstmp$verbose = 0
+    argstmp$objective = XGBOOSTobjective
+  }
+  
+  argstmp[["..."]] = NULL
+  return(argstmp)
+}
+
+
 
 
 ## --------------------------------------------------------------------------- #
@@ -168,7 +289,7 @@ setMethod('BIOMOD.options.default', signature(mod = 'character', typ = 'characte
 
 ##' @name BIOMOD.options.dataset
 ##' @aliases BIOMOD.options.dataset-class
-##' @author Maya Gueguen
+##' @author Maya Guéguen
 ##' 
 ##' @title \code{\link{bm_ModelingOptions}} output object class
 ##' 
@@ -263,8 +384,6 @@ setGeneric("BIOMOD.options.dataset",
     
     if (!is.null(user.val)) {
       .fun_testIfInherits(TRUE, "user.val", user.val, c("list"))
-      
-      
     } else if (user.base == "bigboss") {
       strategy <- "bigboss" # revert to bigboss options 
     } else {
@@ -274,7 +393,7 @@ setGeneric("BIOMOD.options.dataset",
   
   ## TUNING parameterisation --------------------
   if (strategy == "tuned") {
-    all.fun <- c('avNNet', 'rpart', 'rpart2', 'fda', 'gamSpline', 'bam', 'gam', 'gbm', 'glm', 'earth', 'rf', 'xgbTree')
+    all.fun <- c('avNNet', 'rpart', 'rpart2', 'tune', 'fda', 'gamSpline', 'bam', 'gam', 'gbm', 'glm', 'earth', 'rf', 'xgbTree')
     .fun_testIfIn(TRUE, "tuning.fun", tuning.fun, c(all.fun, "bm_SRE", "ENMevaluate", "maxnet"))
     .fun_testIfInherits(TRUE, "bm.format", bm.format, c("BIOMOD.formated.data", "BIOMOD.formated.data.PA"))
   }
@@ -288,7 +407,6 @@ setGeneric("BIOMOD.options.dataset",
     .fun_testIfInherits(TRUE, "calib.lines", calib.lines, c("matrix"))
     
     expected_CVnames <- c(paste0("_allData_RUN", seq_len(ncol(calib.lines))), expected_CVnames)
-    
     if (!is.null(bm.format) && inherits(bm.format, "BIOMOD.formated.data.PA")) {
       expected_CVnames <- c(expected_CVnames
                             , sapply(1:ncol(bm.format@PA.table)
@@ -413,62 +531,21 @@ setMethod('BIOMOD.options.dataset', signature(strategy = 'character'),
                    , tuning.fun = NULL
                    , bm.format = NULL, calib.lines = NULL)
           {
-            cat('\n\t> ', mod, 'options (datatype:', typ, ', package:', pkg, ', function:', fun, ')...')
+            cat('\n\t> ', mod, 'options ( datatype:', typ, ', package:', pkg, ', function:', fun, ')...')
             
-            args <- .BIOMOD.options.dataset.check.args(strategy = strategy, user.val = user.val, user.base = user.base, tuning.fun = tuning.fun
+            args <- .BIOMOD.options.dataset.check.args(strategy = strategy, user.val = user.val
+                                                       , user.base = user.base, tuning.fun = tuning.fun
                                                        , bm.format = bm.format, calib.lines = calib.lines)
             for (argi in names(args)) { assign(x = argi, value = args[[argi]]) }
             rm(args)
             
+            ## GET default values and correct according to data.type --------------------
             BOM <- BIOMOD.options.default(mod, typ, pkg, fun)
             
             argstmp <- BOM@args.default
-            ## NEEDED TO WORK !!!! ------------------------------------------------------
-            ## SHOULD BE MOVED to place when testing values !! ??
-            if (mod == "ANN") { 
-              argstmp[["x"]] = NULL
-              argstmp$size = 2
-            }
+            argstmp <- .BIOMOD.options.default.correct(mod, typ, pkg, argstmp)
             
-            if (mod == "CTA") { argstmp$method <- "class" }
-            
-            if (mod == "FDA") {
-              argstmp$dimension = NULL
-              argstmp$keep.fitted = NULL
-            }
-            if (mod == "GAM") {
-              argstmp[["x"]] = NULL
-              argstmp[["y"]] = NULL
-              argstmp$family = binomial(link = 'logit')
-              if (pkg == "gam") { argstmp$control = gam::gam.control() }
-              if (pkg == "mgcv") {
-                argstmp$method = "GCV.Cp"
-                argstmp$control = mgcv::gam.control()
-              }
-            }
-            if (mod == "GBM"){
-              argstmp$n.cores = 1
-            }
-            if (mod == "GLM") {
-              argstmp$family = binomial(link = 'logit')
-              argstmp$control = list()
-            }
-            if (mod == "MAXNET") { argstmp[["f"]] = NULL }
-            if (mod == "RF") {
-              argstmp[["x"]] = NULL
-              argstmp$mtry = 1
-              argstmp$type <- "classification"
-            }
-            if (mod == "RFd") {
-              argstmp[["x"]] = NULL
-              argstmp$mtry = 1
-              argstmp$type <- "classification"
-            }
-            if (mod == "XGBOOST") { argstmp$nrounds = 4 }
-            
-            argstmp[["..."]] = NULL
             BOM@args.default <- argstmp
-            ## SHOULD BE MOVED to place when testing values !! ??
             
             ## SPECIFIC case of formula -------------------------------------------------
             if ("formula" %in% BOM@args.names) {
@@ -487,14 +564,14 @@ setMethod('BIOMOD.options.dataset', signature(strategy = 'character'),
                 warning("No bm.format provided. No definition of formula through bm_MakeFormula.")
               }
             }
-            ## ATTENTION : si on ne donne pas bm.format, on n'a pas de formula du coup
             
             ## GET parameter values according to strategy -------------------------------
             if (strategy %in% c("default", "bigboss") || (strategy == "user.defined" && user.base == "bigboss")) {
               if (strategy == "bigboss" || (strategy == "user.defined" && user.base == "bigboss")) {
                 # data(OptionsBigboss) # internal data is readily available
+                # typ.bigboss <- ifelse(typ == "binary", "binary", "nonbinary")
                 
-                val <- OptionsBigboss@options[[paste0(c(mod, typ, pkg, fun), collapse = ".")]]@args.values[['_allData_allRun']]
+                val <- OptionsBigboss@options[[paste0(c(mod, pkg, fun), collapse = ".")]]@args.values[['_allData_allRun']]
                 for (ii in names(val)) {
                   if (ii != "formula") { argstmp[[ii]] <- val[[ii]] }
                 }
@@ -502,10 +579,9 @@ setMethod('BIOMOD.options.dataset', signature(strategy = 'character'),
               
               argsval <- lapply(expected_CVnames, function(xx) { argstmp })
               names(argsval) <- expected_CVnames
-            } 
+            }
             
             if (strategy == "user.defined") {
-              
               if (!("..." %in% BOM@args.names)) {
                 for (CVname in names(user.val)) {
                   .fun_testIfIn(TRUE, paste0("names(user.val[['", CVname, "']])"), names(user.val[[CVname]]), BOM@args.names)
@@ -525,9 +601,17 @@ setMethod('BIOMOD.options.dataset', signature(strategy = 'character'),
               }
               
             } else if (strategy == "tuned") {
+              
+              if(typ == "binary"){
+                metric <- ifelse(mod == "MAXENT", "auc.val.avg", "TSS")
+              } else if (typ %in% c("multiclass", "ordinal")) {
+                metric <- "Accuracy"
+              } else {metric <- "Rsquared"}
+              
+              
               argsval <- bm_Tuning(model = mod, tuning.fun = tuning.fun, do.formula = TRUE, do.stepAIC = TRUE
                                    , bm.options = BOM, bm.format = bm.format, calib.lines = calib.lines
-                                   , metric.eval = ifelse(mod == "MAXENT", "auc.val.avg", "TSS"))
+                                   , metric.eval = metric)
               
               # To avoid problem with ENMeval and "bad closing" of foreach loop
               env <- foreach:::.foreachGlobals
@@ -557,16 +641,17 @@ setMethod('BIOMOD.options.dataset', signature(strategy = 'character'),
 setMethod('show', signature('BIOMOD.options.dataset'),
           function(object)
           {
-            cat('\n\t> ', object@model, 'options (datatype:', object@type, ', package:', object@package, ', function:', object@func, ') :')
+            cat('\n\t> ', object@model, 'options ( datatype:', object@type, ', package:', object@package, ', function:', object@func, ') :')
             # for (arg in object@args.names) { ## NOT working for bigboss for example, if new parameters
             dataset <- ifelse("_allData_allRun" %in% names(object@args.values)
                               , "_allData_allRun", names(object@args.values)[1])
             cat('\n\t   ( dataset', dataset, ')')
-
+            
             for (arg in names(object@args.values[[dataset]])) {
               val.def = capture.output(object@args.default[[arg]])
               val.used = capture.output(object@args.values[[dataset]][[arg]])
-
+              if (arg == 'data') val.used = head(val.used)
+              
               cat('\n\t\t- ', arg, "=", sub("\\[1\\] ", "", val.used))
               if (!is.null(val.used) && !is.null(val.def) &&
                   (length(val.used) != length(val.def) || any(val.used != val.def))) {
@@ -586,7 +671,7 @@ setMethod('print', signature('BIOMOD.options.dataset'),
           function(x, dataset = '_allData_allRun')
           {
             object = x
-            cat('\n\t> ', object@model, 'options (datatype:', object@type, ', package:', object@package, ', function:', object@func, ') :')
+            cat('\n\t> ', object@model, 'options ( datatype:', object@type, ', package:', object@package, ', function:', object@func, ') :')
             dataset <- ifelse(dataset %in% names(object@args.values)
                               , dataset, ifelse("_allData_allRun" %in% names(object@args.values)
                                                 , "_allData_allRun", names(object@args.values)[1]))
@@ -613,7 +698,7 @@ setMethod('print', signature('BIOMOD.options.dataset'),
 
 ##' @name BIOMOD.models.options
 ##' @aliases BIOMOD.models.options-class
-##' @author Maya Gueguen
+##' @author Maya Guéguen
 ##' 
 ##' @title \code{\link{bm_ModelingOptions}} output object class
 ##' 
@@ -692,9 +777,4 @@ setMethod('print', signature('BIOMOD.models.options'),
             .bm_cat()
           }
 )
-
-# test <- .fun_testIfIn(test, "GLM$test", object@GLM$test, c("AIC", "BIC", "none"))
-# test <- .fun_testIfIn(test, "GBM$distribution", object@GBM$distribution, c("bernoulli", "huberized", "multinomial", "adaboost"))
-# test <- .fun_testIfIn(test, "CTA$method", object@CTA$method, c("anova", "poisson", "class", "exp"))
-# test <- .fun_testIfIn(test, "FDA$method", object@FDA$method, c('polyreg', 'mars', 'bruto'))
 

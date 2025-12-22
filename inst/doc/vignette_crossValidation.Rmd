@@ -84,7 +84,7 @@ You will obtain as many ensemble models as cross-validation split, and thus as m
 ### &#10012; Concretely
 
 _All the examples are made with the data of the package._ <br/> 
-_For the beginning of the code, see the [main functions vignette](examples_1_mainFunctions.html)._
+_For the beginning of the code, see the [main functions vignette](examples_1_mainFunctions_BIN.html)._
 
 #### &#9938; Cross-validation
 
@@ -142,7 +142,7 @@ myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
 ```
 <br/>
 
-_You can find more examples in the [Secondary functions vignette](examples_2_secundaryFunctions.html)._
+_You can find more examples in the [Auxiliary functions vignette](examples_2_auxiliaryFunctions.html)._
 
 <br/>
 

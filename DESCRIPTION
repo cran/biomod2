@@ -1,45 +1,29 @@
 Package: biomod2
 Type: Package
 Title: Ensemble Platform for Species Distribution Modeling
-Version: 4.2-6-2
-Date: 2025-01-24
-Authors@R: c(person("Wilfried", "Thuiller", role = c("aut")
-                    , email = "wilfried.thuiller@univ-grenoble-alpes.fr"),
-             person("Damien", "Georges", role = c("aut")),
-             person("Maya", "Gueguen", role = c("aut", "cre")
+Version: 4.3-4-3
+Date: 2025-12-11
+Authors@R: c(person("Maya", "Guéguen", role = c("aut", "cre")
                     , email = "maya.gueguen@univ-grenoble-alpes.fr"),
-             person("Robin", "Engler", role = "aut"),
-             person("Frank", "Breiner", role = "aut"),
-             person("Bruno", "Lafourcade", role = "aut"),
-             person("Remi", "Patin", role = "aut"),
-             person("Helene", "Blancheteau", role = "aut"
-                    , email = "helene.blancheteau@univ-grenoble-alpes.fr"))
-Author: Wilfried Thuiller [aut],
-  Damien Georges [aut],
-  Maya Gueguen [aut, cre],
-  Robin Engler [aut],
-  Frank Breiner [aut],
-  Bruno Lafourcade [aut],
-  Remi Patin [aut],
-  Helene Blancheteau [aut]
-Maintainer: Maya Gueguen <maya.gueguen@univ-grenoble-alpes.fr>
-Contact: Wilfried Thuiller <wilfried.thuiller@univ-grenoble-alpes.fr>,
-        Maya Gueguen <maya.gueguen@univ-grenoble-alpes.fr>, Helene
-        Blancheteau <helene.blancheteau@univ-grenoble-alpes.fr>
+             person("Hélène", "Blancheteau", role = "aut"),
+             person("Rémi", "Lemaire-Patin", role = "aut"),
+             person("Wilfried", "Thuiller", role = c("aut")
+                    , email = "wilfried.thuiller@univ-grenoble-alpes.fr"))
 BugReports: https://github.com/biomodhub/biomod2/issues
 URL: https://biomodhub.github.io/biomod2/
 Description: Functions for species distribution modeling, calibration and evaluation, 
   ensemble of models, ensemble forecasting and visualization. The package permits to run
   consistently up to 10 single models on a presence/absences (resp presences/pseudo-absences)
   dataset and to combine them in ensemble models and ensemble projections. Some bench of other 
-  evaluation and visualization tools are also available within the package.
+  evaluation and visualisation tools are also available within the package.
 Depends: R (>= 4.1)
 Imports: stats, utils, methods, terra (>= 1.6-33), sp, reshape,
         reshape2, abind, foreach, ggplot2, gbm (>= 2.1.3), rpart, MASS,
-        pROC (>= 1.15.0), PresenceAbsence, dplyr
+        pROC (>= 1.15.0), PresenceAbsence, dplyr, rlang, scales
 Suggests: Hmisc, gam, mgcv, earth, maxnet, mda, nnet, randomForest,
-        xgboost, car, caret, dismo, ENMeval, doParallel, raster,
-        ggpubr, testthat, knitr, markdown, tidyterra, ggtext
+        xgboost, cito, torch, car, caret, dismo, ENMeval, doParallel,
+        raster, ggpubr, testthat, knitr, markdown, rmarkdown,
+        tidyterra, ggtext, patchwork, R.utils, paletteer, viridis
 License: GPL-3
 RoxygenNote: 7.3.2
 Encoding: UTF-8
@@ -52,16 +36,21 @@ Collate: 'biomod2-package.R' 'biomod2_globalVariables.R'
         'BIOMOD_EnsembleForecasting.R' 'BIOMOD_EnsembleModeling.R'
         'BIOMOD_FormatingData.R' 'BIOMOD_LoadModels.R'
         'BIOMOD_Modeling.R' 'BIOMOD_Projection.R' 'BIOMOD_RangeSize.R'
-        'DEPRECATED.R' 'bm_BinaryTransformation.R'
+        'BIOMOD_Report.R' 'DEPRECATED.R' 'bm_BinaryTransformation.R'
         'bm_CrossValidation.R' 'bm_FindOptimStat.R' 'bm_MakeFormula.R'
-        'bm_ModelingOptions.R' 'bm_PlotEvalBoxplot.R'
-        'bm_PlotEvalMean.R' 'bm_PlotRangeSize.R'
+        'bm_ModelingOptions.R' 'bm_ModelAnalysis.R'
+        'bm_PlotEvalBoxplot.R' 'bm_PlotEvalMean.R' 'bm_PlotRangeSize.R'
         'bm_PlotResponseCurves.R' 'bm_PlotVarImpBoxplot.R'
-        'bm_PseudoAbsences.R' 'bm_RunModelsLoop.R' 'bm_SRE.R'
-        'bm_SampleBinaryVector.R' 'bm_SampleFactorLevels.R'
+        'bm_PseudoAbsences.R' 'bm_RunModelsLoop.R' 'bm_RangeSize.R'
+        'bm_SRE.R' 'bm_SampleBinaryVector.R' 'bm_SampleFactorLevels.R'
         'bm_Tuning.R' 'bm_VariablesImportance.R' 'zzz.R'
 LazyData: true
 NeedsCompilation: no
-Packaged: 2025-01-24 14:46:34 UTC; gueguema
+Packaged: 2025-12-11 13:54:03 UTC; gueguema
+Author: Maya Guéguen [aut, cre],
+  Hélène Blancheteau [aut],
+  Rémi Lemaire-Patin [aut],
+  Wilfried Thuiller [aut]
+Maintainer: Maya Guéguen <maya.gueguen@univ-grenoble-alpes.fr>
 Repository: CRAN
-Date/Publication: 2025-01-24 18:20:06 UTC
+Date/Publication: 2025-12-22 10:00:02 UTC

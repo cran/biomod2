@@ -1,6 +1,6 @@
 ###################################################################################################
 ##' @name bm_PlotEvalMean
-##' @author Damien Georges, Maya Gueguen
+##' @author Damien Georges, Maya Guéguen
 ##' 
 ##' @title Plot mean evaluation scores
 ##' 
@@ -15,10 +15,9 @@
 ##' @param bm.out a \code{\link{BIOMOD.models.out}} or \code{\link{BIOMOD.ensemble.models.out}} 
 ##' object that can be obtained with the \code{\link{BIOMOD_Modeling}} or 
 ##' \code{\link{BIOMOD_EnsembleModeling}} functions
-##' @param metric.eval a \code{vector} containing evaluation metric names to be used, must 
-##' be among \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, \code{BIAS}, 
-##' \code{ROC}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, \code{CSI}, \code{ETS}, 
-##' \code{BOYCE}, \code{MPA}
+##' @param metric.eval a 2-length \code{vector} containing evaluation metric names to be used, must 
+##' be among the metrics used for \code{bm.out} and that can be obtained with the 
+##' \code{\link{get_evaluations}} function applied to \code{bm.out}
 ##' @param dataset a \code{character} corresponding to the dataset upon which evaluation metrics 
 ##' have been calculated and that is to be represented, must be among \code{calibration}, 
 ##' \code{validation}, \code{evaluation}
@@ -93,10 +92,10 @@
 ##' } else {
 ##' 
 ##'   # Format Data with true absences
-##'   myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-##'                                        expl.var = myExpl,
+##'   myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+##'                                        resp.var = myResp,
 ##'                                        resp.xy = myRespXY,
-##'                                        resp.name = myRespName)
+##'                                        expl.var = myExpl)
 ##' 
 ##'   # Model single models
 ##'   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
@@ -106,7 +105,7 @@
 ##'                                       CV.nb.rep = 2,
 ##'                                       CV.perc = 0.8,
 ##'                                       OPT.strategy = 'bigboss',
-##'                                       metric.eval = c('TSS','ROC'),
+##'                                       metric.eval = c('TSS', 'ROC'),
 ##'                                       var.import = 3,
 ##'                                       seed.val = 42)
 ##' }
@@ -120,8 +119,9 @@
 ##' bm_PlotEvalMean(bm.out = myBiomodModelOut)
 ##' 
 ##' 
-##' @importFrom ggplot2 ggplot aes_string geom_point geom_errorbarh geom_errorbar xlab ylab
+##' @importFrom ggplot2 ggplot geom_point geom_errorbarh geom_errorbar xlab ylab
 ##' theme element_blank element_rect coord_cartesian labs
+##' @importFrom rlang .data
 ##' 
 ##' @export
 ##' 
@@ -142,43 +142,49 @@ bm_PlotEvalMean <- function(bm.out, metric.eval = NULL, dataset = 'calibration',
     scores <- get_evaluations(bm.out)
     scores <- scores[scores$metric.eval %in% metric.eval, ]
     
-    ## Compute mean and sd evaluation scores
-    models_mean = tapply(X = scores[, dataset]
+    if (any(!is.na(scores[, dataset]))) {
+      
+      ## Compute mean and sd evaluation scores
+      models_mean = tapply(X = scores[, dataset]
+                           , INDEX = list(scores$metric.eval, scores[, group.by])
+                           , FUN = mean, na.rm = TRUE)
+      models_sd = tapply(X = scores[, dataset]
                          , INDEX = list(scores$metric.eval, scores[, group.by])
-                         , FUN = mean, na.rm = TRUE)
-    models_sd = tapply(X = scores[, dataset]
-                       , INDEX = list(scores$metric.eval, scores[, group.by])
-                       , FUN = sd, na.rm = TRUE)
-    
-    ## Prepare data table for graphic
-    ggdat <- merge(data.frame(name = colnames(models_mean), t(models_mean)),
-                   data.frame(name = colnames(models_sd), t(models_sd)), 
-                   by = "name" )
-    colnames(ggdat) <- c("name", "mean1", "mean2", "sd1", "sd2")
-    
-    limits1 <- aes_string(xmax = "mean1 + sd1", xmin = "mean1 - sd1", fill = NULL)
-    limits2 <- aes_string(ymax = "mean2 + sd2", ymin = "mean2 - sd2", fill = NULL)
-    
-    ## 2. PLOT graphic ------------------------------------------------------------------------------
-    gg <- ggplot(ggdat, aes_string(x = "mean1", y = "mean2", colour = "name", fill = NULL)) +
-      geom_point() + ## add mean points
-      geom_errorbarh(limits1, height = 0) + ## add horizontal error bars
-      geom_errorbar(limits2, width = 0) + ## add vertical error bars
-      xlab(metric.eval[1]) +
-      ylab(metric.eval[2]) +
-      theme(legend.title = element_blank()
-            , legend.key = element_rect(fill = "white"))
-    
-    if (length(ylim) > 0 | length(xlim) > 0) { ## fix scale
-      gg <- gg + coord_cartesian(ylim = ylim, xlim = xlim)
+                         , FUN = sd, na.rm = TRUE)
+      
+      ## Prepare data table for graphic
+      ggdat <- merge(data.frame(name = colnames(models_mean), t(models_mean)),
+                     data.frame(name = colnames(models_sd), t(models_sd)), 
+                     by = "name" )
+      colnames(ggdat) <- c("name", "mean1", "mean2", "sd1", "sd2")
+      
+      limits1 <- aes(xmax = .data$mean1 + .data$sd1, xmin = .data$mean1 - .data$sd1, fill = NULL)
+      limits2 <- aes(ymax = .data$mean2 + .data$sd2, ymin = .data$mean2 - .data$sd2, fill = NULL)
+      
+      ## 2. PLOT graphic ------------------------------------------------------------------------------
+      gg <- ggplot(ggdat, aes(x = .data$mean1, y = .data$mean2, colour = .data$name, fill = NULL)) +
+        geom_point() + ## add mean points
+        geom_errorbarh(limits1, height = 0) + ## add horizontal error bars
+        geom_errorbar(limits2, width = 0) + ## add vertical error bars
+        labs(x = metric.eval[1], y = metric.eval[2]
+             , subtitle = switch(dataset
+                                 , "calibration" = "Calibration dataset"
+                                 , "validation" = "Validation dataset"
+                                 , "evaluation" = "Evaluation dataset")) +
+        theme(legend.title = element_blank()
+              , legend.key = element_rect(fill = "white"))
+      
+      if (length(ylim) > 0 | length(xlim) > 0) { ## fix scale
+        gg <- gg + coord_cartesian(ylim = ylim, xlim = xlim)
+      }
+      
+      if (length(main) > 0) { ## add title
+        gg <- gg + labs(title = main)
+      }
+      
+      if (do.plot){ print(gg) }
+      return(list(tab = ggdat, plot = invisible(gg)))
     }
-    
-    if (length(main) > 0) { ## add title
-      gg <- gg + labs(title = main)
-    }
-    
-    if (do.plot){ print(gg) }
-    return(list(tab = ggdat, plot = invisible(gg)))
   }
 }
 
@@ -195,8 +201,7 @@ bm_PlotEvalMean <- function(bm.out, metric.eval = NULL, dataset = 'calibration',
   ## 2. Check metric.eval argument --------------------------------------------
   scores <- get_evaluations(bm.out)
   
-  if (!is.null(scores))
-  {
+  if (!is.null(scores)) {
     avail.metrics <- sort(unique(as.character(scores$metric.eval)))
     if (is.null(metric.eval) && length(avail.metrics) > 1) {
       metric.eval <- sort(unique(as.character(scores$metric.eval)))[1:2]

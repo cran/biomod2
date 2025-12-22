@@ -85,10 +85,10 @@ if (file.exists(file.out)) {
 } else {
 
   # Format Data with true absences
-  myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-                                       expl.var = myExpl,
+  myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+                                       resp.var = myResp,
                                        resp.xy = myRespXY,
-                                       resp.name = myRespName)
+                                       expl.var = myExpl)
 
   # Model single models
   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
@@ -98,7 +98,7 @@ if (file.exists(file.out)) {
                                       CV.nb.rep = 2,
                                       CV.perc = 0.8,
                                       OPT.strategy = 'bigboss',
-                                      metric.eval = c('TSS','ROC'),
+                                      metric.eval = c('TSS', 'ROC'),
                                       var.import = 3,
                                       seed.val = 42)
 }
@@ -123,12 +123,14 @@ Other Secondary functions:
 \code{\link{bm_CrossValidation}()},
 \code{\link{bm_FindOptimStat}()},
 \code{\link{bm_MakeFormula}()},
+\code{\link{bm_ModelAnalysis}()},
 \code{\link{bm_ModelingOptions}()},
 \code{\link{bm_PlotEvalMean}()},
 \code{\link{bm_PlotRangeSize}()},
 \code{\link{bm_PlotResponseCurves}()},
 \code{\link{bm_PlotVarImpBoxplot}()},
 \code{\link{bm_PseudoAbsences}()},
+\code{\link{bm_RangeSize}()},
 \code{\link{bm_RunModelsLoop}()},
 \code{\link{bm_SRE}()},
 \code{\link{bm_SampleBinaryVector}()},
@@ -137,13 +139,14 @@ Other Secondary functions:
 \code{\link{bm_VariablesImportance}()}
 
 Other Plot functions: 
+\code{\link{bm_ModelAnalysis}()},
 \code{\link{bm_PlotEvalMean}()},
 \code{\link{bm_PlotRangeSize}()},
 \code{\link{bm_PlotResponseCurves}()},
 \code{\link{bm_PlotVarImpBoxplot}()}
 }
 \author{
-Damien Georges, Maya Gueguen
+Damien Georges, Maya Guéguen
 }
 \concept{Plot functions}
 \concept{Secondary functions}

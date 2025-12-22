@@ -53,7 +53,7 @@
 )
 }
 \arguments{
-\item{sp}{A \code{vector}, a \code{\link[terra:vect]{SpatVector}} without associated 
+\item{sp}{a \code{vector}, a \code{\link[terra:vect]{SpatVector}} without associated 
 data (\emph{if presence-only}), or a \code{\link[terra:vect]{SpatVector}}
 object containing binary data (\code{0} : absence,  \code{1} : presence,
 \code{NA} : indeterminate) for a single species that will be used to 
@@ -229,10 +229,10 @@ myExpl <- terra::crop(myExpl, myExtent)
 
 ## ----------------------------------------------------------------------- #
 # Format Data with pseudo-absences : random method
-myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-                                     expl.var = myExpl,
+myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+                                     resp.var = myResp,
                                      resp.xy = myRespXY,
-                                     resp.name = myRespName,
+                                     expl.var = myExpl,
                                      PA.nb.rep = 4,
                                      PA.strategy = 'random',
                                      PA.nb.absences = 1000)
@@ -254,6 +254,7 @@ Other Toolbox objects:
 \code{\link{BIOMOD.options.dataset}},
 \code{\link{BIOMOD.options.default}},
 \code{\link{BIOMOD.projection.out}},
+\code{\link{BIOMOD.rangesize.out}},
 \code{\link{BIOMOD.stored.data}},
 \code{\link{biomod2_ensemble_model}},
 \code{\link{biomod2_model}}

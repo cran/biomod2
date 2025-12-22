@@ -18,10 +18,9 @@ bm_PlotEvalMean(
 object that can be obtained with the \code{\link{BIOMOD_Modeling}} or 
 \code{\link{BIOMOD_EnsembleModeling}} functions}
 
-\item{metric.eval}{a \code{vector} containing evaluation metric names to be used, must 
-be among \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, \code{BIAS}, 
-\code{ROC}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, \code{CSI}, \code{ETS}, 
-\code{BOYCE}, \code{MPA}}
+\item{metric.eval}{a 2-length \code{vector} containing evaluation metric names to be used, must 
+be among the metrics used for \code{bm.out} and that can be obtained with the 
+\code{\link{get_evaluations}} function applied to \code{bm.out}}
 
 \item{dataset}{a \code{character} corresponding to the dataset upon which evaluation metrics 
 have been calculated and that is to be represented, must be among \code{calibration}, 
@@ -93,10 +92,10 @@ if (file.exists(file.out)) {
 } else {
 
   # Format Data with true absences
-  myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-                                       expl.var = myExpl,
+  myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+                                       resp.var = myResp,
                                        resp.xy = myRespXY,
-                                       resp.name = myRespName)
+                                       expl.var = myExpl)
 
   # Model single models
   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
@@ -106,7 +105,7 @@ if (file.exists(file.out)) {
                                       CV.nb.rep = 2,
                                       CV.perc = 0.8,
                                       OPT.strategy = 'bigboss',
-                                      metric.eval = c('TSS','ROC'),
+                                      metric.eval = c('TSS', 'ROC'),
                                       var.import = 3,
                                       seed.val = 42)
 }
@@ -131,12 +130,14 @@ Other Secondary functions:
 \code{\link{bm_CrossValidation}()},
 \code{\link{bm_FindOptimStat}()},
 \code{\link{bm_MakeFormula}()},
+\code{\link{bm_ModelAnalysis}()},
 \code{\link{bm_ModelingOptions}()},
 \code{\link{bm_PlotEvalBoxplot}()},
 \code{\link{bm_PlotRangeSize}()},
 \code{\link{bm_PlotResponseCurves}()},
 \code{\link{bm_PlotVarImpBoxplot}()},
 \code{\link{bm_PseudoAbsences}()},
+\code{\link{bm_RangeSize}()},
 \code{\link{bm_RunModelsLoop}()},
 \code{\link{bm_SRE}()},
 \code{\link{bm_SampleBinaryVector}()},
@@ -145,13 +146,14 @@ Other Secondary functions:
 \code{\link{bm_VariablesImportance}()}
 
 Other Plot functions: 
+\code{\link{bm_ModelAnalysis}()},
 \code{\link{bm_PlotEvalBoxplot}()},
 \code{\link{bm_PlotRangeSize}()},
 \code{\link{bm_PlotResponseCurves}()},
 \code{\link{bm_PlotVarImpBoxplot}()}
 }
 \author{
-Damien Georges, Maya Gueguen
+Damien Georges, Maya Guéguen
 }
 \concept{Plot functions}
 \concept{Secondary functions}

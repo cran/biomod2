@@ -23,7 +23,7 @@ bm_BinaryTransformation(data, threshold, do.filtering = FALSE)
 \code{\link[terra:rast]{SpatRaster}} containing the data to be converted}
 
 \item{threshold}{a \code{numeric} or a \code{vector} of \code{numeric} corresponding to 
-the threshold used to convert the given data}
+the threshold used to convert the given data (see Details)}
 
 \item{do.filtering}{(\emph{optional, default} \code{FALSE}) \cr 
 A \code{logical} value defining whether filtered data should be returned, or binary one 
@@ -76,6 +76,7 @@ Other Secondary functions:
 \code{\link{bm_CrossValidation}()},
 \code{\link{bm_FindOptimStat}()},
 \code{\link{bm_MakeFormula}()},
+\code{\link{bm_ModelAnalysis}()},
 \code{\link{bm_ModelingOptions}()},
 \code{\link{bm_PlotEvalBoxplot}()},
 \code{\link{bm_PlotEvalMean}()},
@@ -83,6 +84,7 @@ Other Secondary functions:
 \code{\link{bm_PlotResponseCurves}()},
 \code{\link{bm_PlotVarImpBoxplot}()},
 \code{\link{bm_PseudoAbsences}()},
+\code{\link{bm_RangeSize}()},
 \code{\link{bm_RunModelsLoop}()},
 \code{\link{bm_SRE}()},
 \code{\link{bm_SampleBinaryVector}()},

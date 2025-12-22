@@ -3,57 +3,67 @@
 \docType{methods}
 \name{plot,BIOMOD.formated.data,missing-method}
 \alias{plot,BIOMOD.formated.data,missing-method}
-\title{\code{plot} method for \code{\link{BIOMOD.formated.data}} object class}
+\title{\code{plot} method for \code{\link{BIOMOD.formated.data}} and 
+\code{\link{BIOMOD.formated.data.PA}} object class}
 \usage{
 \S4method{plot}{BIOMOD.formated.data,missing}(
   x,
   calib.lines = NULL,
-  plot.type,
-  plot.output,
   PA,
   run,
-  plot.eval,
+  plot.type,
   point.size = 1.5,
-  do.plot = TRUE
+  plot.output,
+  plot.valid = TRUE,
+  plot.eval = TRUE,
+  do.plot = TRUE,
+  has.mask = FALSE,
+  has.mask.eval = FALSE
 )
 }
 \arguments{
 \item{x}{a \code{\link{BIOMOD.formated.data}} or \code{\link{BIOMOD.formated.data.PA}}
-object. Coordinates must be available to be able to use \code{plot}.}
+object. Coordinates must be available to be able to use \code{plot}}
 
 \item{calib.lines}{(\emph{optional, default} \code{NULL}) \cr
-an \code{data.frame} object returned by \code{\link{get_calib_lines}} or 
+A \code{data.frame} object returned by \code{\link{get_calib_lines}} or 
 \code{\link{bm_CrossValidation}} functions, to explore the distribution of calibration 
 and validation datasets}
-
-\item{plot.type}{a \code{character}, either \code{'points'} (\emph{default}) 
-or \code{'raster'} (\emph{if environmental variables were given as a raster}). 
-With \code{plot.type = 'points'} occurrences will be represented as points
-(better when using fine-grained data). With \code{plot.type = 'raster'}
-occurrences will be represented as a raster (better when using coarse-grained
-data)}
-
-\item{plot.output}{a \code{character}, either \code{'facet'} (\emph{default}) 
-or \code{'list'}. \code{plot.output} determines whether plots are returned
-as a single facet with all plots or a \code{list} of individual plots
-(better when there are numerous graphics)}
 
 \item{PA}{(\emph{optional, default} \code{'all'}) \cr 
 If \code{x} is a \code{\link{BIOMOD.formated.data.PA}} object, a \code{vector} 
 containing pseudo-absence set to be represented}
 
 \item{run}{(\emph{optional, default} \code{'all'}) \cr 
-If \code{calib.lines} provided, a \code{vector} containing repetition set to 
+If \code{calib.lines} is provided, a \code{vector} containing repetition set to 
 be represented}
+
+\item{plot.type}{a \code{character} defining how occurrences will be represented. 
+Must be \code{'points'} (\emph{default}, better when using fine-grained data) or 
+\code{'raster'} (\emph{if environmental variables were given as a raster}, better 
+when using coarse-grained data)}
+
+\item{point.size}{(\emph{optional, default} \code{1.5}) \cr 
+If \code{plot.type = 'points'}, a \code{numeric} to adjust the size of points}
+
+\item{plot.output}{a \code{character} defining whether to return a single facet with 
+all plots or a \code{list} of individual plots, must be \code{'facet'} (\emph{default}) 
+or \code{list}}
+
+\item{plot.valid}{(\emph{optional, default} \code{TRUE}) \cr 
+A \code{logical} defining whether validation data should be separated on plot or not}
 
 \item{plot.eval}{(\emph{optional, default} \code{TRUE}) \cr 
 A \code{logical} defining whether evaluation data should be added to the plot or not}
 
-\item{point.size}{a \code{numeric} to adjust the size of points when
-\code{plot.type = 'points'}.}
-
 \item{do.plot}{(\emph{optional, default} \code{TRUE}) \cr 
 A \code{logical} defining whether the plot is to be rendered or not}
+
+\item{has.mask}{\emph{optional, default} \code{FALSE}) \cr 
+A \code{logical} defining whether a mask for calibration data is available or not}
+
+\item{has.mask.eval}{(\emph{optional, default} \code{FALSE}) \cr
+A \code{logical} defining whether a mask for evaluation data is available or not}
 }
 \value{
 a \code{list} with the data used to generate the plot and a
@@ -93,15 +103,15 @@ myExpl <- terra::crop(myExpl, myExtent)
 
 ## ----------------------------------------------------------------------- #
 # Format Data with true absences
-myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-                                     expl.var = myExpl,
+myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+                                     resp.var = myResp,
                                      resp.xy = myRespXY,
-                                     resp.name = myRespName)
+                                     expl.var = myExpl)
 myBiomodData
 plot(myBiomodData)
 
 
 }
 \author{
-Remi Patin
+Rémi Lemaire-Patin, Hélène Blancheteau
 }

@@ -185,7 +185,7 @@ function}
 
 \item{algo}{(\emph{optional, default} \code{NULL}) \cr 
 A \code{character} containing algorithm to be loaded, must be either 
-\code{ANN}, \code{CTA}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
+\code{ANN}, \code{CTA}, \code{DNN}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
 \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{SRE}, \code{XGBOOST}}
 
 \item{model.as.col}{(\emph{optional, default} \code{FALSE}) \cr
@@ -198,7 +198,7 @@ available.}
 
 \item{metric.eval}{(\emph{optional, default} \code{NULL}) \cr 
 A \code{vector} containing evaluation metric to be kept, must be among \code{POD}, 
-\code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, \code{BIAS}, \code{ROC}, \code{TSS}, 
+\code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, \code{BIAS}, \code{AUCroc}, \code{AUCprg}, \code{TSS}, 
 \code{KAPPA}, \code{OR}, \code{ORSS}, \code{CSI}, \code{ETS}, \code{BOYCE}, \code{MPA}}
 
 \item{expl.var}{(\emph{optional, default} \code{NULL}) \cr 
@@ -207,7 +207,7 @@ A \code{vector} containing explanatory variables to be kept, that can be obtaine
 
 \item{merged.by.algo}{(\emph{optional, default} \code{NULL}) \cr 
 A \code{character} containing merged algorithm to be loaded, must be among 
-\code{ANN}, \code{CTA}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
+\code{ANN}, \code{CTA}, \code{DNN}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
 \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{SRE}, \code{XGBOOST}, \code{mergedAlgo}}
 
 \item{merged.by.run}{(\emph{optional, default} \code{NULL}) \cr 
@@ -221,18 +221,18 @@ A \code{vector} containing merged pseudo-absence set to be loaded, must be among
 \item{filtered.by}{(\emph{optional, default} \code{NULL}) \cr 
 A \code{vector} containing evaluation metric selected to filter single models to build the 
 ensemble models, must be among \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, 
-\code{ACCURACY}, \code{BIAS}, \code{ROC}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, 
+\code{ACCURACY}, \code{BIAS}, \code{AUCroc}, \code{AUCprg}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, 
 \code{CSI}, \code{ETS}, \code{BOYCE}, \code{MPA}}
 
 \item{metric.binary}{(\emph{optional, default} \code{NULL}) \cr 
 A \code{vector} containing evaluation metric selected to transform predictions into binary 
 values, must be among \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, 
-\code{BIAS}, \code{ROC}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, \code{CSI}, 
+\code{BIAS}, \code{AUCroc}, \code{AUCprg}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, \code{CSI}, 
 \code{ETS}, \code{BOYCE}, \code{MPA}}
 
 \item{metric.filter}{(\emph{optional, default} \code{NULL}) \cr 
 A \code{vector} containing evaluation metric to filter predictions, must be among \code{POD}, 
-\code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, \code{BIAS}, \code{ROC}, \code{TSS}, 
+\code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, \code{BIAS}, \code{AUCroc}, \code{AUCprg}, \code{TSS}, 
 \code{KAPPA}, \code{OR}, \code{ORSS}, \code{CSI}, \code{ETS}, \code{BOYCE}, \code{MPA}}
 
 \item{\ldots}{(\emph{optional, one or several of the following arguments depending on the selected 
@@ -339,7 +339,8 @@ Other Toolbox functions:
 \code{\link{predict.bm}},
 \code{\link{predict.em}},
 \code{\link{predict2.bm}},
-\code{\link{predict2.em}}
+\code{\link{predict2.em}},
+\code{\link{setters}}
 }
 \author{
 Damien Georges

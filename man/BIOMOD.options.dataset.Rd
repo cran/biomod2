@@ -28,7 +28,7 @@
 }
 \arguments{
 \item{mod}{a \code{character} corresponding to the model name to be computed, must be either 
-\code{ANN}, \code{CTA}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
+\code{ANN}, \code{CTA}, \code{DNN}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
 \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{SRE}, \code{XGBOOST}}
 
 \item{typ}{a \code{character} corresponding to the data type to be used, must be either 
@@ -118,11 +118,12 @@ Other Toolbox objects:
 \code{\link{BIOMOD.models.out}},
 \code{\link{BIOMOD.options.default}},
 \code{\link{BIOMOD.projection.out}},
+\code{\link{BIOMOD.rangesize.out}},
 \code{\link{BIOMOD.stored.data}},
 \code{\link{biomod2_ensemble_model}},
 \code{\link{biomod2_model}}
 }
 \author{
-Maya Gueguen
+Maya Guéguen
 }
 \concept{Toolbox objects}

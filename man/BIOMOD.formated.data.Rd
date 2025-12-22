@@ -16,6 +16,7 @@
   env,
   xy = NULL,
   dir.name = ".",
+  data.type = NULL,
   sp.name = NULL,
   eval.sp = NULL,
   eval.env = NULL,
@@ -31,6 +32,7 @@
   env,
   xy = NULL,
   dir.name = ".",
+  data.type = NULL,
   sp.name = NULL,
   eval.sp = NULL,
   eval.env = NULL,
@@ -44,6 +46,7 @@
   env,
   xy = NULL,
   dir.name = ".",
+  data.type = NULL,
   sp.name = NULL,
   eval.sp = NULL,
   eval.env = NULL,
@@ -57,6 +60,7 @@
   env,
   xy = NULL,
   dir.name = ".",
+  data.type = NULL,
   sp.name = NULL,
   eval.sp = NULL,
   eval.env = NULL,
@@ -69,7 +73,7 @@
 \S4method{show}{BIOMOD.formated.data}(object)
 }
 \arguments{
-\item{sp}{A \code{vector}, a \code{\link[terra:vect]{SpatVector}} without associated 
+\item{sp}{a \code{vector}, a \code{\link[terra:vect]{SpatVector}} without associated 
 data (\emph{if presence-only}), or a \code{\link[terra:vect]{SpatVector}}
 object containing binary data (\code{0} : absence,  \code{1} : presence,
 \code{NA} : indeterminate) for a single species that will be used to 
@@ -90,6 +94,8 @@ containing the corresponding \code{X} and \code{Y} coordinates that will be used
 species distribution model(s)}
 
 \item{dir.name}{a \code{character} corresponding to the modeling folder}
+
+\item{data.type}{a \code{character} corresponding to the data type}
 
 \item{sp.name}{a \code{character} corresponding to the species name}
 
@@ -144,6 +150,8 @@ Class returned by \code{\link{BIOMOD_FormatingData}}, and used by
 \section{Slots}{
 
 \describe{
+\item{\code{data.type}}{a \code{character} corresponding to the data type}
+
 \item{\code{dir.name}}{a \code{character} corresponding to the modeling folder}
 
 \item{\code{sp.name}}{a \code{character} corresponding to the species name}
@@ -161,6 +169,8 @@ studied area}
 
 \item{\code{has.data.eval}}{a \code{logical} value defining whether evaluation data is given}
 
+\item{\code{has.filter.raster}}{a \code{logical} value defining whether filtering have been done or not}
+
 \item{\code{eval.coord}}{(\emph{optional, default} \code{NULL}) \cr 
 A 2-columns \code{data.frame} containing the corresponding \code{X} and \code{Y} 
 coordinates for evaluation data}
@@ -171,6 +181,10 @@ evaluation data}
 
 \item{\code{eval.data.env.var}}{(\emph{optional, default} \code{NULL}) \cr 
 A \code{data.frame} containing explanatory variables for evaluation data}
+
+\item{\code{biomod2.version}}{a \code{character} corresponding to the biomod2 version}
+
+\item{\code{call}}{a \code{language} object corresponding to the call used to obtain the object}
 }}
 
 \examples{
@@ -204,10 +218,10 @@ myExpl <- terra::crop(myExpl, myExtent)
 
 ## ----------------------------------------------------------------------- #
 # Format Data with true absences
-myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-                                     expl.var = myExpl,
+myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+                                     resp.var = myResp,
                                      resp.xy = myRespXY,
-                                     resp.name = myRespName)
+                                     expl.var = myExpl)
 myBiomodData
 plot(myBiomodData)
 summary(myBiomodData)
@@ -227,6 +241,7 @@ Other Toolbox objects:
 \code{\link{BIOMOD.options.dataset}},
 \code{\link{BIOMOD.options.default}},
 \code{\link{BIOMOD.projection.out}},
+\code{\link{BIOMOD.rangesize.out}},
 \code{\link{BIOMOD.stored.data}},
 \code{\link{biomod2_ensemble_model}},
 \code{\link{biomod2_model}}

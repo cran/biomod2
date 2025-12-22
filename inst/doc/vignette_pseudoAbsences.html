@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="generator" content="litedown 0.7">
 <title>Pseudo-absences</title>
 <style type="text/css">
 body {
@@ -11,89 +12,121 @@ body {
   margin: auto;
   padding: 1em;
   line-height: 1.5;
-  box-sizing: border-box;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
-body, .footnotes, code { font-size: .9em; }
+body, .abstract, code, .footnotes, footer, #refs, .caption { font-size: .9em; }
 li li { font-size: .95em; }
-*, *:before, *:after {
-  box-sizing: inherit;
-}
+ul:has(li > input[type="checkbox"]) { list-style: none; padding-left: 1em; }
+*, :before, :after { box-sizing: border-box; }
+a { color: steelblue; }
 pre, img { max-width: 100%; }
-pre, pre:hover {
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-pre code {
-  display: block;
-  overflow-x: auto;
-}
+pre { white-space: pre-wrap; word-break: break-word; }
+pre code { display: block; padding: 1em; overflow-x: auto; }
 code { font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace; }
-:not(pre) > code, code[class] { background-color: #F8F8F8; }
-code.language-undefined, pre > code:not([class]) {
-  background-color: inherit;
-  border: 1px solid #eee;
+:not(pre, th) > code, code[class], div > .caption { background: #f8f8f8; }
+pre > code:is(:not([class]), .language-plain, .language-none, .plain), .box, .figure, .table { background: inherit; border: 1px solid #eee; }
+pre > code {
+  &.message { border-color: #9eeaf9; }
+  &.warning { background: #fff3cd; border-color: #fff3cd; }
+  &.error { background: #f8d7da; border-color: #f8d7da; }
 }
+.fenced-chunk { border-left: 1px solid #666; }
+.code-fence {
+  opacity: .4;
+  border: 1px dashed #666;
+  border-left: 2px solid;
+  &:hover { opacity: inherit; }
+}
+.box, .figure, .table, table { margin: 1em auto; }
+div > .caption { padding: 1px 1em; }
+.figure { p:has(img, svg), pre:has(svg) { text-align: center; } }
+.flex-col { display: flex; justify-content: space-between; }
 table {
-  margin: auto;
-  border-top: 1px solid #666;
+  &:only-child:not(.table > *) { margin: auto; }
+  th, td { padding: 5px; font-variant-numeric: tabular-nums; }
+  thead, tfoot, tr:nth-child(even) { background: whitesmoke; }
+  thead th { border-bottom: 1px solid #ddd; }
+  &:not(.datatable-table) {
+    border-top: 1px solid #666;
+    border-bottom: 1px solid #666;
+  }
 }
-table thead th { border-bottom: 1px solid #ddd; }
-th, td { padding: 5px; }
-thead, tfoot, tr:nth-child(even) { background: #eee; }
 blockquote {
   color: #666;
   margin: 0;
-  padding-left: 1em;
-  border-left: 0.5em solid #eee;
+  padding: 1px 1em;
+  border-left: .5em solid #eee;
 }
 hr, .footnotes::before { border: 1px dashed #ddd; }
 .frontmatter { text-align: center; }
-#TOC .numbered li { list-style: none; }
-#TOC .numbered { padding-left: 0; }
-#TOC .numbered ul { padding-left: 1em; }
-table, .body h2 { border-bottom: 1px solid #666; }
+#TOC {
+  a { text-decoration: none; }
+  ul { list-style: none; padding-left: 1em; }
+  & > ul { padding: 0; }
+  ul ul { border-left: 1px solid lightsteelblue; }
+}
+.body h2 { border-bottom: 1px solid #666; }
 .body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
-.footnote-ref a::before { content: "["; }
-.footnote-ref a::after { content: "]"; }
-section.footnotes::before {
-  content: "";
-  display: block;
-  max-width: 20em;
+.main-number::after { content: "."; }
+span[class^="ref-number-"] { font-weight: bold; }
+.ref-number-fig::after, .ref-number-tab::after { content: ":"; }
+.cross-ref-chp::before { content: "Chapter "; }
+.cross-ref-sec::before { content: "Section "; }
+.cross-ref-fig::before, .ref-number-fig::before { content: "Figure "; }
+.cross-ref-tab::before, .ref-number-tab::before { content: "Table "; }
+.cross-ref-eqn::before, .MathJax_ref:has(mjx-mtext > mjx-c + mjx-c)::before { content: "Equation "; }
+.abstract, #refs {
+  &::before { display: block; margin: 1em auto; font-weight: bold; }
+}
+.abstract::before { content: "Abstract"; text-align: center; }
+#refs::before { content: "Bibliography"; font-size: 1.5em; }
+.ref-paren-open::before { content: "("; }
+.ref-paren-close::after { content: ")"; }
+.ref-semicolon::after { content: "; "; }
+.ref-and::after { content: " and "; }
+.ref-et-al::after { content: " et al."; font-style: italic; }
+.footnote-ref a {
+  &::before { content: "["; }
+  &::after { content: "]"; }
+}
+section.footnotes {
+  margin-top: 2em;
+  &::before { content: ""; display: block; max-width: 20em; }
+}
+.fade {
+  background: repeating-linear-gradient(135deg, white, white 30px, #ddd 32px, #ddd 32px);
+  opacity: 0.6;
 }
 
 @media print {
-  body {
-    font-size: 12pt;
-    max-width: 100%;
-  }
-  tr, img { page-break-inside: avoid; }
+  body { max-width: 100%; }
+  tr, img { break-inside: avoid; }
 }
 @media only screen and (min-width: 992px) {
-  pre { white-space: pre; }
+  body:not(.pagesjs) pre:has(.line-numbers):not(:hover) { white-space: pre; }
 }
 </style>
 </head>
 <body>
 <div class="frontmatter">
 <div class="title"><h1>Pseudo-absences</h1></div>
-<div class="author"><h2></h2></div>
-<div class="date"><h3></h3></div>
 </div>
 <div class="body">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<h3 id="definition"><i class="fa-solid fa-address-card"></i> Definition</h3>
-<p><code>biomod2</code> requires either <strong>presence / absence data</strong>, or <strong>presence-only data supplemented with pseudo-absences</strong> that can be generated with the <a href="../reference/BIOMOD_FormatingData.html"><code>BIOMOD_FormatingData</code></a> function.</p>
-<p><em>Pseudo-absences</em> (sometimes also referred as <em>background data</em>) are NOT to be considered as absences, and rather represent the available environment in the studied area. They will be used to compare observed used environment (represented by the presences) against what is available.</p>
+<h3 id="sec:definition"><i class="fa-solid fa-address-card"></i> Definition</h3>
+<p>When using <code>data.type ='binary'</code> in <a href="../reference/BIOMOD_FormatingData.html">BIOMOD_FormatingData</a>, <code>biomod2</code> requires either <strong>presence / absence data</strong>, or <strong>presence-only data supplemented with pseudo-absences</strong> that can be generated within the same function.</p>
+<p>The general idea behind is to select points in the studied area that will be used to compare observed environment (represented by the presences) against what is available. Those points are NOT to be considered as absences, and rather represent the available environment. From a semantic point of view, several terms can be encountered in the literature for the same purpose : <em>background data</em> when it comes to MaxEnt mostly, <em>pseudo-absences</em>, or <em>quadrature points</em> when applying point-process model (PPM).</p>
 <p><strong>Note</strong> that it is NOT recommended to mix both absence and pseudo-absences data.</p>
-</br>
-<h3 id="how-to-select-them-methods"><i class="fa-solid fa-cookie"></i> How to select them ? - Methods</h3>
-<p>3 different methods are implemented within <code>biomod2</code> to select pseudo-absences (PA) :</p>
+<p><br/><br/></p>
+<h3 id="sec:how-to-select-them-methods"><i class="fa-solid fa-cookie"></i> How to select them ? - Methods</h3>
+<p>3 different methods are implemented within <code>biomod2</code> to select pseudo-absences (PA) through the <a href="../reference/BIOMOD_FormatingData.html">BIOMOD_FormatingData</a> function :</p>
 <ol>
-<li>the <strong>random</strong> method : PA are randomly selected over the studied area (excluding presence points)</li>
-<li>the <strong>disk</strong> method : PA are randomly selected within circles around presence points defined by a minimum and a maximum distance values (defined in the same projection system units as the presence points).</li>
-<li>the <strong>SRE</strong> method : a Surface Range Envelop model is used to randomly select PA outside this envelop, i.e. in conditions (combination of explanatory variables) that differ in a defined proportion from those of presence points.</li>
+<li><strong>random</strong> : PA are randomly selected over the studied area (excluding presence points)</li>
+<li><strong>disk</strong> : PA are randomly selected within circles around presence points defined by a minimum and a maximum distance values (same projection system units as the presence points)</li>
+<li><strong>SRE</strong> : a Surface Range Envelop model is used to randomly select PA outside this envelop, i.e. in conditions (combination of explanatory variables) that differ in a defined proportion from those of presence points</li>
 </ol>
-<p>The selection of one or the other method will depend on a more important and underlying question : <em>how were obtained the dataset presence points ?</em></p>
+<p>The selection of one or the other method will depend on a more important and underlying question : <br/> <em>how were obtained the dataset presence points ?</em></p>
 <ul>
 <li>Was there a sampling design ?</li>
 <li>If yes, what was the objective of the study ? the scope ?</li>
@@ -142,9 +175,9 @@ section.footnotes::before {
 <div style="text-align:center;">
 [See code examples, section **Prepare data & parameters / Pseudo-absences extraction**](examples_1_mainFunctions.html)
 </div>
-<p><strong>Note</strong> that it is also possible for the user to select by himself its own pseudo-absence points, and to give them to the <a href="../reference/BIOMOD_FormatingData.html"><code>BIOMOD_FormatingData</code></a> function.</p>
-</br>
-<h3 id="how-to-select-them-barbet-massin-et-al-2012"><i class="fa-solid fa-vial"></i> How to select them ? - Barbet-Massin et al. 2012</h3>
+<p><strong>Note</strong> that it is also possible for the user to select by himself its own pseudo-absence points.</p>
+<p><br/><br/></p>
+<h3 id="sec:how-to-select-them-barbet-massin-et-al-2012"><i class="fa-solid fa-vial"></i> How to select them ? - Barbet-Massin et al. 2012</h3>
 <p><strong>Barbet-Massin, M.</strong>, Jiguet, F., Albert, C.H. and Thuiller, W. (<strong>2012</strong>), <em>Selecting pseudo-absences for species distribution models: how, where and how many?</em>. <strong>Methods in Ecology and Evolution</strong>, 3: 327-338. <a href="https://doi.org/10.1111/j.2041-210X.2011.00172.x">https://doi.org/10.1111/j.2041-210X.2011.00172.x</a></p>
 <p>This paper tried to estimate the relative effect of method and number of PA on predictive accuracy of common modelling techniques, using :</p>
 <ul>

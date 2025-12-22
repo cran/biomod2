@@ -12,32 +12,39 @@
 ##' 
 ##' @param bm.format a \code{\link{BIOMOD.formated.data}} or \code{\link{BIOMOD.formated.data.PA}} 
 ##' object returned by the \code{\link{BIOMOD_FormatingData}} function
-##' @param weights a \code{matrix} containing observation weights for each pseudo-absence (or 
-##' \code{allData}) dataset
-##' @param calib.lines a \code{matrix} containing calibration / validation lines for each 
-##' pseudo-absence (or \code{allData}) x repetition (or \code{allRun}) combination that can be 
-##' obtained with the \code{\link{bm_CrossValidation}} function
-##' 
 ##' @param modeling.id a \code{character} corresponding to the name (ID) of the simulation set 
 ##' (\emph{a random number by default})
 ##' @param models a \code{vector} containing model names to be computed, must be among 
-##' \code{ANN}, \code{CTA}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
+##' \code{ANN}, \code{CTA}, \code{DNN}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
 ##' \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{RFd}, \code{SRE}, \code{XGBOOST}
 ##' @param models.pa (\emph{optional, default} \code{NULL}) \cr 
 ##' A \code{list} containing for each model a \code{vector} defining which pseudo-absence datasets 
 ##' are to be used, must be among \code{colnames(bm.format@PA.table)}
+##' 
+##' @param calib.lines a \code{matrix} containing calibration / validation lines for each 
+##' pseudo-absence (or \code{allData}) x repetition (or \code{allRun}) combination that can be 
+##' obtained with the \code{\link{bm_CrossValidation}} function
+##' 
 ##' @param bm.options a \code{\link{BIOMOD.models.options}} object returned by the  
 ##' \code{\link{bm_ModelingOptions}} function
+##' 
 ##' @param metric.eval a \code{vector} containing evaluation metric names to be used, must 
-##' be among \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, \code{BIAS}, 
-##' \code{ROC}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, \code{CSI}, \code{ETS}, 
-##' \code{BOYCE}, \code{MPA}
+##' be among \code{AUCroc}, \code{AUCprg}, \code{TSS}, \code{KAPPA}, \code{ACCURACY}, \code{BIAS}, \code{POD}, 
+##' \code{FAR}, \code{POFD}, \code{SR}, \code{CSI}, \code{ETS}, \code{OR}, \code{ORSS}, 
+##' \code{BOYCE}, \code{MPA} (\emph{binary data}), 
+##' \code{RMSE}, \code{MAE}, \code{MSE}, \code{Rsquared}, \code{Rsquared_aj}, \code{Max_error} 
+##' (\emph{abundance / count / relative data}), 
+##' \code{Accuracy}, \code{Recall}, \code{Precision}, \code{F1} (\emph{multiclass/ordinal data})
 ##' @param var.import (\emph{optional, default} \code{NULL}) \cr 
 ##' An \code{integer} corresponding to the number of permutations to be done for each variable to 
 ##' estimate variable importance
+##' 
+##' @param weights a \code{matrix} containing observation weights for each pseudo-absence (or 
+##' \code{allData}) dataset
 ##' @param scale.models (\emph{optional, default} \code{FALSE}) \cr 
 ##' A \code{logical} value defining whether all models predictions should be scaled with a 
 ##' binomial GLM or not
+##' 
 ##' @param nb.cpu (\emph{optional, default} \code{1}) \cr 
 ##' An \code{integer} value corresponding to the number of computing resources to be used to 
 ##' parallelize the single models computation
@@ -48,21 +55,21 @@
 ##' 
 ##' 
 ##' @param model a \code{character} corresponding to the model name to be computed, must be either 
-##' \code{ANN}, \code{CTA}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
-##' \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{RFd}, \code{SRE}, \code{XGBOOST}
+##' \code{ANN}, \code{CTA}, \code{DNN}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
+##' \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{SRE}, \code{XGBOOST}
 ##' @param run.name a \code{character} corresponding to the model to be run (sp.name + pa.id + 
 ##' run.id)
 ##' @param dir.name (\emph{optional, default} \code{.}) \cr
 ##' A \code{character} corresponding to the modeling folder
 ##' @param Data a \code{data.frame} containing observations, coordinates and environmental 
 ##' variables that can be obtained with the \code{get_species_data} function
-##' @param weights.vec a \code{vector} containing observation weights the concerned pseudo-absence 
-##' (or \code{allData}) dataset
 ##' @param calib.lines.vec a \code{vector} containing calibration / validation lines for the 
 ##' concerned pseudo-absence (or \code{allData}) x repetition (or \code{allRun}) combination
 ##' @param eval.data (\emph{optional, default} \code{NULL}) \cr
 ##' A \code{data.frame} containing validation observations, coordinates and environmental 
 ##' variables that can be obtained with the \code{get_eval_data} function
+##' @param weights.vec a \code{vector} containing observation weights the concerned pseudo-absence 
+##' (or \code{allData}) dataset
 ##' 
 ##' 
 ##' 
@@ -81,7 +88,7 @@
 ##' }
 ##' 
 ##' 
-##' @keywords models formula options CTA GLM GBM GAM RF ANN FDA SRE MARS MAXENT XGBOOST
+##' @keywords models formula options CTA GLM GBM GAM RF ANN DNN FDA SRE MARS MAXENT XGBOOST
 ##' 
 ##' 
 ##' @seealso \code{\link[rpart]{rpart}}, \code{\link[rpart]{prune}}, \code{\link[gbm]{gbm}}, 
@@ -104,21 +111,21 @@
 ##'
 ###################################################################################################
 
+
 bm_RunModelsLoop <- function(bm.format,
-                             weights,
-                             calib.lines,
                              modeling.id,
                              models,
                              models.pa,
+                             calib.lines,
                              bm.options,
                              metric.eval,
                              var.import,
-                             scale.models = TRUE,
+                             weights,
+                             scale.models = FALSE,
                              nb.cpu = 1,
                              seed.val = NULL,
                              do.progress = TRUE)
 {
-  
   if (nb.cpu > 1) {
     if (.getOS() != "windows") {
       if (!isNamespaceLoaded("doParallel")) {
@@ -178,26 +185,30 @@ bm_RunModelsLoop <- function(bm.format,
                   run.name = list.data[[ii]]$run.name,
                   dir.name = bm.format@dir.name,
                   modeling.id = modeling.id,
-                  bm.options = bm.options,
                   Data = list.data[[ii]]$data.all,
-                  weights.vec = list.data[[ii]]$weights.vec,
+                  bm.options = bm.options,
                   calib.lines.vec = list.data[[ii]]$calib.lines.vec,
                   eval.data = get_eval_data(bm.format),
                   metric.eval = metric.eval,
                   var.import = var.import,
+                  weights.vec = list.data[[ii]]$weights.vec,
                   scale.models = scale.models,
                   seed.val = seed.val,
                   do.progress = TRUE)
     }
   
-  for (iii in 1:length(out)){
-    if (names(out[[iii]][1]) == "message"){
-      out[[iii]] <- list(model = NULL,
-                       calib.failure = names(list.data)[iii],
-                       pred = NULL,
-                       pred.eval = NULL,
-                       evaluation = NULL,
-                       var.import = NULL)
+  if (length(out) > 0) {
+    for (iii in 1:length(out)){
+      if (length(names(out[[iii]][1])) > 0 && 
+          nchar(names(out[[iii]][1])) > 0 && 
+          names(out[[iii]][1]) == "message") {
+        out[[iii]] <- list(model = NULL,
+                           calib.failure = names(list.data)[iii],
+                           pred = NULL,
+                           pred.eval = NULL,
+                           evaluation = NULL,
+                           var.import = NULL)
+      }
     }
   }
   
@@ -206,23 +217,22 @@ bm_RunModelsLoop <- function(bm.format,
 }
 
 
-# ---------------------------------------------------------------------------- #
+###################################################################################################
 
 ##' 
 ##' @rdname bm_RunModelsLoop
 ##' @export
 ##' 
 
-bm_RunModel <- function(model, run.name, dir.name = '.'
-                        , modeling.id = '', bm.options
-                        , Data, weights.vec, calib.lines.vec
-                        , eval.data = NULL
-                        , metric.eval = c('ROC','TSS','KAPPA'), var.import = 0
-                        , scale.models = TRUE, nb.cpu = 1, seed.val = NULL, do.progress = TRUE)
+bm_RunModel <- function(model, run.name
+                        , dir.name = '.', modeling.id = ''
+                        , Data, bm.options, calib.lines.vec, eval.data = NULL
+                        , metric.eval = c('AUCroc', 'TSS', 'KAPPA'), var.import = 0
+                        , weights.vec, scale.models = FALSE
+                        , nb.cpu = 1, seed.val = NULL, do.progress = TRUE)
 {
   ## 0. Check arguments ---------------------------------------------------------------------------
-  args <- .bm_RunModel.check.args(model, bm.options, Data, weights.vec, calib.lines.vec
-                                  , eval.data, metric.eval, scale.models, seed.val, do.progress)
+  args <- .bm_RunModel.check.args(model, Data, bm.options, calib.lines.vec, metric.eval, weights.vec, scale.models)
   if (is.null(args)) { return(NULL) }
   for (argi in names(args)) { assign(x = argi, value = args[[argi]]) }
   rm(args)
@@ -236,8 +246,9 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
   opt_name <- grep(model, names(bm.options@options), value = TRUE)
   if (length(opt_name) == 1) {
     bm.opt <- bm.options@options[[opt_name]]
-  } else if (model == 'RF'){bm.opt <- bm.options@options[["RF.binary.randomForest.randomForest"]] }
-  else { stop("pitiprobleum") } ## Should not happen now
+  } else if (model == 'RF') {
+    bm.opt <- bm.options@options[["RF.binary.randomForest.randomForest"]]
+  } else { stop("pitiprobleum") } ## Should not happen now
   
   if (length(grep("GAM", model)) == 1) {
     subclass_name <- paste0(bm.opt@model, "_", bm.opt@type, "_", bm.opt@package)
@@ -256,33 +267,42 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
   if (model != "MAXENT") { ## ANY MODEL BUT MAXENT ------------------------------------------------
     
     ## PRELIMINAR ---------------------------------------------------
-
-
-    if (model %in% c("ANN", "MARS", "RF","RFd") & is.null(bm.opt.val$formula)) {
+    if (model %in% c("ANN", "DNN", "MARS", "RF", "RFd") && is.null(bm.opt.val$formula)) { #add all models (not XGBOOST)? 
       bm.opt.val$formula <- bm_MakeFormula(resp.name = resp_name
                                            , expl.var = head(data_env)
                                            , type = 'simple'
                                            , interaction.level = 0)
     }
     
-    if (model == "RF" && !is.null(bm.opt.val$type) && bm.opt.val$type == "classification") {
+    if (!is.null(bm.opt.val$type) && bm.opt.val$type == "classification") {
       # defining occurrences as factor for doing classification and not regression in RF
       data_mod <- data_mod %>% mutate_at(resp_name, factor)
       bm.opt.val$strata <- data_mod[calib.lines.vec, , drop = FALSE][ , resp_name]
-      bm.opt.val$sampsize <- unlist(ifelse(!is.null(bm.opt.val$sampsize), list(bm.opt.val$sampsize), length(data_sp[calib.lines.vec]))) ## TOCHECK !!
-    }
-    if (model == "RFd" && !is.null(bm.opt.val$type) && bm.opt.val$type == "classification") {
-      # defining occurrences as factor for doing classification and not regression in RF
-      data_mod <- data_mod %>% mutate_at(resp_name, factor)
-      bm.opt.val$strata <- data_mod[calib.lines.vec, , drop = FALSE][ , resp_name]
-      nb_presences <- summary(data_mod[calib.lines.vec,resp_name])[["1"]]
-      bm.opt.val$sampsize <- unlist(ifelse(!is.null(bm.opt.val$sampsize), list(bm.opt.val$sampsize), list(c("0" =nb_presences,"1" =nb_presences))))
-      bm.opt.val$replace <- unlist(ifelse(!is.null(bm.opt.val$replace), list(bm.opt.val$replace), TRUE))
+      
+      if (model == "RF" && data.type == "binary") {
+        bm.opt.val$sampsize <- unlist(ifelse(!is.null(bm.opt.val$sampsize)
+                                             , list(bm.opt.val$sampsize)
+                                             , length(data_sp[calib.lines.vec]))) ## TOCHECK !!
+      }
+      if (model == "RFd" && !is.null(bm.opt.val$type) && bm.opt.val$type == "classification") {
+        nb_presences <- summary(data_mod[calib.lines.vec, resp_name])[["1"]]
+        bm.opt.val$sampsize <- unlist(ifelse(!is.null(bm.opt.val$sampsize)
+                                             , list(bm.opt.val$sampsize)
+                                             , list(c("0" = nb_presences, "1" = nb_presences))))
+        bm.opt.val$replace <- unlist(ifelse(!is.null(bm.opt.val$replace), list(bm.opt.val$replace), TRUE))
+      }
     }
     
     ## FILL data parameter ------------------------------------------
-    if (model %in% c("ANN", "CTA", "FDA", "GAM", "GBM", "MARS", "RF","RFd")) {
+    if (model %in% c("ANN", "CTA", "FDA", "GAM", "GBM", "MARS", "RF", "RFd")) {
       bm.opt.val$data <- data_mod[calib.lines.vec, , drop = FALSE]
+    } else if (model == "DNN"){
+      categorical_var <- .get_categorical_names(data_env)
+      to_scale <- setdiff(names(data_env), categorical_var)
+      scale_data <- scale(data_mod[calib.lines.vec, to_scale, drop = FALSE])
+      bm.opt.val$data <- cbind(data_mod[calib.lines.vec, 1, drop = FALSE],                 #resp
+                               as.data.frame(scale_data),                                  #standarzise values
+                               data_mod[calib.lines.vec, categorical_var, drop = FALSE] )  #categorical data
     } else if (model == "GLM") {
       bm.opt.val$data <- cbind(data_mod[calib.lines.vec, , drop = FALSE], 
                                data.frame("weights" = weights.vec[calib.lines.vec]))
@@ -313,18 +333,16 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
     }
     
     ## REORGANIZE order of parameters -------------------------------
-    if (model %in% c("ANN", "MARS", "RF","RFd")) {
+    if (model %in% c("ANN", "DNN", "MARS", "RF", "RFd")) {
       bm.opt.val <- bm.opt.val[c("formula", "data", names(bm.opt.val)[which(!(names(bm.opt.val) %in% c("formula", "data")))])]
     }
     if (model %in% c("FDA")) {
       bm.opt.val$method <- eval(parse(text = paste0("quote(", bm.opt.val$method, ")")))
     }
     
-    
     ## RUN model ----------------------------------------------------
     model.call <- paste0(bm.opt@package, "::", bm.opt@func)
     model.sp <- try(do.call(eval(parse(text = model.call)), bm.opt.val))
-    
     
     ## GET results --------------------------------------------------
     if (!inherits(model.sp, "try-error")) {
@@ -333,7 +351,7 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
         # select best trees --------------- May be done otherway
         tr <- as.data.frame(model.sp$cptable)
         tr$xsum <- tr$xerror + tr$xstd
-        tr <- tr[tr$nsplit > 0,]
+        tr <- tr[tr$nsplit > 0, ]
         if (nrow(tr) > 0) {
           Cp <- tr[tr$xsum == min(tr$xsum), "CP"]
           model.sp <- prune(model.sp, cp = Cp[length(Cp)])
@@ -348,24 +366,29 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
                       model = model.sp,
                       model_name = model_name,
                       model_class = bm.opt@model,
+                      model_type = data.type,
                       model_options = bm.opt, ## bm.opt.val ??
                       dir_name = dir_name,
                       resp_name = resp_name,
                       expl_var_names = expl_var_names,
-                      expl_var_type = get_var_type(data_env[calib.lines.vec, , drop = FALSE]),
-                      expl_var_range = get_var_range(data_env[calib.lines.vec, , drop = FALSE]))
+                      expl_var_type = .get_var_type(data_env[calib.lines.vec, , drop = FALSE]),
+                      expl_var_range = .get_var_range(data_env[calib.lines.vec, , drop = FALSE]))
       if (model == "GAM") { model.bm@model_subclass = subclass_name } ## TO BE ADDED to all models ?
       if (model == "GBM" && exists("best.iter")) { model.bm@n.trees_optim = best.iter }
       if (model == "SRE" && bm.opt.val$do.extrem == TRUE) { model.bm@extremal_conditions = model.sp }
+      if (model == "DNN") {model.bm@scaling_attributes <- attributes(scale_data)}
       # if (model == "SRE") {
       #   model.sp <- as.data.frame(model.sp)
       #   rownames(model.sp) <- rownames(bm.opt.val$expl.var)
       #   model.bm@extremal_conditions = model.sp
       # }
+      if (data.type %in% c("ordinal", "multiclass")){
+        model.bm@levels_factor <- levels(data_sp)
+      }
     }
     
     ## POSTLIMINAR --------------------------------------------------
-    if (model %in% c("RF","RFd") && !is.null(bm.opt.val$type) && bm.opt.val$type == "classification") {
+    if (model %in% c("RF", "RFd") && !is.null(bm.opt.val$type) && bm.opt.val$type == "classification" && data.type == "binary") {
       # canceling occurences class modifications
       data_mod <- data_mod %>% mutate_at(resp_name, function(.x) {
         .x %>% as.character() %>% as.numeric()
@@ -407,9 +430,10 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
         paste0(" outputdirectory=\"", MWD$m_outdir, "\""),
         paste0(" outputformat=logistic "), 
         ifelse(length(categorical_var), paste0(" togglelayertype=", categorical_var, collapse = " "), ""),
+        ifelse(!is.null(bm.opt.val$togglelayerselected), paste0(" togglelayerselected=\"", bm.opt.val$togglelayerselected, "\""), ""),
         " redoifexists")
       vec_x <- names(bm.opt.val)[which(!(names(bm.opt.val) %in% c("path_to_maxent.jar", "memory_allocated", "initial_heap_size",
-                                                                  "max_heap_size", "background_data_dir")))]
+                                                                  "max_heap_size", "background_data_dir", "togglelayerselected")))]
       maxent.args <- c(maxent.args, sapply(vec_x, function(xx) {
         paste0(" ", xx, "=", bm.opt.val[[xx]])
       }))
@@ -439,8 +463,8 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
                         dir_name = dir_name,
                         resp_name = resp_name,
                         expl_var_names = expl_var_names,
-                        expl_var_type = get_var_type(data_env[calib.lines.vec, , drop = FALSE]), 
-                        expl_var_range = get_var_range(data_env[calib.lines.vec, , drop = FALSE]))
+                        expl_var_type = .get_var_type(data_env[calib.lines.vec, , drop = FALSE]), 
+                        expl_var_range = .get_var_range(data_env[calib.lines.vec, , drop = FALSE]))
         
         # for MAXENT predictions are calculated in the same time than models building to save time.
         cat("\n Getting predictions...")
@@ -458,7 +482,7 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
       }
     }
   }
-
+  
   
   ## 1. Create output object ----------------------------------------------------------------------
   ListOut <- list(model = NULL,
@@ -479,20 +503,19 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
     } else if (model == "SRE" && bm.opt.val$do.extrem == FALSE) {
       g.pred <- model.sp
     } else {
-      g.pred <- try(predict(model.bm, data_env, on_0_1000 = TRUE, seedval = seed.val, temp_workdir = temp_workdir))
+      g.pred <- try(predict(model.bm, data_env, on_0_1000 = on_0_1000, seedval = seed.val, temp_workdir = temp_workdir))
     }
-  }
-  
-  if (model == "MAXENT" & !inherits(g.pred, 'try-error')) {
+  } else if (model == "MAXENT" & !inherits(g.pred, 'try-error')) {
     temp_workdir = model.bm@model_output_dir
   }
   
   ## scale or not predictions -------------------------------------------------
-  if (scale.models & !inherits(g.pred, 'try-error')) {
+  if (scale.models && !inherits(g.pred, 'try-error') && data.type == "binary") {
     cat("\n\tModel scaling...")
-    model.bm@scaling_model <- try(.scaling_model(g.pred / 1000, data_sp, weights = weights.vec))
+    if (on_0_1000) { g.pred <- g.pred / 1000 }
+    model.bm@scaling_model <- try(.scaling_model(data.to.rescale = g.pred, data.ref = data_sp, weights = weights.vec))
     ## with weights
-    g.pred <- try(predict(model.bm, data_env, on_0_1000 = TRUE, seedval = seed.val, temp_workdir = temp_workdir))
+    g.pred <- try(predict(model.bm, data_env, on_0_1000 = on_0_1000, seedval = seed.val, temp_workdir = temp_workdir))
   }
   
   ## check predictions existence and stop execution if not ok -----------------
@@ -508,6 +531,21 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
     cat("\n*** single value predicted")
   }
   
+  ## Find good format of prediction for ordinal
+  if (data.type %in% c("ordinal", "multiclass")) {
+    if (model %in% c("GLM", "GAM", "XGBOOST")) {
+      # optimized_pred <- .threshold_ordinal(fit = g.pred, obs = data_sp, metric.eval = "Accuracy")
+      # g.pred <- optimized_pred$fit_factor
+      # model.bm@thresholds_ordinal <- optimized_pred$limits
+      g.pred <- .numeric2factor(g.pred, data_sp, ordered = ifelse(data.type == "ordinal", TRUE, FALSE))
+    } else {
+      g.pred <- factor(g.pred, levels = levels(data_sp), ordered = ifelse(data.type == "ordinal", TRUE, FALSE))
+    }
+  } else {
+    g.pred <- as.numeric(g.pred) 
+  }
+  
+  ## If everything is ok 
   if (test_pred_ok) {
     # keep the model name
     ListOut$model <- model_name
@@ -523,10 +561,19 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
     g.pred.eval <- try(
       predict(model.bm, 
               eval.data[, expl_var_names, drop = FALSE], 
-              on_0_1000 = TRUE, 
+              on_0_1000 = on_0_1000, 
               seedval = seed.val, 
               temp_workdir = temp_workdir)
     )
+    
+    if (data.type %in% c("ordinal", "multiclass")) {
+      if (model %in% c("GLM", "GAM", "XGBOOST")) {
+        g.pred.eval <- .numeric2factor(g.pred.eval, data_sp, ordered = ifelse(data.type == "ordinal", TRUE, FALSE))
+      } 
+      g.pred.eval <- factor(g.pred.eval, levels = levels(data_sp), ordered = ifelse(data.type == "ordinal", TRUE, FALSE))
+    } else {
+      g.pred.eval <- as.numeric(g.pred.eval) 
+    }
   }
   
   ## SAVE predictions ---------------------------------------------------------
@@ -550,18 +597,21 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
       cross.validation <- foreach(xx = metric.eval, .combine = "rbind") %do% {
         bm_FindOptimStat(metric.eval = xx,
                          obs = data_sp[which(eval.lines.vec == FALSE)],
-                         fit = g.pred[which(eval.lines.vec == FALSE)])
+                         fit = g.pred[which(eval.lines.vec == FALSE)],
+                         k = length(expl_var_names))
       }
-      if (max(cross.validation$cutoff,na.rm = T) > 1000) {cat("\n*** Wrong values predicted, please be careful with the results fo this model")}
       colnames(cross.validation)[which(colnames(cross.validation) == "best.stat")] <- "calibration"
+      
+      if (data.type == 'binary' && max(cross.validation$cutoff, na.rm = TRUE) > 1000) {
+        cat("\n*** Wrong values predicted, please be careful with the results fo this model")
+      }
       
       stat.validation <- foreach(xx = metric.eval, .combine = "rbind") %do% {
         bm_FindOptimStat(metric.eval = xx,
                          obs = data_sp[which(eval.lines.vec == TRUE)],
                          fit = g.pred[which(eval.lines.vec == TRUE)],
-                         threshold = cross.validation$cutoff[
-                           which(cross.validation$metric.eval == xx)
-                         ])
+                         threshold = cross.validation$cutoff[which(cross.validation$metric.eval == xx)],
+                         k = length(expl_var_names))
       }
       cross.validation$validation <- stat.validation$best.stat
     } else {
@@ -569,7 +619,8 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
       cross.validation <- foreach(xx = metric.eval, .combine = "rbind") %do% {
         bm_FindOptimStat(metric.eval = xx,
                          obs = data_sp[which(eval.lines.vec == TRUE)],
-                         fit = g.pred[which(eval.lines.vec == TRUE)])
+                         fit = g.pred[which(eval.lines.vec == TRUE)],
+                         k = length(expl_var_names))
       }
       colnames(cross.validation)[which(colnames(cross.validation) == "best.stat")] <- "calibration"
       cross.validation$validation <- NA
@@ -590,7 +641,8 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
         bm_FindOptimStat(metric.eval = xx,
                          obs = eval.data[, 1],
                          fit = g.pred.eval.without.na,
-                         threshold = cross.validation["cutoff", xx])
+                         threshold = cross.validation["cutoff", xx],
+                         k = length(expl_var_names))
       }
       cross.validation$evaluation <- stat.evaluation$best.stat
     } else {
@@ -633,8 +685,8 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
 
 ###################################################################################################
 
-.bm_RunModel.check.args <- function(model, bm.options, Data, weights.vec, calib.lines.vec
-                                    , eval.data, metric.eval, scale.models, seed.val = NULL, do.progress = TRUE)
+.bm_RunModel.check.args <- function(model, Data, bm.options, calib.lines.vec, metric.eval
+                                    , weights.vec, scale.models)
 {
   ## 0. Do some cleaning over Data argument -----------------------------------
   data_sp <- Data[, 1]
@@ -645,14 +697,24 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
   # replace Pseudo absences selected (NA) into true absences (0).. for model computing purpose
   if (sum(is.na(Data[, 1]))) { data_sp[which(is.na(data_sp))] <- 0 }
   
-  ## 1. Check CalibLines argument ---------------------------------------------
+  ## 1. Check data.type -------------------------------------------------------
+  data.type <- bm.options@options[[1]]@type
+  avail.types.list <- c('binary', 'count', 'ordinal', 'relative', 'abundance', 'multiclass')
+  .fun_testIfIn(TRUE, "data.type", data.type, avail.types.list)
+  
+  on_0_1000 <- TRUE
+  if (data.type %in% c("abundance", "count", "multiclass", "ordinal", "relative")) {
+    on_0_1000 <- FALSE
+  }
+  
+  ## 2. Check calib.lines.vec argument ----------------------------------------
   if (any(calib.lines.vec == FALSE)) ## if some lines for evaluation...
   {
     eval.lines.vec <- !calib.lines.vec
     # ...test if there is (pseudo)absences AND presences in evaluation and calibration datasets
-    if (length(which(data_sp[calib.lines.vec] == 0)) == 0 ||
+    if ((length(which(data_sp[calib.lines.vec] == 0)) == 0 & data.type == "binary") ||
         length(which(data_sp[calib.lines.vec] == 0)) == length(calib.lines.vec) ||
-        length(which(data_sp[eval.lines.vec] == 0)) == 0 ||
+        (length(which(data_sp[eval.lines.vec] == 0)) == 0 & data.type == "binary") ||
         length(which(data_sp[eval.lines.vec] == 0)) == length(eval.lines.vec)) {
       warning(paste0(resp_name, " ", model,
                      " was switched off because of no both presences and absences data given"),
@@ -662,7 +724,7 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
   } else { ## evaluation = calibration dataset
     eval.lines.vec <- calib.lines.vec
     # ...test if there is absences AND presences in whole dataset
-    if (length(which(data_sp == 0)) == 0 ||
+    if ((length(which(data_sp == 0)) == 0 & data.type == "binary")  ||
         length(which(data_sp == 0)) == length(data_sp)) {
       warning(paste0(resp_name, " ", model,
                      " was switched off because of no both presences and absences data given (full model)"),
@@ -671,7 +733,20 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
     }
   }
   
-  ## 2. Check weights argument ------------------------------------------------
+  ## 3. Check metric.eval arguments -------------------------------------------
+  metric.eval <- unique(metric.eval)
+  avail.eval.meth.list <- c('TSS', 'KAPPA', 'ACCURACY', 'BIAS', 'POD', 'FAR', 'POFD'
+                            , 'SR', 'CSI', 'ETS', 'HK', 'HSS', 'OR', 'ORSS', 'AUCroc', "AUCprg"
+                            , 'BOYCE', 'MPA'
+                            , 'RMSE', 'MSE', 'MAE', 'Rsquared', 'Rsquared_aj', 'Max_error'
+                            , 'Accuracy', 'Recall', 'Precision', 'F1')
+  if (sum(!(metric.eval %in% avail.eval.meth.list)) > 0) {
+    tmp = which(metric.eval %in% avail.eval.meth.list)
+    warning(paste0(toString(metric.eval[!tmp]), ' were switched off !'), immediate. = TRUE)
+    metric.eval <- metric.eval[tmp]
+  }  
+  
+  ## 4. Check weights.vec argument --------------------------------------------
   if (is.null(weights.vec)) { weights.vec <- rep(1, nrow(Data)) }
   ## These models require data and weights to be in the same dataset
   if (model %in% c('ANN', 'MARS', 'CTA', 'GBM')) { ## TO BE ADDED RF ??
@@ -681,40 +756,30 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
     data_env_w <- data_env
   }
   
-  ## 3. Check scale.models argument -------------------------------------------
+  ## 5. Check scale.models argument -------------------------------------------
   if (model == "SRE") { scale.models <- FALSE } else if (model %in% c("ANN", "FDA")) { scale.models <- TRUE }
   
-
-  ## 4. Check models.eval.meth arguments --------------------------------------
-  metric.eval <- unique(metric.eval)
-  avail.eval.meth.list <- c('POD', 'FAR', 'POFD', 'SR', 'ACCURACY', 'BIAS'
-                            , 'ROC', 'TSS', 'KAPPA', 'OR', 'ORSS', 'CSI'
-                            , 'ETS', 'BOYCE', 'MPA')
-  # .fun_testIfIn(TRUE, "metric.eval", metric.eval, avail.eval.meth.list)
-  if (sum(!(metric.eval %in% avail.eval.meth.list)) > 0) {
-    tmp = which(metric.eval %in% avail.eval.meth.list)
-    warnings(paste0(toString(metric.eval[!tmp]), ' were switched off !'), imediate = TRUE)
-    metric.eval <- metric.eval[tmp]
-  }  
-  
+  ## 6. Get data together -----------------------------------------------------
   data_mod <- cbind(data_sp, data_env_w)
   colnames(data_mod) <- c(resp_name, colnames(data_env_w))
+
   
-  return(list(data_sp = data_sp,
+  return(list(resp_name = resp_name,
+              expl_var_names = expl_var_names,
+              data_sp = data_sp,
               data_xy = data_xy,
               data_env = data_env,
               data_mod = data_mod,
-              weights.vec = weights.vec,
+              data.type = data.type,
+              on_0_1000 = on_0_1000,
               eval.lines.vec = eval.lines.vec,
               metric.eval = metric.eval,
-              eval.data = eval.data,
-              scale.models = scale.models,
-              resp_name = resp_name,
-              expl_var_names = expl_var_names,
-              seed.val = seed.val, ##seedval, CAREFUL really user value now, don't know if it is good thing or not !
-              do.progress = do.progress))
+              weights.vec = weights.vec,
+              scale.models = scale.models))
 }
 
+
+###################################################################################################
 
 .maxent.prepare.workdir <- function(sp_name, run_name = NULL, data_sp, data_xy, data_env
                                     , categorical_var = NULL, calib.lines.vec = NULL, data_eval
@@ -795,3 +860,4 @@ bm_RunModel <- function(model, run.name, dir.name = '.'
   
   return(MWD)
 }
+

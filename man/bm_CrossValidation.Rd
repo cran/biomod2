@@ -114,7 +114,7 @@ repetition (in columns) which observation lines should be used for models calibr
 A \code{logical} value defining whether models should be also calibrated and validated over 
 the whole dataset (and pseudo-absence datasets) or not}
 
-\item{\ldots}{(\emph{optional, one or several of the following arguments depending on the 
+\item{\ldots}{(\emph{optional, one or several of the listed above arguments depending on the 
 selected method})}
 }
 \value{
@@ -147,7 +147,6 @@ The column names are given \emph{a posteriori} of the selection, ranging from 1 
 number of columns. 
 If \code{do.full.models = TRUE}, columns merging runs (and/or pseudo-absence datasets) 
 are added at the end. \cr \cr
-
 
 
 \bold{Concerning cross-validation strategies :}
@@ -195,8 +194,8 @@ Wenger et Olden 2012}). Presences will however be unbalanced over the partitions
 if the presences are clumped on an edge of the study area.
 }
 \examples{
-
 library(terra)
+
 # Load species occurrences (6 species available)
 data(DataSpecies)
 head(DataSpecies)
@@ -221,10 +220,10 @@ myExpl <- terra::crop(myExpl, myExtent)
 
 # --------------------------------------------------------------- #
 # Format Data with true absences
-myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-                                     expl.var = myExpl,
+myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+                                     resp.var = myResp,
                                      resp.xy = myRespXY,
-                                     resp.name = myRespName)
+                                     expl.var = myExpl)
 
 # --------------------------------------------------------------- #
 # Create the different validation datasets
@@ -290,6 +289,7 @@ Other Secondary functions:
 \code{\link{bm_BinaryTransformation}()},
 \code{\link{bm_FindOptimStat}()},
 \code{\link{bm_MakeFormula}()},
+\code{\link{bm_ModelAnalysis}()},
 \code{\link{bm_ModelingOptions}()},
 \code{\link{bm_PlotEvalBoxplot}()},
 \code{\link{bm_PlotEvalMean}()},
@@ -297,6 +297,7 @@ Other Secondary functions:
 \code{\link{bm_PlotResponseCurves}()},
 \code{\link{bm_PlotVarImpBoxplot}()},
 \code{\link{bm_PseudoAbsences}()},
+\code{\link{bm_RangeSize}()},
 \code{\link{bm_RunModelsLoop}()},
 \code{\link{bm_SRE}()},
 \code{\link{bm_SampleBinaryVector}()},
@@ -305,6 +306,6 @@ Other Secondary functions:
 \code{\link{bm_VariablesImportance}()}
 }
 \author{
-Frank Breiner, Maya Gueguen
+Maya Guéguen
 }
 \concept{Secondary functions}

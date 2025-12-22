@@ -2,8 +2,10 @@
 % Please edit documentation in R/bm_FindOptimStat.R
 \name{bm_FindOptimStat}
 \alias{bm_FindOptimStat}
-\alias{bm_CalculateStat}
+\alias{bm_CalculateStatBin}
+\alias{bm_CalculateStatAbund}
 \alias{get_optim_value}
+\alias{bm_CalculateStatAbun}
 \title{Calculate the best score according to a given evaluation method}
 \usage{
 bm_FindOptimStat(
@@ -13,18 +15,24 @@ bm_FindOptimStat(
   nb.thresh = 100,
   threshold = NULL,
   boyce.bg.env = NULL,
-  mpa.perc = 0.9
+  mpa.perc = 0.9,
+  k = NULL
 )
 
 get_optim_value(metric.eval)
 
-bm_CalculateStat(misc, metric.eval = "TSS")
+bm_CalculateStatBin(misc, metric.eval = "TSS")
+
+bm_CalculateStatAbun(metric.eval, obs, fit, k)
 }
 \arguments{
 \item{metric.eval}{a \code{character} corresponding to the evaluation metric to be used, must 
-be either \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, \code{BIAS}, 
-\code{ROC}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, \code{CSI}, \code{ETS}, 
-\code{BOYCE}, \code{MPA}}
+be either \code{AUCroc}, \code{AUCprg}, \code{TSS}, \code{KAPPA}, \code{ACCURACY}, \code{BIAS}, \code{POD}, 
+\code{FAR}, \code{POFD}, \code{SR}, \code{CSI}, \code{ETS}, \code{OR}, \code{ORSS}, 
+\code{BOYCE}, \code{MPA} (\emph{binary data}), 
+\code{RMSE}, \code{MAE}, \code{MSE}, \code{Rsquared}, \code{Rsquared_aj}, \code{Max_error} 
+(\emph{abundance / count / relative data}), 
+\code{Accuracy}, \code{Recall}, \code{Precision}, \code{F1} (\emph{multiclass/ordinal data})}
 
 \item{obs}{a \code{vector} of observed values (binary, \code{0} or \code{1})}
 
@@ -49,6 +57,9 @@ pseudo-absences selected for modeling})
 of correctly classified presences for Minimal Predicted Area (see \code{ecospat.mpa()} in 
 \pkg{ecospat})}
 
+\item{k}{an \code{integer} corresponding to the number of environmental variables used in the 
+model}
+
 \item{misc}{a \code{matrix} corresponding to a contingency table}
 }
 \value{
@@ -68,6 +79,10 @@ convert continuous values into binary ones leading to the best score for a given
 metric.
 }
 \details{
+\emph{Please refer to \href{https://www.cawcr.gov.au/projects/verification/}{CAWRC website 
+("Methods for dichotomous forecasts")} to get detailed description (simple/complex metrics).} \cr
+Optimal value of each method can be obtained with the \code{\link{get_optim_value}} function.
+
 \describe{
   \item{simple}{
   \itemize{
@@ -81,7 +96,8 @@ metric.
   }
   \item{complex}{
   \itemize{
-    \item \code{ROC} : Relative operating characteristic
+    \item \code{AUCroc} : Area Under Curve of Relative operating characteristic
+    \item \code{AUCprg} : Area Under Curve of Precision-Recall-Gain curve
     \item \code{TSS} : True skill statistic (Hanssen and Kuipers discriminant, Peirce's 
     skill score)
     \item \code{KAPPA} : Cohen's Kappa (Heidke skill score)
@@ -98,18 +114,32 @@ metric.
     presences)
   }
   }
+  \item{abundance / count / relative data}{
+  \itemize{
+    \item \code{RMSE} : Root Mean Square Error
+    \item \code{MSE} : Mean Square Error
+    \item \code{MAE} : Mean Absolute Error
+    \item \code{Rsquared} : R squared
+    \item \code{Rsquared_aj} : R squared adjusted
+    \item \code{Max_error} : Maximum error
+  }
+  }
+  \item{multiclass/ordinal data}{
+  \itemize{
+    \item \code{Accuracy} : Accuracy
+    \item \code{Recall} : Macro average Recall
+    \item \code{Precision} : Macro average Precision
+    \item \code{F1} : Macro F1 score
+  }
+  }
 }
   
-Optimal value of each method can be obtained with the \code{\link{get_optim_value}} function. \cr
-\emph{Please refer to the \href{https://www.cawcr.gov.au/projects/verification/}{CAWRC website 
-(section "Methods for dichotomous forecasts")} to get detailed description of each metric.}
-
-Note that if a value is given to \code{threshold}, no optimization will be done., and 
+Note that if a value is given to \code{threshold}, no optimization will be done, and 
 only the score for this threshold will be returned.
 
 The Boyce index returns \code{NA} values for \code{SRE} models because it can not be 
 calculated with binary predictions. \cr This is also the reason why some \code{NA} values 
-might appear for \code{GLM} models if they do not converge.
+might appear for \code{GLM} models if they did not converge.
 }
 \note{
 In order to break dependency loop between packages \pkg{biomod2} and \pkg{ecospat}, 
@@ -157,6 +187,7 @@ Other Secondary functions:
 \code{\link{bm_BinaryTransformation}()},
 \code{\link{bm_CrossValidation}()},
 \code{\link{bm_MakeFormula}()},
+\code{\link{bm_ModelAnalysis}()},
 \code{\link{bm_ModelingOptions}()},
 \code{\link{bm_PlotEvalBoxplot}()},
 \code{\link{bm_PlotEvalMean}()},
@@ -164,6 +195,7 @@ Other Secondary functions:
 \code{\link{bm_PlotResponseCurves}()},
 \code{\link{bm_PlotVarImpBoxplot}()},
 \code{\link{bm_PseudoAbsences}()},
+\code{\link{bm_RangeSize}()},
 \code{\link{bm_RunModelsLoop}()},
 \code{\link{bm_SRE}()},
 \code{\link{bm_SampleBinaryVector}()},

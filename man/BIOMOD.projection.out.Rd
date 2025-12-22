@@ -87,7 +87,11 @@ not}
 \item{\code{type}}{a \code{character} corresponding to the class of the \code{val} slot of the 
 \code{proj.out} slot}
 
+\item{\code{data.type}}{a \code{character} corresponding to the data type}
+
 \item{\code{proj.out}}{a \code{\link{BIOMOD.stored.data}} object}
+
+\item{\code{call}}{a \code{language} object corresponding to the call used to obtain the object}
 }}
 
 \examples{
@@ -126,10 +130,10 @@ if (file.exists(file.out)) {
 } else {
 
   # Format Data with true absences
-  myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-                                       expl.var = myExpl,
+  myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+                                       resp.var = myResp,
                                        resp.xy = myRespXY,
-                                       resp.name = myRespName)
+                                       expl.var = myExpl)
 
   # Model single models
   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
@@ -139,7 +143,7 @@ if (file.exists(file.out)) {
                                       CV.nb.rep = 2,
                                       CV.perc = 0.8,
                                       OPT.strategy = 'bigboss',
-                                      metric.eval = c('TSS','ROC'),
+                                      metric.eval = c('TSS', 'AUCroc'),
                                       var.import = 3,
                                       seed.val = 42)
 }
@@ -170,6 +174,7 @@ Other Toolbox objects:
 \code{\link{BIOMOD.models.out}},
 \code{\link{BIOMOD.options.dataset}},
 \code{\link{BIOMOD.options.default}},
+\code{\link{BIOMOD.rangesize.out}},
 \code{\link{BIOMOD.stored.data}},
 \code{\link{biomod2_ensemble_model}},
 \code{\link{biomod2_model}}

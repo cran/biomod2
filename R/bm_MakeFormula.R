@@ -16,13 +16,14 @@
 ##' @param interaction.level an \code{integer} corresponding to the interaction level depth 
 ##' between explanatory variables
 ##' @param k (\emph{optional, default} \code{NULL}) \cr 
-##' An \code{integer} corresponding to the smoothing parameter value of \code{\link[mgcv]{s}} 
-##' or \code{\link[gam]{s}} arguments (\emph{used only if \code{type = 's_smoother'}})
+##' If \code{type = 's_smoother'}, an \code{integer} corresponding to the smoothing parameter 
+##' value of \code{\link[mgcv]{s}} or \code{\link[gam]{s}} arguments
+##' 
 ##' 
 ##' @return  
 ##' 
-##' A \code{\link[stats]{formula}} class object that can be directly given to most of 
-##' \R statistical models.
+##' A \code{\link[stats]{formula}} class object that can be directly given to most of \R 
+##' statistical models.
 ##' 
 ##' 
 ##' @details
@@ -64,6 +65,7 @@
 ##'
 ###################################################################################################
 
+
 bm_MakeFormula <- function(resp.name, 
                            expl.var, 
                            type = 'simple', 
@@ -71,10 +73,10 @@ bm_MakeFormula <- function(resp.name,
                            k = NULL)
 {
   ## 1. Check parameters --------------------------------------------------------------------------
-  if (!is.character(resp.name) || length(resp.name)!=1) {
+  if (!is.character(resp.name) || length(resp.name) != 1) {
     stop("resp.name must be a unique response variable name")
   }
-  if (!is.data.frame(expl.var) &&  !is.matrix(expl.var)) {
+  if (!is.data.frame(expl.var) && !is.matrix(expl.var)) {
     stop("expl.var must be a data.frame or matrix")
   }
   .fun_testIfIn(TRUE, "type", type, c("simple", "quadratic", "polynomial", "s_smoother"))
@@ -111,9 +113,9 @@ bm_MakeFormula <- function(resp.name,
            for (v in 1:ncol(expl.var)) {
              if (is.numeric(expl.var[, v])) {
                if (is.null(k)) {
-                 junk <- paste(junk, paste0("gam::s(", explVarNames[v], ")"), sep = " + ")
+                 junk <- paste(junk, paste0("s(", explVarNames[v], ")"), sep = " + ")
                } else {
-                 junk <- paste(junk, paste0("gam::s(", explVarNames[v], ",k=", k, ")"), sep = " + ")
+                 junk <- paste(junk, paste0("s(", explVarNames[v], ",k=", k, ")"), sep = " + ")
                }
              } else { junk <- paste(junk, explVarNames[v], sep = " + ") }
            }
@@ -133,3 +135,4 @@ bm_MakeFormula <- function(resp.name,
   ## 4. Return the formula ------------------------------------------------------------------------
   return(as.formula(paste0(resp.name," ~ ", junk)))
 }
+

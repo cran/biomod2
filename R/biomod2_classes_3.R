@@ -54,7 +54,7 @@
 ##' \code{RUN2}, \code{...}, \code{allRun}
 ##' @param algo (\emph{optional, default} \code{NULL}) \cr 
 ##' A \code{character} containing algorithm to be loaded, must be either 
-##' \code{ANN}, \code{CTA}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
+##' \code{ANN}, \code{CTA}, \code{DNN}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
 ##' \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{SRE}, \code{XGBOOST}
 ##' 
 ##' @param merged.by.PA (\emph{optional, default} \code{NULL}) \cr 
@@ -65,17 +65,17 @@
 ##' \code{RUN2}, \code{...}, \code{mergedRun}
 ##' @param merged.by.algo (\emph{optional, default} \code{NULL}) \cr 
 ##' A \code{character} containing merged algorithm to be loaded, must be among 
-##' \code{ANN}, \code{CTA}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
+##' \code{ANN}, \code{CTA}, \code{DNN}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
 ##' \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{SRE}, \code{XGBOOST}, \code{mergedAlgo}
 ##' @param filtered.by (\emph{optional, default} \code{NULL}) \cr 
 ##' A \code{vector} containing evaluation metric selected to filter single models to build the 
 ##' ensemble models, must be among \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, 
-##' \code{ACCURACY}, \code{BIAS}, \code{ROC}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, 
+##' \code{ACCURACY}, \code{BIAS}, \code{AUCroc}, \code{AUCprg}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, 
 ##' \code{CSI}, \code{ETS}, \code{BOYCE}, \code{MPA}
 ##' 
 ##' @param metric.eval (\emph{optional, default} \code{NULL}) \cr 
 ##' A \code{vector} containing evaluation metric to be kept, must be among \code{POD}, 
-##' \code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, \code{BIAS}, \code{ROC}, \code{TSS}, 
+##' \code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, \code{BIAS}, \code{AUCroc}, \code{AUCprg}, \code{TSS}, 
 ##' \code{KAPPA}, \code{OR}, \code{ORSS}, \code{CSI}, \code{ETS}, \code{BOYCE}, \code{MPA}
 ##' @param expl.var (\emph{optional, default} \code{NULL}) \cr 
 ##' A \code{vector} containing explanatory variables to be kept, that can be obtained with the 
@@ -84,11 +84,11 @@
 ##' @param metric.binary (\emph{optional, default} \code{NULL}) \cr 
 ##' A \code{vector} containing evaluation metric selected to transform predictions into binary 
 ##' values, must be among \code{POD}, \code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, 
-##' \code{BIAS}, \code{ROC}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, \code{CSI}, 
+##' \code{BIAS}, \code{AUCroc}, \code{AUCprg}, \code{TSS}, \code{KAPPA}, \code{OR}, \code{ORSS}, \code{CSI}, 
 ##' \code{ETS}, \code{BOYCE}, \code{MPA}
 ##' @param metric.filter (\emph{optional, default} \code{NULL}) \cr 
 ##' A \code{vector} containing evaluation metric to filter predictions, must be among \code{POD}, 
-##' \code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, \code{BIAS}, \code{ROC}, \code{TSS}, 
+##' \code{FAR}, \code{POFD}, \code{SR}, \code{ACCURACY}, \code{BIAS}, \code{AUCroc}, \code{AUCprg}, \code{TSS}, 
 ##' \code{KAPPA}, \code{OR}, \code{ORSS}, \code{CSI}, \code{ETS}, \code{BOYCE}, \code{MPA}
 ##' 
 ##' @param model.as.col (\emph{optional, default} \code{FALSE}) \cr
@@ -249,6 +249,7 @@ setMethod('get_species_data', signature('BIOMOD.formated.data.PA'), function(obj
   return(tab.sp)
 })
 
+
 ## get_eval_data.BIOMOD.formated.data ---------------------------------------------------
 ##' 
 ##' @rdname getters.out
@@ -264,6 +265,7 @@ setMethod('get_eval_data', signature('BIOMOD.formated.data'), function(obj) {
     return(tab.sp)
   } else { return(NULL) }
 })
+
 
 
 ## -------------------------------------------------------------------------- #
@@ -287,6 +289,7 @@ setMethod('get_eval_data', signature('BIOMOD.formated.data'), function(obj) {
 ##'   simulation set
 ##' @slot dir.name a \code{character} corresponding to the modeling folder
 ##' @slot sp.name a \code{character} corresponding to the species name
+##' @slot data.type a \code{character} corresponding to the data type
 ##' @slot expl.var.names a \code{vector} containing names of explanatory
 ##'   variables
 ##' @slot models.computed a \code{vector} containing names of computed models
@@ -312,6 +315,7 @@ setMethod('get_eval_data', signature('BIOMOD.formated.data'), function(obj) {
 ##' @slot models.prediction.eval a \code{\link{BIOMOD.stored.data.frame-class}}
 ##'   object containing models predictions for evaluation data
 ##' @slot link a \code{character} containing the file name of the saved object
+##' @slot call a \code{language} object corresponding to the call used to obtain the object
 ##'
 ##' @param object a \code{\link{BIOMOD.models.out}} object
 ##' 
@@ -355,10 +359,10 @@ setMethod('get_eval_data', signature('BIOMOD.formated.data'), function(obj) {
 ##' 
 ##' ## ----------------------------------------------------------------------- #
 ##' # Format Data with true absences
-##' myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-##'                                      expl.var = myExpl,
+##' myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+##'                                      resp.var = myResp,
 ##'                                      resp.xy = myRespXY,
-##'                                      resp.name = myRespName)
+##'                                      expl.var = myExpl)
 ##' 
 ##' ## ----------------------------------------------------------------------- #
 ##' # Model single models
@@ -369,7 +373,7 @@ setMethod('get_eval_data', signature('BIOMOD.formated.data'), function(obj) {
 ##'                                     CV.nb.rep = 2,
 ##'                                     CV.perc = 0.8,
 ##'                                     OPT.strategy = 'bigboss',
-##'                                     metric.eval = c('TSS','ROC'),
+##'                                     metric.eval = c('TSS', 'AUCroc'),
 ##'                                     var.import = 3,
 ##'                                     seed.val = 42)
 ##' myBiomodModelOut
@@ -387,6 +391,7 @@ setClass("BIOMOD.models.out",
          representation(modeling.id = 'character',
                         dir.name = 'character',
                         sp.name = 'character',
+                        data.type = 'character',
                         expl.var.names = 'character',
                         models.computed = 'character',
                         models.failed = 'character',
@@ -399,7 +404,8 @@ setClass("BIOMOD.models.out",
                         variables.importance = 'BIOMOD.stored.data.frame',
                         models.prediction = 'BIOMOD.stored.data.frame',
                         models.prediction.eval = 'BIOMOD.stored.data.frame',
-                        link = 'character'),
+                        link = 'character',
+                        call = 'ANY'),
          prototype(modeling.id = as.character(format(Sys.time(), "%s")),
                    dir.name = '.',
                    sp.name = '',
@@ -407,7 +413,7 @@ setClass("BIOMOD.models.out",
                    models.computed = '',
                    models.failed = '',
                    has.evaluation.data = FALSE,
-                   scale.models = TRUE,
+                   scale.models = FALSE,
                    formated.input.data = new('BIOMOD.stored.formated.data'),
                    calib.lines = new('BIOMOD.stored.data.frame'),
                    models.options = new('BIOMOD.stored.options'),
@@ -415,7 +421,8 @@ setClass("BIOMOD.models.out",
                    variables.importance = new('BIOMOD.stored.data.frame'),
                    models.prediction = new('BIOMOD.stored.data.frame'),
                    models.prediction.eval = new('BIOMOD.stored.data.frame'),
-                   link = ''),
+                   link = '',
+                   call = ''),
          validity = function(object){ return(TRUE) } )
 
 # BIOMOD.stored.models.out is defined here and not with outher BIOMOD.stored.data
@@ -428,7 +435,7 @@ setClass("BIOMOD.stored.models.out",
          contains = "BIOMOD.stored.data",
          representation(val = 'BIOMOD.models.out'),
          prototype(val = NULL),
-         validity = function(object){ return(TRUE) } )
+         validity = function(object) { return(TRUE) })
 
 
 # 4.3 Other functions ------------------------------------------------------
@@ -439,18 +446,16 @@ setClass("BIOMOD.stored.models.out",
 ##' @export
 ##' 
 
-setMethod('show', signature('BIOMOD.models.out'),
-          function(object) {
-            .bm_cat("BIOMOD.models.out")
-            cat("\nModeling folder :", object@dir.name, fill = .Options$width)
-            cat("\nSpecies modeled :", object@sp.name, fill = .Options$width)
-            cat("\nModeling id :", object@modeling.id, fill = .Options$width)
-            cat("\nConsidered variables :", object@expl.var.names, fill = .Options$width)
-            cat("\n\nComputed Models : ", object@models.computed, fill = .Options$width)
-            cat("\n\nFailed Models : ", object@models.failed, fill = .Options$width)
-            .bm_cat()
-          }
-)
+setMethod('show', signature('BIOMOD.models.out'), function(object) {
+  .bm_cat("BIOMOD.models.out")
+  cat("\nModeling directory (dir.name) :", object@dir.name, fill = .Options$width)
+  cat("\nModeled species (sp.name) :", object@sp.name, fill = .Options$width)
+  cat("\nModeling id (modeling.id) :", object@modeling.id, fill = .Options$width)
+  cat("\nExplanatory variables (expl.var.names) :", object@expl.var.names, fill = .Options$width)
+  cat("\n\nComputed models (models.computed) : ", object@models.computed, fill = .Options$width)
+  cat("\nFailed models (models.failed) : ", object@models.failed, fill = .Options$width)
+  .bm_cat()
+})
 
 ## get_options.BIOMOD.models.out ---------------------------------------------------
 ##' 
@@ -458,12 +463,10 @@ setMethod('show', signature('BIOMOD.models.out'),
 ##' @export
 ##' 
 
-setMethod("get_options", "BIOMOD.models.out",
-          function(obj) {
-            model_options <- load_stored_object(obj@models.options)
-            return(model_options)
-          }
-)
+setMethod("get_options", "BIOMOD.models.out", function(obj) {
+  model_options <- load_stored_object(obj@models.options)
+  return(model_options)
+})
 
 ## get_calib_lines.BIOMOD.models.out ---------------------------------------------------
 ##' 
@@ -472,7 +475,8 @@ setMethod("get_options", "BIOMOD.models.out",
 ##'
 
 setMethod("get_calib_lines", "BIOMOD.models.out",
-          function(obj, as.data.frame = FALSE, PA = NULL, run = NULL) {
+          function(obj, as.data.frame = FALSE, PA = NULL, run = NULL)
+          {
             out <- load_stored_object(obj@calib.lines)
             
             if (!is.null(out) && as.data.frame == TRUE) {
@@ -496,20 +500,22 @@ setMethod("get_calib_lines", "BIOMOD.models.out",
 ##' 
 
 setMethod("get_formal_data", "BIOMOD.models.out",
-          function(obj, subinfo = NULL) {
+          function(obj, subinfo = NULL)
+          {
             if (is.null(subinfo)) {
               return(load_stored_object(obj@formated.input.data))
             } else if (subinfo == 'MinMax') {
               env = as.data.frame(get_formal_data(obj)@data.env.var)
-              MinMax = foreach(i = 1:ncol(env)) %do% {
-                x = env[, i]
-                if (is.numeric(x)) {
-                  return(list(min = min(x, na.rm = TRUE)
-                              , max = max(x, na.rm = TRUE)))
-                } else if (is.factor(x)) {
-                  return(list(levels = levels(x)))
+              MinMax = foreach(i = 1:ncol(env)) %do%
+                {
+                  x = env[, i]
+                  if (is.numeric(x)) {
+                    return(list(min = min(x, na.rm = TRUE)
+                                , max = max(x, na.rm = TRUE)))
+                  } else if (is.factor(x)) {
+                    return(list(levels = levels(x)))
+                  }
                 }
-              }
               names(MinMax) = colnames(env)
               return(MinMax)
             } else if (subinfo == 'expl.var') {
@@ -517,9 +523,9 @@ setMethod("get_formal_data", "BIOMOD.models.out",
             } else if (subinfo == 'expl.var.names') {
               return(obj@expl.var.names)
             } else if (subinfo == 'resp.var') {
-              return(as.numeric(get_formal_data(obj)@data.species))
+              return(get_formal_data(obj)@data.species)
             } else if (subinfo == 'eval.resp.var') {
-              return(as.numeric(get_formal_data(obj)@eval.data.species))
+              return(get_formal_data(obj)@eval.data.species)
             } else if (subinfo == 'eval.expl.var') {
               return(as.data.frame(get_formal_data(obj)@eval.data.env.var))
             } else { stop("Unknown subinfo tag")}
@@ -536,8 +542,8 @@ setMethod("get_formal_data", "BIOMOD.models.out",
 
 setMethod("get_predictions", "BIOMOD.models.out",
           function(obj, evaluation = FALSE
-                   , full.name = NULL, PA = NULL, run = NULL, algo = NULL,
-                   model.as.col = FALSE)
+                   , full.name = NULL, PA = NULL, run = NULL, algo = NULL
+                   , model.as.col = FALSE)
           {
             if (evaluation && (!obj@has.evaluation.data)) {
               warning("!   Calibration data returned because no evaluation data available")
@@ -552,7 +558,7 @@ setMethod("get_predictions", "BIOMOD.models.out",
             }
             
             # subselection of models_selected
-            keep_lines <- .filter_outputs.df(out, subset.list = list(full.name =  full.name, PA = PA
+            keep_lines <- .filter_outputs.df(out, subset.list = list(full.name = full.name, PA = PA
                                                                      , run = run, algo = algo))
             out <- out[keep_lines, ]
             if (model.as.col) {
@@ -568,9 +574,10 @@ setMethod("get_predictions", "BIOMOD.models.out",
 ##' 
 
 setMethod("get_built_models", "BIOMOD.models.out",
-          function(obj, full.name = NULL, PA = NULL, run = NULL, algo = NULL) { 
+          function(obj, full.name = NULL, PA = NULL, run = NULL, algo = NULL)
+          { 
             out <- obj@models.computed
-            keep_ind <- .filter_outputs.vec(out, obj.type = "mod", subset.list = list(full.name =  full.name, PA = PA
+            keep_ind <- .filter_outputs.vec(out, obj.type = "mod", subset.list = list(full.name = full.name, PA = PA
                                                                                       , run = run, algo = algo))
             out <- out[keep_ind]
             return(out)
@@ -648,7 +655,9 @@ setMethod("get_variables_importance", "BIOMOD.models.out",
 ##' @slot models.out a \code{\link{BIOMOD.stored.data}} object
 ##' @slot type a \code{character} corresponding to the class of the \code{val} slot of the 
 ##' \code{proj.out} slot
+##' @slot data.type a \code{character} corresponding to the data type
 ##' @slot proj.out a \code{\link{BIOMOD.stored.data}} object
+##' @slot call a \code{language} object corresponding to the call used to obtain the object
 ##' 
 ##' @param x a \code{\link{BIOMOD.projection.out}} object
 ##' @param object a \code{\link{BIOMOD.projection.out}} object
@@ -714,10 +723,10 @@ setMethod("get_variables_importance", "BIOMOD.models.out",
 ##' } else {
 ##' 
 ##'   # Format Data with true absences
-##'   myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-##'                                        expl.var = myExpl,
+##'   myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+##'                                        resp.var = myResp,
 ##'                                        resp.xy = myRespXY,
-##'                                        resp.name = myRespName)
+##'                                        expl.var = myExpl)
 ##' 
 ##'   # Model single models
 ##'   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
@@ -727,7 +736,7 @@ setMethod("get_variables_importance", "BIOMOD.models.out",
 ##'                                       CV.nb.rep = 2,
 ##'                                       CV.perc = 0.8,
 ##'                                       OPT.strategy = 'bigboss',
-##'                                       metric.eval = c('TSS','ROC'),
+##'                                       metric.eval = c('TSS', 'AUCroc'),
 ##'                                       var.import = 3,
 ##'                                       seed.val = 42)
 ##' }
@@ -770,16 +779,20 @@ setClass("BIOMOD.projection.out",
                         models.projected = 'character',
                         models.out = 'BIOMOD.stored.data',
                         type = 'character',
-                        proj.out = 'BIOMOD.stored.data'),
+                        data.type = 'character',
+                        proj.out = 'BIOMOD.stored.data',
+                        call = 'ANY'),
          prototype(modeling.id = '',
                    proj.name = '',
                    dir.name = '.',
                    sp.name = '',
                    expl.var.names = '',
                    coord = data.frame(),
-                   scale.models = TRUE,
+                   scale.models = FALSE,
                    models.projected = '',
-                   type = ''),
+                   type = '',
+                   data.type = 'binary',
+                   call = ''),
          validity = function(object){ return(TRUE) })
 
 
@@ -792,101 +805,114 @@ setClass("BIOMOD.projection.out",
 ##' @param maxcell maximum number of cells to plot. Argument transmitted to \code{\link[terra]{plot}}.
 ##' 
 
-setMethod(
-  'plot', signature(x = 'BIOMOD.projection.out', y = "missing"),
-  function(x,
-           coord = NULL,
-           plot.output, # list or facet
-           do.plot = TRUE, # whether plots are displayed or just returned
-           std = TRUE, # limits between 0 and 1000 or between 0 and max
-           scales, # transmitted to facet_wrap
-           size, # size of points transmitted to geom_point
-           maxcell = 5e5, # max number of cells to plot. Transmitted to terra::plot
-           ...
-  ){
-    # extraction of projection happens in argument check
-    args <- .plot.BIOMOD.projection.out.check.args(x,
-                                                   coord = coord,
-                                                   plot.output = plot.output, # list or facet
-                                                   do.plot = do.plot,
-                                                   std = std,
-                                                   scales = scales,
-                                                   size = size,
-                                                   maxcell = maxcell,
-                                                   ...)
-    for (argi in names(args)) { 
-      assign(x = argi, value = args[[argi]]) 
-    }
-    rm(args)
-    
-    
-    ### Plot SpatRaster ---------------------------------------------------------
-    
-    if (inherits(proj,"SpatRaster")) {
-      maxi <- ifelse(max(global(proj, "max", na.rm = TRUE)$max) > 1, 1000, 1) 
-      if (std) {
-        limits <-  c(0,maxi)
-      } else {
-        limits <- NULL
-      }
-      
-      if (plot.output == "facet") {
-        g <- ggplot() +
-          tidyterra::geom_spatraster(data = proj,
-                                     maxcell = maxcell) +
-          scale_fill_viridis_c(NULL, limits = limits) +
-          facet_wrap(~lyr)
-      } else if (plot.output == "list") {
-        g <- lapply(names(proj), function(thislayer){
-          ggplot() +
-            tidyterra::geom_spatraster(data = subset(proj, thislayer),
-                                       maxcell = maxcell) +
-            scale_fill_viridis_c(NULL, limits = limits) +
-            ggtitle(thislayer)
-        })
-      }
-    } else {
-      ### Plot data.frame  -----------------------------------------------------
-      maxi <- ifelse(max(proj$pred) > 1, 1000, 1) 
-      if (std) {
-        limits <-  c(0,maxi)
-      } else {
-        limits <- NULL
-      }
-      plot.df <- merge(proj, coord, by = c("points"))
-      if(plot.output == "facet"){
-        g <- ggplot(plot.df)+
-          geom_point(aes(x = x, y = y, color = pred), size = size) +
-          scale_colour_viridis_c(NULL, limits = limits) +
-          facet_wrap(~full.name)
-      } else if (plot.output == "list"){
-        g <- lapply(unique(plot.df$full.name), function(thislayer){
-          ggplot(subset(plot.df, plot.df$full.name == thislayer)) +
-            geom_point(aes(x = x, y = y, color = pred), size = size) +
-            scale_colour_viridis_c(NULL, limits = limits) +
-            ggtitle(thislayer)
-        })
-      }
-      
-    }
-    if (do.plot) {
-      show(g)
-    } 
-    return(g)
-  }
+setMethod('plot', signature(x = 'BIOMOD.projection.out', y = "missing"),
+          function(x,
+                   coord = NULL,
+                   plot.output, # list or facet
+                   do.plot = TRUE, # whether plots are displayed or just returned
+                   std = TRUE, # limits between 0 and 1000 or between 0 and max
+                   scales, # transmitted to facet_wrap
+                   size, # size of points transmitted to geom_point
+                   maxcell = 5e5, # max number of cells to plot. Transmitted to terra::plot
+                   ...)
+          {
+            # extraction of projection happens in argument check
+            args <- .plot.BIOMOD.projection.out.check.args(x,
+                                                           coord = coord,
+                                                           plot.output = plot.output, # list or facet
+                                                           do.plot = do.plot,
+                                                           std = std,
+                                                           scales = scales,
+                                                           size = size,
+                                                           maxcell = maxcell,
+                                                           ...)
+            for (argi in names(args)) { assign(x = argi, value = args[[argi]]) }
+            rm(args)
+            
+            
+            ### Plot SpatRaster ---------------------------------------------------------
+            
+            if (inherits(proj,"SpatRaster")) {
+              maxi <- ifelse(max(global(proj, "max", na.rm = TRUE)$max) > 1, 1000, 1)
+              if (x@data.type != "binary") { maxi <- max(global(proj, "max", na.rm = TRUE)$max) }
+              if (std) {
+                limits <-  c(0, maxi)
+              } else {
+                limits <- NULL
+              }
+              
+              if (x@data.type %in% c("multiclass", "ordinal") && !(all(grepl("EMfreq|EMcv", names(proj))))){
+                if (any(grepl("EMfreq|EMcv", names(proj)))){ # But EMmode, EMmean, ... before 
+                  proj <- c(proj[[!grepl("EMfreq|EMcv", names(proj))]], proj[[grepl("EMfreq|EMcv", names(proj))]])
+                }
+                args_scale_fill <- list(NULL, limits = NULL, discrete = TRUE, na.translate = FALSE)
+              } else {
+                args_scale_fill <- list(NULL, limits = limits, discrete = FALSE)
+              }
+            
+              
+              if (plot.output == "facet") {
+                g <- ggplot() +
+                  tidyterra::geom_spatraster(data = proj,
+                                             maxcell = maxcell) +
+                  #scale_fill_viridis(NULL, limits = limits, discrete = discrete, na.value = "transparent") +
+                  do.call(viridis::scale_fill_viridis, args_scale_fill) +
+                  facet_wrap(~lyr)
+              } else if (plot.output == "list") {
+                g <- lapply(names(proj), function(thislayer){
+                  ggplot() +
+                    tidyterra::geom_spatraster(data = subset(proj, thislayer),
+                                               maxcell = maxcell) +
+                    #scale_fill_viridis(NULL, limits = limits, discrete = discrete, na.value = "transparent") +
+                    do.call(viridis::scale_fill_viridis, args_scale_fill) +
+                    ggtitle(thislayer)
+                })
+              }
+            } else {
+              ### Plot data.frame  -----------------------------------------------------
+              maxi <- ifelse(max(proj$pred) > 1, 1000, 1)
+              if (x@data.type != "binary") { maxi <- max(proj$pred, na.rm = TRUE) }
+              if (std) {
+                limits <-  c(0,maxi)
+              } else {
+                limits <- NULL
+              }
+              
+              if (x@data.type %in% c("multiclass", "ordinal") && !(all(grepl("EMfreq|EMcv", names(proj))))){
+                args_scale_fill <- list(NULL, limits = NULL, discrete = TRUE, na.translate = FALSE)
+              } else {
+                args_scale_fill <- list(NULL, limits = limits, discrete = FALSE)
+              }
+              
+              plot.df <- merge(proj, coord, by = c("points"))
+              if (plot.output == "facet") {
+                g <- ggplot(plot.df)+
+                  geom_point(aes(x = x, y = y, color = pred), size = size) +
+                  # scale_colour_viridis(NULL, limits = limits, discrete = discrete) +
+                  do.call(viridis::scale_color_viridis, args_scale_fill) +
+                  facet_wrap(~full.name)
+              } else if (plot.output == "list"){
+                g <- lapply(unique(plot.df$full.name), function(thislayer) {
+                  ggplot(subset(plot.df, plot.df$full.name == thislayer)) +
+                    geom_point(aes(x = x, y = y, color = pred), size = size) +
+                    # scale_colour_viridis(NULL, limits = limits, discrete = discrete) +
+                    do.call(viridis::scale_color_viridis, args_scale_fill) +
+                    ggtitle(thislayer)
+                })
+              }
+            }
+            if (do.plot) {
+              show(g)
+            } 
+            return(g)
+          }
 )
 
 ### .plot.BIOMOD.projection.out.check.args ----------------------------------
 
-.plot.BIOMOD.projection.out.check.args <- function(x,
-                                                   coord,
-                                                   plot.output, # list or facet
-                                                   do.plot,
-                                                   std,
-                                                   scales,
-                                                   size,
-                                                   ...){
-  
+.plot.BIOMOD.projection.out.check.args <- function(x, coord, plot.output # list or facet
+                                                   , do.plot, std, scales, size, ...)
+{
   proj <- get_predictions(x, ...)
   
   ## 1 - check for tidyterra ----------------------
@@ -900,7 +926,7 @@ setMethod(
   if (missing(plot.output)) {
     plot.output <- "facet"
   } else {
-    .fun_testIfIn(TRUE, "plot.output", plot.output, c("facet","list"))
+    .fun_testIfIn(TRUE, "plot.output", plot.output, c("facet", "list"))
   }
   
   ## 3 - do.plot ----------------------
@@ -910,11 +936,10 @@ setMethod(
   stopifnot(is.logical(std))
   
   ## 5 - check scales for facet_wrap -------------------------------
-  if(missing(scales)){
+  if (missing(scales)) {
     scales <- "fixed"
   } else {
-    .fun_testIfIn(TRUE, "scales", scales,
-                  c("fixed","free","free_x","free_y"))
+    .fun_testIfIn(TRUE, "scales", scales, c("fixed","free","free_x","free_y"))
   }
   
   ## 6 - check coord if x is a data.frame -------------------------------
@@ -922,15 +947,14 @@ setMethod(
     npred <- length(unique(proj$points))
     
     if (nrow(x@coord) > 0) {
-      if(!is.null(coord)){
-      cat("! ignoring argument `coord` as coordinates were already given to BIOMOD_Projection")
+      if (!is.null(coord)) {
+        cat("! ignoring argument `coord` as coordinates were already given to BIOMOD_Projection")
       }
       coord <- x@coord
     }
-
+    
     if (nrow(x@coord) == 0 & is.null(coord)) {
-        stop("missing coordinates to plot with a data.frame. Either give argument `coord` to plot or argument `new.env.xy` to BIOMOD_Projection")
-      
+      stop("missing coordinates to plot with a data.frame. Either give argument `coord` to plot or argument `new.env.xy` to BIOMOD_Projection")
     } else if (!inherits(coord, c("data.frame","matrix"))) {
       stop("`coord` must be a data.frame or a matrix.")
     } else if (ncol(coord) != 2) {
@@ -939,12 +963,12 @@ setMethod(
       stop("`coord` must have as many rows as the number of predictions (", npred, ").")
     } else {
       coord <- as.data.frame(coord)
-      colnames(coord) <- c("x","y")
+      colnames(coord) <- c("x", "y")
       coord$points <- seq_len(npred)
     }
   }
   
-  if(missing(size)){
+  if (missing(size)) {
     size <- 0.75
   } 
   
@@ -969,27 +993,26 @@ setMethod(
 ##' @export
 ##' 
 
-setMethod('show', signature('BIOMOD.projection.out'),
-          function(object){
-            .bm_cat("BIOMOD.projection.out")
-            cat("\nProjection directory :", paste0(object@dir.name, "/", object@sp.name, "/", object@proj.name), fill = .Options$width)
-            cat("\n")
-            cat("\nsp.name :", object@sp.name, fill = .Options$width)
-            cat("\nexpl.var.names :", object@expl.var.names, fill = .Options$width)
-            cat("\n")
-            cat("\nmodeling.id :", object@modeling.id , "(", object@models.out@link , ")", fill = .Options$width)
-            cat("\nmodels.projected :", toString(object@models.projected), fill = .Options$width)
-            df.info <- .extract_projlinkInfo(object)
-            if(any(df.info$type == "bin")){
-              available.metric <- unique(subset(df.info, df.info$type == "bin")$metric)
-              cat("\navailable binary projection :", toString(available.metric), fill = .Options$width)
-            }
-            if(any(df.info$type == "filt")){
-              available.metric <- unique(subset(df.info, df.info$type == "filt")$metric)
-              cat("\navailable filtered projection :", toString(available.metric), fill = .Options$width)
-            }
-            .bm_cat()
-          })
+setMethod('show', signature('BIOMOD.projection.out'), function(object)
+{
+  .bm_cat("BIOMOD.projection.out")
+  cat("\nModeled species (sp.name) :", object@sp.name, fill = .Options$width)
+  cat("\nModeling id (modeling.id) :", object@modeling.id , "(", object@models.out@link , ")", fill = .Options$width)
+  cat("\nExplanatory variables (expl.var.names) :", object@expl.var.names, fill = .Options$width)
+  cat("\nProjection directory (dir.name/sp.name/proj.name) :"
+      , paste0(object@dir.name, "/", object@sp.name, "/", object@proj.name), fill = .Options$width)
+  cat("\n\nProjected models (models.projected) : ", object@models.projected, fill = .Options$width)
+  df.info <- .extract_projlinkInfo(object)
+  if (any(df.info$type == "bin")) {
+    available.metric <- unique(subset(df.info, df.info$type == "bin")$metric)
+    cat("\nAvailable binary projection :", available.metric, fill = .Options$width)
+  }
+  if (any(df.info$type == "filt")) {
+    available.metric <- unique(subset(df.info, df.info$type == "filt")$metric)
+    cat("\nAvailable filtered projection :", available.metric, fill = .Options$width)
+  }
+  .bm_cat()
+})
 
 ## get_projected_models.BIOMOD.projection.out ----------------------------------
 ##' 
@@ -1002,7 +1025,6 @@ setMethod("get_projected_models", "BIOMOD.projection.out",
                    , merged.by.algo = NULL, merged.by.run = NULL
                    , merged.by.PA = NULL, filtered.by = NULL)
           {
-            
             out <- obj@models.projected
             if (length(grep("EM|merged", out)) > 0) {
               keep_ind <- .filter_outputs.vec(out, obj.type = "em", subset.list = list(full.name = full.name
@@ -1026,18 +1048,18 @@ setMethod("get_projected_models", "BIOMOD.projection.out",
 ##' @export
 ##' @importFrom terra rast
 
-setMethod('free', signature('BIOMOD.projection.out'),
-          function(obj) {
-            if (inherits(obj@proj.out, "BIOMOD.stored.data.frame")) {
-              obj@proj.out@val  <- data.frame()
-            } else if (inherits(obj@proj.out, "BIOMOD.stored.SpatRaster")) {
-              obj@proj.out@val <- wrap(rast(matrix()))
-            } else {
-              obj@proj.out@val <- NULL
-            }
-            obj@proj.out@inMemory <- FALSE
-            return(obj)
-          })
+setMethod('free', signature('BIOMOD.projection.out'), function(obj)
+{
+  if (inherits(obj@proj.out, "BIOMOD.stored.data.frame")) {
+    obj@proj.out@val  <- data.frame()
+  } else if (inherits(obj@proj.out, "BIOMOD.stored.SpatRaster")) {
+    obj@proj.out@val <- wrap(rast(matrix()))
+  } else {
+    obj@proj.out@val <- NULL
+  }
+  obj@proj.out@inMemory <- FALSE
+  return(obj)
+})
 
 ## get_predictions.BIOMOD.projection.out ---------------------------------------
 # (the method is used for EM as well)
@@ -1051,10 +1073,9 @@ setMethod("get_predictions", "BIOMOD.projection.out",
                    , full.name = NULL, PA = NULL, run = NULL, algo = NULL
                    , merged.by.algo = NULL, merged.by.run = NULL
                    , merged.by.PA = NULL, filtered.by = NULL, 
-                   model.as.col = FALSE, ...) {
-            
-            # extract layers from obj@proj.out@link concerned by metric.filter 
-            # or metric.binary
+                   model.as.col = FALSE, ...)
+          {
+            # extract layers from obj@proj.out@link concerned by metric.filter or metric.binary
             selected.layers <- .extract_selected.layers(obj, 
                                                         metric.binary = metric.binary,
                                                         metric.filter = metric.filter)
@@ -1093,7 +1114,7 @@ setMethod("get_predictions", "BIOMOD.projection.out",
                 out <- .transform_model.as.col(out)
               }
             }
-
+            
             return(out)
           }
 )
@@ -1120,6 +1141,7 @@ setMethod("get_predictions", "BIOMOD.projection.out",
 ##' @slot sp.name a \code{character} corresponding to the species name
 ##' @slot expl.var.names a \code{vector} containing names of explanatory
 ##'   variables
+##' @slot data.type a \code{character} corresponding to the data type
 ##' @slot models.out a \code{\link{BIOMOD.stored.models.out-class}} object
 ##'   containing informations from \code{\link{BIOMOD_Modeling}} object
 ##' @slot em.by a \code{character} corresponding to the way kept models have
@@ -1139,6 +1161,7 @@ setMethod("get_predictions", "BIOMOD.projection.out",
 ##' @slot models.prediction.eval a \code{\link{BIOMOD.stored.data.frame-class}}
 ##'   object containing models predictions for evaluation data
 ##' @slot link a \code{character} containing the file name of the saved object
+##' @slot call a \code{language} object corresponding to the call used to obtain the object
 ##'   
 ##' @param object a \code{\link{BIOMOD.ensemble.models.out}} object
 ##' 
@@ -1187,10 +1210,10 @@ setMethod("get_predictions", "BIOMOD.projection.out",
 ##' } else {
 ##' 
 ##'   # Format Data with true absences
-##'   myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-##'                                        expl.var = myExpl,
+##'   myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+##'                                        resp.var = myResp,
 ##'                                        resp.xy = myRespXY,
-##'                                        resp.name = myRespName)
+##'                                        expl.var = myExpl)
 ##' 
 ##'   # Model single models
 ##'   myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
@@ -1200,7 +1223,7 @@ setMethod("get_predictions", "BIOMOD.projection.out",
 ##'                                       CV.nb.rep = 2,
 ##'                                       CV.perc = 0.8,
 ##'                                       OPT.strategy = 'bigboss',
-##'                                       metric.eval = c('TSS','ROC'),
+##'                                       metric.eval = c('TSS', 'AUCroc'),
 ##'                                       var.import = 3,
 ##'                                       seed.val = 42)
 ##' }
@@ -1214,7 +1237,7 @@ setMethod("get_predictions", "BIOMOD.projection.out",
 ##'                                       em.algo = c('EMmean', 'EMca'),
 ##'                                       metric.select = c('TSS'),
 ##'                                       metric.select.thresh = c(0.7),
-##'                                       metric.eval = c('TSS', 'ROC'),
+##'                                       metric.eval = c('TSS', 'AUCroc'),
 ##'                                       var.import = 3,
 ##'                                       seed.val = 42)
 ##' myBiomodEM
@@ -1234,6 +1257,7 @@ setClass("BIOMOD.ensemble.models.out",
                         dir.name = 'character',
                         sp.name = 'character',
                         expl.var.names = 'character',
+                        data.type = 'character',
                         models.out = 'BIOMOD.stored.models.out',
                         em.by = 'character',
                         em.computed = 'character',
@@ -1243,11 +1267,13 @@ setClass("BIOMOD.ensemble.models.out",
                         variables.importance = 'BIOMOD.stored.data.frame',
                         models.prediction = 'BIOMOD.stored.data.frame',
                         models.prediction.eval = 'BIOMOD.stored.data.frame',
-                        link = 'character'),
+                        link = 'character',
+                        call = 'ANY'),
          prototype(modeling.id = '.',
                    dir.name = '.',
                    sp.name = '',
                    expl.var.names = '',
+                   data.type = '',
                    models.out = new('BIOMOD.stored.models.out'),
                    em.by = character(),
                    em.computed = character(),
@@ -1257,7 +1283,8 @@ setClass("BIOMOD.ensemble.models.out",
                    variables.importance = new('BIOMOD.stored.data.frame'),
                    models.prediction = new('BIOMOD.stored.data.frame'),
                    models.prediction.eval = new('BIOMOD.stored.data.frame'),
-                   link = ''),
+                   link = '',
+                   call = ''),
          validity = function(object){ return(TRUE) })
 
 
@@ -1269,16 +1296,16 @@ setClass("BIOMOD.ensemble.models.out",
 ##' @export
 ##' 
 
-setMethod('show', signature('BIOMOD.ensemble.models.out'),
-          function(object){
-            .bm_cat("BIOMOD.ensemble.models.out")
-            cat("\nsp.name :", object@sp.name, fill = .Options$width)
-            cat("\nexpl.var.names :", object@expl.var.names, fill = .Options$width)
-            cat("\n")
-            cat("\nmodels computed:", toString(object@em.computed), fill = .Options$width)
-            cat("\nmodels failed:", toString(object@em.failed), fill = .Options$width)
-            .bm_cat()
-          })
+setMethod('show', signature('BIOMOD.ensemble.models.out'), function(object) {
+  .bm_cat("BIOMOD.ensemble.models.out")
+  cat("\nModeled species (sp.name) :", object@sp.name, fill = .Options$width)
+  cat("\nModeling id (modeling.id) :", object@modeling.id , "(", object@models.out@link , ")", fill = .Options$width)
+  cat("\nExplanatory variables (expl.var.names) :", object@expl.var.names, fill = .Options$width)
+  cat("\n\nComputed models (em.computed) : ", object@em.computed, fill = .Options$width)
+  cat("\nFailed models (em.failed) : ", object@em.failed, fill = .Options$width)
+  .bm_cat()
+})
+
 ## get_formal_data.BIOMOD.ensemble.models.out ----------------------------------
 ##' 
 ##' @rdname getters.out
@@ -1286,7 +1313,8 @@ setMethod('show', signature('BIOMOD.ensemble.models.out'),
 ##' 
 
 setMethod("get_formal_data", "BIOMOD.ensemble.models.out",
-          function(obj, subinfo = NULL) {
+          function(obj, subinfo = NULL)
+          {
             if (is.null(subinfo)) {
               return(load_stored_object(obj@models.out))
             } else {
@@ -1424,4 +1452,119 @@ setMethod("get_variables_importance", "BIOMOD.ensemble.models.out",
             }
           }
 )
+
+## -------------------------------------------------------------------------- #
+## 7. Generic Functions definition ------------------------------------------
+## -------------------------------------------------------------------------- #
+## Used for different classes 
+##    01 = BIOMOD.formated.data, 02 = BIOMOD.formated.data.PA
+##    A = BIOMOD.models.out, B = BIOMOD.projection.out, C = BIOMOD.ensemble.models.out
+
+##' @name setters
+##' @aliases set_new_dirname
+##' @author Hélène Blancheteau
+##' 
+##' @title Functions to change the place of the different biomod2 objects
+##' 
+##' @description This function allow the user to change the folder where
+##' the modelling of biomod2 have been done.
+##' 
+##' 
+##' @param obj a \code{\link{BIOMOD.formated.data}}, \code{\link{BIOMOD.formated.data.PA}}, 
+##' \code{\link{BIOMOD.models.out}}, \code{\link{BIOMOD.projection.out}} or 
+##' \code{\link{BIOMOD.ensemble.models.out}} object
+##' @param new.dir.name a \code{character} corresponding to the new folder path
+##' 
+##' @seealso \code{\link{BIOMOD.models.out}}, \code{\link{BIOMOD.projection.out}}, 
+##' \code{\link{BIOMOD.ensemble.models.out}}
+##' @family Toolbox functions
+##' 
+##' @rdname setters
+##' @export
+##' 
+
+setGeneric("set_new_dirname", function(obj, new.dir.name) { standardGeneric("set_new_dirname") }) ##ABC ## 012 ? 
+
+.set_new_dirname.models <- function(obj, new.dir.name, obj.type)
+{
+  new.object <- obj
+  new.dir.name <- R.utils::getAbsolutePath(new.dir.name)
+  sp.name <- new.object@sp.name
+  modellingID <- new.object@modeling.id
+  
+  new.object@dir.name <- new.dir.name
+  if (obj.type == "mod") {
+    to.change <- c("formated.input.data", "calib.lines","models.options", "models.evaluation", "variables.importance", "models.prediction","models.prediction.eval")
+    new.name <- file.path(new.dir.name, sp.name, '.BIOMOD_DATA', modellingID, n)
+    name.OUT = paste0(sp.name, '.', modellingID, '.models.out')
+  } else if (obj.type == "em") {
+    to.change <- c("models.out", "models.evaluation", "variables.importance", "models.prediction","models.prediction.eval")
+    new.name <- file.path(new.dir.name, sp.name, '.BIOMOD_DATA', modellingID, 'ensemble.models', n)
+    name.OUT = paste0(sp.name, '.', modellingID, '.ensemble.models.out')
+  }
+  for (n in to.change){
+    eval(parse(text = paste0("new.object@", n, "@link", "<- new.name"))) #Plus tordu que ça tu meurs
+  }
+  
+  # Copy in the new file 
+  dir.create(file.path(new.dir.name, sp.name), showWarnings = FALSE)
+  dir.create(file.path(new.dir.name, sp.name, '.BIOMOD_DATA'), showWarnings = FALSE)
+  file.copy(from = file.path(obj@dir.name, sp.name, '.BIOMOD_DATA'),
+            to = file.path(new.dir.name, sp.name), recursive = TRUE)
+  dir.create(file.path(new.dir.name, sp.name, 'models'), showWarnings = FALSE)
+  file.copy(from = file.path(obj@dir.name, sp.name, 'models'),
+            to = file.path(new.dir.name, sp.name), recursive = TRUE)
+  
+  # Assign new object
+  new.object@link <- file.path(new.object@dir.name, sp.name, name.OUT)
+  assign(x = name.OUT, value = new.object)
+  save(list = name.OUT, file = new.object@link)
+}
+
+
+## set_new_dirname.BIOMOD.models.out ------------------------------------------
+##' 
+##' @rdname setters
+##' @export
+##' 
+
+setMethod('set_new_dirname', signature(obj = 'BIOMOD.models.out'), function(obj, new.dir.name) {
+  .set_new_dirname.models(obj = obj, new.dir.name = new.dir.name, obj.type = "mod")
+})
+
+## set_new_dirname.BIOMOD.ensemble.models.out ---------------------------------
+##' 
+##' @rdname setters
+##' @export
+##' 
+
+setMethod('set_new_dirname', signature(obj = 'BIOMOD.ensemble.models.out'), function(obj, new.dir.name) {
+  .set_new_dirname.models(obj = obj, new.dir.name = new.dir.name, obj.type = "em")
+})
+
+## set_new_dirname.BIOMOD.projection.out --------------------------------------
+##' 
+##' @rdname setters
+##' @export
+##' 
+
+setMethod('set_new_dirname', signature(obj = 'BIOMOD.projection.out'), function(obj, new.dir.name)
+{
+  new.object <- obj
+  new.dir.name <- R.utils::getAbsolutePath(new.dir.name)
+  sp.name <- new.object@sp.name
+  modellingID <- new.object@modeling.id
+  proj.name <- paste0("proj_",new.object@proj.name)
+  name.OUT = paste0(sp.name, '.', modellingID, '.models.out')
+  
+  new.object@dir.name <- new.dir.name
+  new.object@models.out@link <- file.path(new.dir.name, sp.name, name.OUT) 
+  new.object@proj.out@link <- file.path(new.dir.name, sp.name, proj.name, paste0(proj.name, "_", sp.name, ".tif")) 
+  
+  # Copy in the new file 
+  dir.create(file.path(new.dir.name, sp.name, proj.name), recursive = TRUE)
+  file.copy(from = file.path(obj@dir.name, sp.name, proj.name),
+            to = file.path(new.dir.name, sp.name), recursive = TRUE)
+  
+})
 

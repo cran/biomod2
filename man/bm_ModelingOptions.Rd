@@ -5,9 +5,8 @@
 \title{Configure the modeling options for each selected model}
 \usage{
 bm_ModelingOptions(
-  data.type,
-  models = c("ANN", "CTA", "FDA", "GAM", "GBM", "GLM", "MARS", "MAXENT", "MAXNET", "RF",
-    "RFd", "SRE", "XGBOOST"),
+  data.type = "binary",
+  models,
   strategy,
   user.val = NULL,
   user.base = "bigboss",
@@ -17,21 +16,23 @@ bm_ModelingOptions(
 }
 \arguments{
 \item{data.type}{a \code{character} corresponding to the data type to be used, must be either 
-\code{binary}, \code{binary.PA}, \code{abundance}, \code{compositional}. For the moment, only \code{binary} is accept.}
+\code{binary}, \code{count}, \code{relative}, \code{abundance}, \code{multiclass}, \code{ordinal}}
 
 \item{models}{a \code{vector} containing model names to be computed, must be among 
-\code{ANN}, \code{CTA}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
+\code{ANN}, \code{CTA}, \code{DNN}, \code{FDA}, \code{GAM}, \code{GBM}, \code{GLM}, \code{MARS}, 
 \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{RFd}, \code{SRE}, \code{XGBOOST}}
 
 \item{strategy}{a \code{character} corresponding to the method to select models' parameters 
-values, must be either \code{default}, \code{bigboss}, \code{user.defined}, \code{tuned}}
+values, must be either \code{default}, \code{bigboss}, \code{user.defined}, \code{tuned} 
+(see Details)}
 
 \item{user.val}{(\emph{optional, default} \code{NULL}) \cr
 A \code{list} containing parameters values for some (all) models}
 
-\item{user.base}{(\emph{optional, default} \code{bigboss}) \cr A character, 
-\code{default} or \code{bigboss} used when \code{strategy = 'user.defined'}. 
-It sets the bases of parameters to be modified by user defined values.}
+\item{user.base}{(\emph{optional, default} \code{bigboss}) \cr
+If \code{strategy = 'user.defined'}, a \code{character} corresponding to the basic set of 
+options to be modified by user defined values, must be either \code{default} or \code{bigboss} 
+(see Details)}
 
 \item{bm.format}{(\emph{optional, default} \code{NULL}) \cr
 A \code{\link{BIOMOD.formated.data}} or \code{\link{BIOMOD.formated.data.PA}} object returned 
@@ -53,92 +54,122 @@ This function creates a \code{\link{BIOMOD.models.options}} object containing pa
 for each single model that can be run within \pkg{biomod2} through 
 \code{\link{BIOMOD_Modeling}} function.
 
-12 models are currently available, and are listed within the \code{\link{ModelsTable}} dataset.
+11 different algorithms are currently available, with different versions for some (\code{GAM}, 
+\code{MAXENT}, \code{RF}). These models are associated with \emph{binary} or \emph{nonbinary} 
+datatypes, but all combinations are not available. They are all listed within the 
+\code{\link{ModelsTable}} dataset.
 
 Different strategies are available to set those parameters, through the \code{strategy} 
 argument :
 \describe{
   \item{default}{all parameters names and values are directly retrieve from functions to be 
-  called through \code{\link[methods]{formalArgs}} and \code{\link{formals}} functions respectively}
+  called through \code{\link[methods]{formalArgs}} and \code{\link{formals}} functions}
   \item{bigboss}{default parameter values are updated with values predefined by \pkg{biomod2} 
-  team}
+  team (see \code{\link{OptionsBigboss}})}
   \item{user.defined}{default parameter values are updated with values provided by the user}
   \item{tuned}{default parameter values are updated by calling \code{\link{bm_Tuning}} 
   function}
 }
 
-To define the same options for all datasets of a model, you can provide these options as a list in 
-user.val with the names "for_all_datasets".
+To define the same options for all datasets of a model, options can be provided through the 
+\code{user.val} parameter as a \code{list} whose name is \code{for_all_datasets}.
 }
 \note{
 \code{MAXENT} being the only external model (not called through a \code{R} package), 
-default parameters, and their values, are the following :
+default parameters, and their values, are the following : \cr \cr
 
-\itemize{
-  \item \code{path_to_maxent.jar = getwd()} : a \code{character} corresponding to path to 
-  \code{maxent.jar} file
-  \item \code{memory_allocated = 512} : an \code{integer} corresponding to the amount of 
-  memory (in Mo) reserved for \code{java} to run \code{MAXENT}, must be either \code{64}, 
-  \code{128}, \code{256}, \code{512}, \code{1024}... or \code{NULL} to use default \code{java}
-  memory limitation parameter
+\tabular{ccl}{
+  \strong{FLAG} \tab \strong{default} \tab \strong{Description}  \cr
   
-  \item \code{initial_heap_size = NULL} : a \code{character} corresponding to initial heap 
+  \code{path_to_maxent.jar} \tab getwd() \tab a \code{character} corresponding to path to 
+  \code{maxent.jar} file \cr
+  \code{memory_allocated} \tab 512 \tab an \code{integer} corresponding to the amount of memory 
+  (in Mo) reserved for \code{java} to run \code{MAXENT}, must be either \code{64}, 
+  \code{128}, \code{256}, \code{512}, \code{1024}... or \code{NULL} to use default \code{java}
+  memory limitation parameter \cr
+  
+  \code{initial_heap_size} \tab NULL \tab a \code{character} corresponding to initial heap 
   space (shared memory space) allocated to \code{java} (argument \code{-Xms} when calling 
   \code{java}), must be either \code{1024K}, \code{4096M}, \code{10G} ... or \code{NULL} to 
   use default \code{java} parameter. Used in \code{\link{BIOMOD_Projection}} but not in 
-  \code{\link{BIOMOD_Modeling}}.
-  \item \code{max_heap_size = NULL} : a \code{character} corresponding to maximum heap 
+  \code{\link{BIOMOD_Modeling}}. \cr
+  \code{max_heap_size} \tab NULL \tab a \code{character} corresponding to maximum heap 
   space (shared memory space) allocated to \code{java} (argument \code{-Xmx} when calling 
   \code{java}), must be either \code{1024K}, \code{4096M}, \code{10G} ... or \code{NULL} to 
   use default \code{java} parameter, and must be larger than \code{initial_heap_size}. Used 
-  in \code{\link{BIOMOD_Projection}} but not in \code{\link{BIOMOD_Modeling}}.
+  in \code{\link{BIOMOD_Projection}} but not in \code{\link{BIOMOD_Modeling}}. \cr
   
-  \item \code{background_data_dir = 'default'} : a \code{character} corresponding to path 
+  \code{background_data_dir} \tab 'default' \tab a \code{character} corresponding to path 
   to folder where explanatory variables are stored as \code{ASCII} files (raster format). 
   If specified, \code{MAXENT} will generate its own background data from rasters of 
   explanatory variables (\code{'default'} value). Otherwise \pkg{biomod2} pseudo-absences
-  will be used (see \code{\link{BIOMOD_FormatingData}}).
-  \item \code{visible = FALSE} : a \code{logical} value defining whether \code{MAXENT} 
-  user interface is to be used or not
+  will be used (see \code{\link{BIOMOD_FormatingData}}). \cr
+  \code{visible} \tab FALSE \tab a \code{logical} value defining whether \code{MAXENT} 
+  user interface is to be used or not \cr
   
-  \item \code{linear = TRUE} : a \code{logical} value defining whether linear features are 
-  to be used or not
-  \item \code{quadratic = TRUE} : a \code{logical} value defining whether quadratic features are 
-  to be used or not
-  \item \code{product = TRUE} : a \code{logical} value defining whether product features are 
-  to be used or not
-  \item \code{threshold = TRUE} : a \code{logical} value defining whether threshold features are 
-  to be used or not
-  \item \code{hinge = TRUE} : a \code{logical} value defining whether hinge features are 
-  to be used or not
+  \code{linear} \tab TRUE \tab a \code{logical} value defining whether linear features are 
+  to be used or not \cr
+  \code{quadratic} \tab TRUE \tab a \code{logical} value defining whether quadratic features are 
+  to be used or not \cr
+  \code{product} \tab TRUE \tab a \code{logical} value defining whether product features are 
+  to be used or not \cr
+  \code{threshold} \tab TRUE \tab a \code{logical} value defining whether threshold features are 
+  to be used or not \cr
+  \code{hinge} \tab TRUE \tab a \code{logical} value defining whether hinge features are 
+  to be used or not \cr
   
-  \item \code{l2lqthreshold = 10} : an \code{integer} corresponding to the number of 
-  samples at which quadratic features start being used
-  \item \code{lq2lqptthreshold = 80} : an \code{integer} corresponding to the number of 
-  samples at which product and threshold features start being used
-  \item \code{hingethreshold = 15} : an \code{integer} corresponding to the number of 
-  samples at which hinge features start being used
+  \code{l2lqthreshold} \tab 10 \tab an \code{integer} corresponding to the number of 
+  samples at which quadratic features start being used \cr
+  \code{lq2lqptthreshold} \tab 80 \tab an \code{integer} corresponding to the number of 
+  samples at which product and threshold features start being used \cr
+  \code{hingethreshold} \tab 15 \tab an \code{integer} corresponding to the number of 
+  samples at which hinge features start being used \cr
   
-  \item \code{beta_lqp = -1.0} : a \code{numeric} corresponding to the regularization 
+  \code{beta_lqp} \tab -1.0 \tab a \code{numeric} corresponding to the regularization 
   parameter to be applied to all linear, quadratic and product features (\emph{negative value 
-  enables automatic setting})
-  \item \code{beta_threshold = -1.0} : a \code{numeric} corresponding to the regularization 
+  enables automatic setting}) \cr
+  \code{beta_threshold} \tab -1.0 \tab a \code{numeric} corresponding to the regularization 
   parameter to be applied to all threshold features (\emph{negative value enables automatic 
-  setting})
-  \item \code{beta_hinge = -1.0} : a \code{numeric} corresponding to the regularization 
+  setting}) \cr
+  \code{beta_hinge} \tab -1.0 \tab a \code{numeric} corresponding to the regularization 
   parameter to be applied to all hinge features (\emph{negative value enables automatic 
-  setting})
-  \item \code{beta_categorical = -1.0} : a \code{numeric} corresponding to the regularization 
+  setting}) \cr
+  \code{beta_categorical} \tab -1.0 \tab a \code{numeric} corresponding to the regularization 
   parameter to be applied to all categorical features (\emph{negative value enables automatic 
-  setting})
+  setting}) \cr
   
-  \item \code{betamultiplier = 1} : a \code{numeric} corresponding to the number by which 
+  \code{betamultiplier} \tab 1 \tab a \code{numeric} corresponding to the number by which 
   multiply all automatic regularization parameters (\emph{higher number gives a more 
-  spread-out distribution})
+  spread-out distribution}) \cr
   
-  \item \code{defaultprevalence = 0.5} : a \code{numeric} corresponding to the default 
+  \code{defaultprevalence} \tab 0.5 \tab a \code{numeric} corresponding to the default 
   prevalence of the modelled species (\emph{probability of presence at ordinary occurrence 
-  points})
+  points}) \cr
+  
+  \code{togglelayerselected} \tab NULL \tab a \code{character} defining the prefix to be used 
+  to REMOVE environmental layers whose names begin with this prefix (\emph{all selected by 
+  default}) \cr
+  \code{maximumbackground} \tab 10000 \tab an \code{integer} corresponding to the maximum 
+  number of pixels to be selected randomly among background points if larger than this number \cr
+  \code{maximumiterations} \tab 500 \tab an \code{integer} corresponding to the maximum number 
+  of iterations for training \cr
+  \code{convergencethreshold} \tab 0.00005 \tab a \code{numeric} corresponding to the drop in 
+  log loss per iteration below which the training will be stopped \cr
+  \code{autofeature} \tab TRUE \tab a \code{logical} value defining whether feature classes 
+  to be used will automatically be selected based on number of training samples or not \cr
+  \code{jackknife} \tab FALSE \tab a \code{logical} value defining whether variables' 
+  importance is to be measured or not. If selected, training will be done with each 
+  environmental variable first omitted then used in isolation. \cr
+  \code{writeclampgrid} \tab FALSE \tab a \code{logical} value defining whether clamping mask 
+  is to be saved or not (\emph{absolute difference between prediction values with and without 
+  clamping}) \cr
+  \code{writemess} \tab FALSE \tab a \code{logical} value defining whether multidimensional 
+  environmental similarity surface (MESS) is to be saved or not (\emph{degree of novelness of 
+  environmental conditions; and which variable is the most out of range at each point}) \cr
+  \code{logfile} \tab 'maxent.log' \tab a \code{character} corresponding to file name in which 
+  debugging information will be written \cr
+  \code{verbose} \tab FALSE \tab a \code{logical} value defining whether detailed diagnostics 
+  for debugging should be given or not \cr
 }
 }
 \examples{
@@ -168,10 +199,10 @@ myExpl <- terra::crop(myExpl, myExtent)
 
 # ---------------------------------------------------------------#
 # Format Data with true absences
-myBiomodData <- BIOMOD_FormatingData(resp.var = myResp,
-                                     expl.var = myExpl,
+myBiomodData <- BIOMOD_FormatingData(resp.name = myRespName,
+                                     resp.var = myResp,
                                      resp.xy = myRespXY,
-                                     resp.name = myRespName)
+                                     expl.var = myExpl)
 
 # k-fold selection
 cv.k <- bm_CrossValidation(bm.format = myBiomodData,
@@ -181,8 +212,8 @@ cv.k <- bm_CrossValidation(bm.format = myBiomodData,
 
 
 # ---------------------------------------------------------------#
-allModels <- c('ANN', 'CTA', 'FDA', 'GAM', 'GBM', 'GLM'
-               , 'MARS', 'MAXENT', 'MAXNET', 'RF', 'SRE', 'XGBOOST')
+allModels <- c('ANN', 'CTA', 'DNN', 'FDA', 'GAM', 'GBM', 'GLM', 'MARS'
+               , 'MAXENT', 'MAXNET', 'RF', 'RFd', 'SRE', 'XGBOOST')
 
 # default parameters
 opt.d <- bm_ModelingOptions(data.type = 'binary',
@@ -238,7 +269,8 @@ opt.t
 
 }
 \seealso{
-\code{\link{ModelsTable}}, \code{\link{BIOMOD.models.options}}, 
+\code{\link{ModelsTable}}, \code{\link{OptionsBigboss}}, 
+\code{\link{BIOMOD.models.options}}, 
 \code{\link{bm_Tuning}}, \code{\link{BIOMOD_Modeling}}
 
 Other Secondary functions: 
@@ -246,12 +278,14 @@ Other Secondary functions:
 \code{\link{bm_CrossValidation}()},
 \code{\link{bm_FindOptimStat}()},
 \code{\link{bm_MakeFormula}()},
+\code{\link{bm_ModelAnalysis}()},
 \code{\link{bm_PlotEvalBoxplot}()},
 \code{\link{bm_PlotEvalMean}()},
 \code{\link{bm_PlotRangeSize}()},
 \code{\link{bm_PlotResponseCurves}()},
 \code{\link{bm_PlotVarImpBoxplot}()},
 \code{\link{bm_PseudoAbsences}()},
+\code{\link{bm_RangeSize}()},
 \code{\link{bm_RunModelsLoop}()},
 \code{\link{bm_SRE}()},
 \code{\link{bm_SampleBinaryVector}()},
@@ -260,7 +294,7 @@ Other Secondary functions:
 \code{\link{bm_VariablesImportance}()}
 }
 \author{
-Damien Georges, Wilfried Thuiller, Maya Gueguen
+Damien Georges, Wilfried Thuiller, Maya Guéguen
 }
 \concept{Secondary functions}
 \keyword{models}
