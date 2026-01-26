@@ -1,8 +1,8 @@
 Package: biomod2
 Type: Package
 Title: Ensemble Platform for Species Distribution Modeling
-Version: 4.3-4-3
-Date: 2025-12-11
+Version: 4.3-4-4
+Date: 2026-01-22
 Authors@R: c(person("Maya", "Guéguen", role = c("aut", "cre")
                     , email = "maya.gueguen@univ-grenoble-alpes.fr"),
              person("Hélène", "Blancheteau", role = "aut"),
@@ -21,11 +21,12 @@ Imports: stats, utils, methods, terra (>= 1.6-33), sp, reshape,
         reshape2, abind, foreach, ggplot2, gbm (>= 2.1.3), rpart, MASS,
         pROC (>= 1.15.0), PresenceAbsence, dplyr, rlang, scales
 Suggests: Hmisc, gam, mgcv, earth, maxnet, mda, nnet, randomForest,
-        xgboost, cito, torch, car, caret, dismo, ENMeval, doParallel,
-        raster, ggpubr, testthat, knitr, markdown, rmarkdown,
-        tidyterra, ggtext, patchwork, R.utils, paletteer, viridis
+        xgboost (>= 3.1.3.1), cito, torch, car, caret, dismo, ENMeval,
+        doParallel, raster, ggpubr, testthat, knitr, markdown,
+        rmarkdown, tidyterra, ggtext, patchwork, kableExtra, DT,
+        R.utils, paletteer, viridis
 License: GPL-3
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Encoding: UTF-8
 VignetteBuilder: knitr
 Collate: 'biomod2-package.R' 'biomod2_globalVariables.R'
@@ -46,11 +47,11 @@ Collate: 'biomod2-package.R' 'biomod2_globalVariables.R'
         'bm_Tuning.R' 'bm_VariablesImportance.R' 'zzz.R'
 LazyData: true
 NeedsCompilation: no
-Packaged: 2025-12-11 13:54:03 UTC; gueguema
+Packaged: 2026-01-26 12:10:23 UTC; gueguema
 Author: Maya Guéguen [aut, cre],
   Hélène Blancheteau [aut],
   Rémi Lemaire-Patin [aut],
   Wilfried Thuiller [aut]
 Maintainer: Maya Guéguen <maya.gueguen@univ-grenoble-alpes.fr>
 Repository: CRAN
-Date/Publication: 2025-12-22 10:00:02 UTC
+Date/Publication: 2026-01-26 13:00:10 UTC

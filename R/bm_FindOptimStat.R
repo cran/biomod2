@@ -128,12 +128,13 @@
 ##' @references
 ##' 
 ##' \itemize{
-##'   \item Engler, R., Guisan, A., and Rechsteiner L. 2004. An improved approach for predicting 
-##'   the distribution of rare and endangered species from occurrence and pseudo-absence data. 
-##'   \emph{Journal of Applied Ecology}, \bold{41(2)}, 263-274.
-##'   \item Hirzel, A. H., Le Lay, G., Helfer, V., Randin, C., and Guisan, A. 2006. Evaluating 
-##'   the ability of habitat suitability models to predict species presences. \emph{Ecological 
-##'   Modelling}, \bold{199(2)}, 142-152.
+##'   \item Engler R, Guisan A, Rechsteiner L (\bold{2004}). \emph{An improved approach for 
+##'   predicting the distribution of rare and endangered species from occurrence and 
+##'   pseudo-absence data.} Journal of Applied Ecology, 41(2), 263-274. 
+##'   \doi{10.1111/j.0021-8901.2004.00881.x}
+##'   \item Hirzel AH, Le Lay G, Helfer V, Randin C, Guisan A (\bold{2006}). \emph{Evaluating 
+##'   the ability of habitat suitability models to predict species presences.} Ecological 
+##'   Modelling, 199(2), 142-152. \doi{10.1016/j.ecolmodel.2006.05.017}
 ##' }
 ##'
 ##' @keywords models options evaluation auc tss boyce mpa
@@ -285,15 +286,12 @@ bm_FindOptimStat <- function(metric.eval = 'TSS',
   } else if (metric.eval == 'AUCroc') ## ROC ---------------------------------------------------------
   {
     roc1 <- roc(obs, fit, percent = TRUE, direction = "<", levels = c(0, 1))
-    roc1.out <- coords(roc1, "best", ret = c("threshold", "sens", "spec")
-                       , transpose = TRUE, best.method = "closest.topleft")
-    ## if two optimal values are returned keep only the first one
-    if (!is.null(ncol(roc1.out))) { roc1.out <- roc1.out[, 1] }
+    roc1.out <- coords(roc1, "best", ret = c("threshold", "sens", "spec"), best.method = "closest.topleft")
     
     best.stat <- as.numeric(auc(roc1)) / 100
-    cutoff <- as.numeric(roc1.out["threshold"])
-    specificity <- as.numeric(roc1.out["specificity"])
-    sensitivity <- as.numeric(roc1.out["sensitivity"])
+    cutoff <- as.numeric(roc1.out[1, "threshold"])
+    specificity <- as.numeric(roc1.out[1, "specificity"])
+    sensitivity <- as.numeric(roc1.out[1, "sensitivity"])
   
   } else if (metric.eval == 'AUCprg') ## PRG ---------------------------------------------------------
   {

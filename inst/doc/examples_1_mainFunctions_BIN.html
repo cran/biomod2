@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<meta name="generator" content="litedown 0.7">
+<meta name="generator" content="litedown 0.9">
 <title>Main functions: binary data</title>
 <style type="text/css">
 body {
@@ -108,8 +108,6 @@ section.footnotes {
 }
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.14/css/prism-xcode.min.css">
-<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>
 </head>
 <body>
 <div class="frontmatter">
@@ -365,6 +363,19 @@ bm_PlotRangeSize(bm.range = myBiomodRangeSize,
                  do.mean = TRUE)
 </code></pre>
 <p><br/><br/></p>
+<h3 id="sec:export-a-report"><i class="fa-solid fa-file-export"></i> Export a report</h3>
+<pre><code class="language-R"># Get a summary report
+BIOMOD_Report(bm.out = myBiomodEM, strategy = 'report')
+
+# Get a pre-filled ODMAP
+BIOMOD_Report(bm.out = myBiomodEM, strategy = 'ODMAP')
+
+# Get a code report
+BIOMOD_Report(bm.out = myBiomodEM, strategy = 'code')
+</code></pre>
+<p><br/><br/></p>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>
 </body>
 </html>

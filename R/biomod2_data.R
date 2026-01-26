@@ -37,23 +37,23 @@
 "ModelsTable"
 
 # ModelsTable <- data.frame(model = c('ANN', 'CTA', 'DNN', 'FDA', 'GAM', 'GAM', 'GAM', 'GBM', 'GLM'
-#                                     , 'MARS', 'MAXENT', 'MAXNET', 'RF','RFd', 'SRE', 'XGBOOST', 
+#                                     , 'MARS', 'MAXENT', 'MAXNET', 'RF','RFd', 'SRE', 'XGBOOST',
 #                                     'CTA', 'DNN', 'FDA', 'GAM', 'GAM', 'GAM', 'GBM', 'GLM'
 #                                     , 'MARS', 'RF', 'XGBOOST')
 #                           , type = c(rep('binary',16), rep('nonbinary',11))
 #                           , package = c('nnet', 'rpart', 'cito', 'mda', 'gam', 'mgcv', 'mgcv', 'gbm', 'stats'
-#                                         , 'earth', 'MAXENT', 'maxnet', 'randomForest','randomForest', 'biomod2', 'xgboost', 
+#                                         , 'earth', 'MAXENT', 'maxnet', 'randomForest','randomForest', 'biomod2', 'xgboost',
 #                                         'rpart', 'cito', 'mda', 'gam', 'mgcv', 'mgcv', 'gbm', 'stats'
 #                                         , 'earth', 'randomForest', 'xgboost')
 #                           , func = c('nnet', 'rpart', 'dnn', 'fda', 'gam', 'bam', 'gam', 'gbm', 'glm'
-#                                      , 'earth', 'MAXENT', 'maxnet', 'randomForest','randomForest', 'bm_SRE', 'xgboost',
+#                                      , 'earth', 'MAXENT', 'maxnet', 'randomForest','randomForest', 'bm_SRE', 'xgb_train',
 #                                      'rpart', 'dnn', 'fda', 'gam', 'bam', 'gam', 'gbm', 'glm'
-#                                      , 'earth', 'randomForest', 'xgboost')
+#                                      , 'earth', 'randomForest', 'xgb_train')
 #                           , train = c('avNNet', 'rpart', 'tune', 'fda', 'gamLoess', 'bam', 'gam', 'gbm', 'glm'
 #                                       , 'earth', 'ENMevaluate', 'maxnet', 'rf','rf', 'bm_SRE', 'xgbTree',
 #                                       'rpart', 'tune', 'fda', 'gamLoess', 'bam', 'gam', 'gbm', 'glm'
 #                                       , 'earth', 'rf', 'xgbTree'))
-
+# 
 # usethis::use_data(ModelsTable, overwrite = TRUE)
 # usethis::use_data(ModelsTable, overwrite = TRUE, internal = TRUE)
 
@@ -174,10 +174,9 @@
 #'        \item \code{do.extrem = TRUE}
 #'      }
 #'    }
-#'    \item{\code{XGBOOST.xgboost.xgboost}}{
+#'    \item{\code{XGBOOST.xgboost.xgb_train}}{
 #'      \itemize{
-#'        \item \code{params = list(max_depth = 2, eta = 1)}
-#'        \item \code{nthread = 2}
+#'        \item \code{params = list(max_depth = 2, eta = 1, nthread = 2)}
 #'        \item \code{nrounds = 4}
 #'      }
 #'    }
@@ -249,11 +248,9 @@
 # bm.opt@options$RFd.binary.randomForest.randomForest@args.values[['_allData_allRun']]$nodesize = 5
 # bm.opt@options$RFd.binary.randomForest.randomForest@args.values[['_allData_allRun']]$maxnodes = NULL
 # bm.opt@options$SRE.binary.biomod2.bm_SRE@args.values[['_allData_allRun']]$do.extrem = TRUE
-# bm.opt@options$XGBOOST.binary.xgboost.xgboost@args.values[['_allData_allRun']]$params = list(max_depth = 2, eta = 1)
-# bm.opt@options$XGBOOST.binary.xgboost.xgboost@args.values[['_allData_allRun']]$nthread = 2
-# bm.opt@options$XGBOOST.binary.xgboost.xgboost@args.values[['_allData_allRun']]$nrounds = 4
-# # bm.opt@options$XGBOOST.binary.xgboost.xgboost@args.values[['_allData_allRun']]$objective = "binary:logistic"
-
+# bm.opt@options$XGBOOST.binary.xgboost.xgb_train@args.values[['_allData_allRun']]$params = xgb.params(max_depth = 2, eta = 1, nthread = 2)
+# bm.opt@options$XGBOOST.binary.xgboost.xgb_train@args.values[['_allData_allRun']]$nrounds = 4
+# 
 # # Remove things to be adapted to "count", "abundance" and "compositional"
 # bm.opt@options$CTA.binary.rpart.rpart@args.values[['_allData_allRun']] <- bm.opt@options$CTA.binary.rpart.rpart@args.values[['_allData_allRun']][-which(names(bm.opt@options$CTA.binary.rpart.rpart@args.values[['_allData_allRun']]) == "method")]
 # bm.opt@options$DNN.binary.cito.dnn@args.values[['_allData_allRun']] <- bm.opt@options$DNN.binary.cito.dnn@args.values[['_allData_allRun']][-which(names(bm.opt@options$DNN.binary.cito.dnn@args.values[['_allData_allRun']]) == "loss")]
@@ -265,13 +262,12 @@
 # bm.opt@options$GLM.binary.stats.glm@args.values[['_allData_allRun']] <- bm.opt@options$GLM.binary.stats.glm@args.values[['_allData_allRun']][-which(names(bm.opt@options$GLM.binary.stats.glm@args.values[['_allData_allRun']]) == "family")]
 # bm.opt@options$MARS.binary.earth.earth@args.values[['_allData_allRun']] <- bm.opt@options$MARS.binary.earth.earth@args.values[['_allData_allRun']][-which(names(bm.opt@options$MARS.binary.earth.earth@args.values[['_allData_allRun']]) == "glm")]
 # bm.opt@options$RF.binary.randomForest.randomForest@args.values[['_allData_allRun']] <- bm.opt@options$RF.binary.randomForest.randomForest@args.values[['_allData_allRun']][-which(names(bm.opt@options$RF.binary.randomForest.randomForest@args.values[['_allData_allRun']]) == "type")]
-# bm.opt@options$XGBOOST.binary.xgboost.xgboost@args.values[['_allData_allRun']] <- bm.opt@options$XGBOOST.binary.xgboost.xgboost@args.values[['_allData_allRun']][-which(names(bm.opt@options$XGBOOST.binary.xgboost.xgboost@args.values[['_allData_allRun']]) == "objective")]
-
+# 
 # bm.opt@models <- sub(".binary", "", bm.opt@models)
 # names(bm.opt@options) <- bm.opt@models
-
+# 
 # OptionsBigboss <- bm.opt
-
+# 
 # usethis::use_data(OptionsBigboss, overwrite = TRUE)
 # usethis::use_data(OptionsBigboss, overwrite = TRUE, internal = TRUE)
 
@@ -357,22 +353,20 @@
 #' @references
 #' 
 #' \itemize{
-#'   \item \href{https://www.vigie-plume.fr/}{STOC EPS} - Vigie-Nature (2025). 
+#'   \item \href{https://www.vigie-plume.fr/}{STOC EPS} - Vigie-Nature (\bold{2025}). 
 #'   \emph{French Breeding Bird Monitoring Scheme.} Muséum National d’Histoire Naturelle 
 #'   (MNHN) - Office Français pour la Biodiversité (OFB) - Ligue pour la Protection des 
 #'   Oiseaux (LPO).
 #'   \item Fontaine B, Moussy C, Chiffard Carricaburu J, Dupuis J, Corolleur E, Schmaltz L, 
-#'   Lorrillière R, Loïs G, Gaudard C. (2020) Suivi des oiseaux communs en France 
-#'   1989-2019 : 30 ans de suivis participatifs. MNHN - Centre d'Ecologie et des Sciences 
+#'   Lorrillière R, Loïs G, Gaudard C (\bold{2020}). \emph{Suivi des oiseaux communs en France 
+#'   1989-2019 : 30 ans de suivis participatifs.} MNHN - Centre d'Ecologie et des Sciences 
 #'   de la Conservation, LPO BirdLife France - Service Connaissance, Ministère de la 
 #'   Transition écologique et solidaire. 46 pp.
-#'   \item  Brun P, Zimmermann NE, Hari C, Pellissier L, Karger DN. (2022) 
-#'   CHELSA-BIOCLIM+ A novel set of global climate-related predictors at 
-#'   kilometre-resolution. EnviDat. 
-#'   DOI: \href{https://www.doi.org/10.16904/envidat.332}{10.16904/envidat.332}
-#'   \item CORINE Land Cover 2018 (raster 100 m), Europe, 6-yearly - version 2020_20u1, 
-#'   May 2020. European Environment Agency. 
-#'   DOI: \doi{10.2909/960998c1-1870-4e82-8051-6485205ebbac}
+#'   \item  Brun P, Zimmermann NE, Hari C, Pellissier L, Karger DN (\bold{2022}). 
+#'   \emph{CHELSA-BIOCLIM+ A novel set of global climate-related predictors at 
+#'   kilometre-resolution.} EnviDat. \doi{10.16904/envidat.332}
+#'   \item CORINE Land Cover 2018 (raster 100 m), Europe, 6-yearly - \bold{version 2020_20u1}, 
+#'   May 2020. European Environment Agency. \doi{10.2909/960998c1-1870-4e82-8051-6485205ebbac}
 #' }
 #' 
 ###################################################################################################
