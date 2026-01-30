@@ -1,4 +1,4 @@
-86c2a51d1ad50136efa51b369487517c *DESCRIPTION
+c7fcfd4b30b209242fd24ca074579a2d *DESCRIPTION
 d283d45d0ee70180063780964b55d952 *NAMESPACE
 739f01992a59cf41eb851051f25a505c *R/BIOMOD_EnsembleForecasting.R
 c1d9a3b542ea0be6eb5c3f73b813b25a *R/BIOMOD_EnsembleModeling.R
@@ -7,11 +7,11 @@ e661d8a7296e360510cba750c43940de *R/BIOMOD_LoadModels.R
 adf78cdfe6b02fd41d9427c41c72d792 *R/BIOMOD_Modeling.R
 496eaad63de776a6f4a0d1a5ad03c5d2 *R/BIOMOD_Projection.R
 04802e21bb7a43b0cec9ac3430766015 *R/BIOMOD_RangeSize.R
-e057cf66b451ddb7fa8f5d38c6ed3d96 *R/BIOMOD_Report.R
+2cef9b04aa3b2967d0178ff63b4a4ccf *R/BIOMOD_Report.R
 7a5e0f1b7e5a3bd1b67ab22efdf39e18 *R/DEPRECATED.R
 75e6bd7fa4a1dd09ca4843b729c4fb29 *R/biomod2-package.R
 521cfb48aa97f9aaf4cba66fe8a5d284 *R/biomod2_classes_0.R
-9ad7be821ed9e764c2048a4f0e8167e1 *R/biomod2_classes_1.R
+7be05684eeb3c803204700923027b95a *R/biomod2_classes_1.R
 4d721e0a46df8af9700583db66c513d6 *R/biomod2_classes_2.R
 3887032501edaa4a3df193a59978ba79 *R/biomod2_classes_3.R
 b2da5f3fd0185a5ac3b31984c72e9d95 *R/biomod2_classes_4.R
@@ -56,8 +56,8 @@ acb70da10683ef6361c3d80fa053b835 *inst/doc/examples_1_mainFunctions_AB.Rmd
 6833c1730617d8242cb85a99f3490cc6 *inst/doc/examples_1_mainFunctions_BIN.html
 75ac00b3fc5152bcf2a0c9f9a50c30a0 *inst/doc/examples_2_auxiliaryFunctions.Rmd
 9f8e016f8db1301340894bb41af903c1 *inst/doc/examples_2_auxiliaryFunctions.html
-fb33c22a996b0c3fa599a9bd56adcd3c *inst/doc/news.Rmd
-52c7c9e95029e856ddd36f7ae451e5c7 *inst/doc/news.html
+a0c212d4ab06f134850d4c11b62a1cac *inst/doc/news.Rmd
+6e66353254335fd34f55de0704f07fc8 *inst/doc/news.html
 ccf8b8e9c187826b4a41b3e9e4b16873 *inst/doc/vignette_crossValidation.Rmd
 d130545a6bd19ba6ab0f493772a86760 *inst/doc/vignette_crossValidation.html
 6f2ca656b717b5a96e8a297a660c4797 *inst/doc/vignette_dataPreparation.Rmd
@@ -96,7 +96,7 @@ a699f8f1ebedbfdf1bc337a8de2f64a4 *man/BIOMOD_Modeling.Rd
 65187625e20e5862d3a1d91156c410ba *man/BIOMOD_PresenceOnly-deprecated.Rd
 f545cc155717414d06b907af6fa9e920 *man/BIOMOD_Projection.Rd
 944492012d0caf4d1c497e8a48e9b5e2 *man/BIOMOD_RangeSize.Rd
-cd66de8f8931296452cda602bfd9e6f1 *man/BIOMOD_Report.Rd
+9d3c096cba7a240ba2466a20e9bc9b1e *man/BIOMOD_Report.Rd
 81e489eb5e64a69e6627f734cd3df40d *man/BIOMOD_tuning-deprecated.Rd
 febab396165468dbb459ed1f6bae426d *man/BinaryTransformation-deprecated.Rd
 1d5408573e52618dc3bbd7e8b126b3e3 *man/DataSTOC.Rd
@@ -104,7 +104,7 @@ febab396165468dbb459ed1f6bae426d *man/BinaryTransformation-deprecated.Rd
 0c75f0676b420ae2d35a3edaa6e86ba2 *man/Find.Optim.Stat-deprecated.Rd
 06e1cef06d398f69110555deba5e2134 *man/ModelsTable.Rd
 6fc9bef4a3160f80e299414a690feac2 *man/ODMAP.Rd
-fd3bb546bef5f7976c21d80c56b74687 *man/OptionsBigboss.Rd
+11b9e93cfb4a891789b14c98dcdea19b *man/OptionsBigboss.Rd
 f7ef0011189bbaaf2fb8ed113b7b6d25 *man/ProbDensFunc-deprecated.Rd
 9e1f1cced0672fc1b5abda6a63092e37 *man/bioclim_current.Rd
 eb5d5c6a95e2c6829e755644d7bad216 *man/bioclim_future.Rd
@@ -160,7 +160,7 @@ a73f0e024368f583c0e9419c4d59eda0 *man/variables_importance-deprecated.Rd
 acb70da10683ef6361c3d80fa053b835 *vignettes/examples_1_mainFunctions_AB.Rmd
 2077f4964836da48313d9310193083d7 *vignettes/examples_1_mainFunctions_BIN.Rmd
 75ac00b3fc5152bcf2a0c9f9a50c30a0 *vignettes/examples_2_auxiliaryFunctions.Rmd
-fb33c22a996b0c3fa599a9bd56adcd3c *vignettes/news.Rmd
+a0c212d4ab06f134850d4c11b62a1cac *vignettes/news.Rmd
 ddeb1484be3e649598dca45591569967 *vignettes/pictures/LogoBiomod.png
 f3b0d4b7ecdb9574cc363a29f5b0d588 *vignettes/pictures/SCHEMA_BIOMOD2_WORKFLOW_functions.pdf
 b23623da009d4187448e6f937e734e58 *vignettes/pictures/SCHEMA_BIOMOD2_WORKFLOW_functions.png
