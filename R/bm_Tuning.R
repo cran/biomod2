@@ -316,7 +316,7 @@ bm_Tuning <- function(model,
   
   argsval <- foreach(PA.i = combi$PA, calib.i = combi$calib, dataset.i = combi$name_dataset) %do%
     {
-      cat(paste0("\n\t\t> Dataset ", dataset.i))
+      cat("\n\t\t> Dataset", dataset.i)
       
       if(inherits(bm.options, "BIOMOD.options.dataset") && !is.null(bm.options@args.values[[dataset.i]])){
         argstmp <- bm.options@args.values[[dataset.i]]
@@ -326,11 +326,11 @@ bm_Tuning <- function(model,
       
       
       if (model == "MAXNET") {
-        warning("No tuning available for that model. Sorry.")
+        .message("No tuning available for that model. Sorry.")
       } else if (model == "XGBOOST") {
-        warning("Due to upgrade of xgboost package, currently, no tuning available for that model. Sorry.")
+        .message("Due to upgrade of xgboost package, currently, no tuning available for that model. Sorry.")
       } else {
-        ## 1. SPECIFIC CASE OF MAXENT OR SRE ------------------------------------------------------------
+        ## 1. SPECIFIC CASE OF MAXENT, SRE OR DNN -------------------------------------------------
         if (model %in% c("MAXENT", "SRE", "DNN")) {
           cat("\n\t\t\t> Tuning parameters...")
           
@@ -340,15 +340,19 @@ bm_Tuning <- function(model,
           mySpExpl <- mySpExpl[which(calib.lines[, calib.i] == TRUE), ]
           mySpExpl <- mySpExpl[which(mySpExpl[, PA.i] == TRUE), ]
           
-          ## SRE case
-          myResp <- mySpExpl[, 1]
-          myExpl <- mySpExpl[, 4:(3 + ncol(bm.format@data.env.var))]
-          
-          ## MAXENT case
-          if (params.train$MAXENT.algorithm == "maxnet") {
-            mySpExpl[["_allData_allRun"]] <- NULL
-            mySpExpl[, 1] <- ifelse(mySpExpl[, 1] == 1 & !is.na(mySpExpl[, 1]), 1, 0)
-            mySpExpl <- mySpExpl[, 1:(3 + ncol(bm.format@data.env.var))]
+          ## SRE / DNN case
+          if (model %in% c("SRE", "DNN")) {
+            myResp <- mySpExpl[, 1]
+            myExpl <- mySpExpl[, 4:(3 + ncol(bm.format@data.env.var))]
+            if (model == "SRE") {
+              myResp <- sapply(myResp, function(xx) ifelse(xx == 0 || is.na(xx), 0, 1))
+            }
+          } else { ## MAXENT case
+            if (params.train$MAXENT.algorithm == "maxnet") {
+              mySpExpl[["_allData_allRun"]] <- NULL
+              mySpExpl[, 1] <- ifelse(mySpExpl[, 1] == 1 & !is.na(mySpExpl[, 1]), 1, 0)
+              mySpExpl <- mySpExpl[, 1:(3 + ncol(bm.format@data.env.var))]
+            }
           }
           
           if (model == "MAXENT") { # ------------------------------------------#
@@ -379,7 +383,6 @@ bm_Tuning <- function(model,
               argstmp$betamultiplier <- tune.MAXENT@results[tmp, "rm"]
             }
           } else if (model == "SRE") { # -------------------------------------- #
-            myResp <- sapply(myResp, function(xx) ifelse(xx == 0 || is.na(xx), 0, 1))
             
             tune.SRE <- foreach(rep = 1:ctrl.train$repeats, .combine = "rbind") %do%
               {
@@ -406,15 +409,15 @@ bm_Tuning <- function(model,
             argstmp$quant <- tmp[which.max(tmp[, metric.eval]), "quant"]
             
           } else { ## DNN case  # -------------------------------------- #
-
+            
             ## Preparation of data 
             scale_data <- scale(myExpl)
             argstmp$data <- cbind(myResp, as.data.frame(scale_data))
             argstmp$formula <- as.formula( "myResp ~.")
             
             ## Preparation of the tune parameters
-            params.train = params.train[grep(paste0(model,"\\."), names(params.train))]
-            for (param.n in names(params.train)) {
+            names_DNN <- grep(paste0(model,"\\."), names(params.train), value = TRUE)
+            for (param.n in names_DNN) {
               real.name <- unlist(strsplit(param.n, split = "\\."))[2]
               
               if (real.name == "hidden") {
@@ -422,11 +425,19 @@ bm_Tuning <- function(model,
                     length(params.train$DNN.hidden$width) == 1) {
                   argstmp$hidden <- rep(params.train$DNN.hidden$width, params.train$DNN.hidden$depth)
                 } else if (length(params.train$DNN.hidden$depth) == 1) {
-                  argstmp$hidden <- cito::tune(params.train$DNN.hidden$width, fixed = 'depth')
+                  lower <- params.train$DNN.hidden$width[1]
+                  upper <- params.train$DNN.hidden$width[2]
+                  addi <- params.train$DNN.hidden$depth
+                  argstmp$hidden <- cito::tune(lower = lower, upper = upper, additional = addi, fixed = 'depth')
                 } else if (length(params.train$DNN.hidden$width) == 1) {
-                  argstmp$hidden <- cito::tune(params.train$DNN.hidden$depth, fixed = 'width')
+                  lower <- params.train$DNN.hidden$depth[1]
+                  upper <- params.train$DNN.hidden$depth[2]
+                  addi <- params.train$DNN.hidden$width
+                  argstmp$hidden <- cito::tune(lower = lower, upper = upper, additional = addi, fixed = 'width')
                 } else {
-                  argstmp$hidden <- cito::tune(params.train$DNN.hidden$depth, params.train$DNN.hidden$width)
+                  lower <- c(params.train$DNN.hidden$width[1], params.train$DNN.hidden$depth[1])
+                  upper <- c(params.train$DNN.hidden$width[2], params.train$DNN.hidden$depth[2])
+                  argstmp$hidden <- cito::tune(lower = lower, upper = upper)
                 }
               } else {
                 if (length(params.train[[param.n]]) == 1) {
@@ -442,13 +453,13 @@ bm_Tuning <- function(model,
             tune.DNN <- do.call(cito::dnn, argstmp)
             
             ## Keep the tuned parameters
-            argstmp$hidden = tune.DNN$model_properties$hidden
-            argstmp$bias = tune.DNN$model_properties$bias
-            argstmp$lambda = tune.DNN$training_properties$lambda
-            argstmp$alpha = tune.DNN$training_properties$alpha 
-            argstmp$lr = as.numeric(tune.DNN$training_properties$lr)
-            argstmp$batchsize = tune.DNN$training_properties$batchsize
-            argstmp$epochs = tune.DNN$training_properties$epochs
+            argstmp$hidden <- tune.DNN$model_properties$hidden
+            argstmp$bias <- tune.DNN$model_properties$bias
+            argstmp$lambda <- tune.DNN$training_properties$lambda
+            argstmp$alpha <- tune.DNN$training_properties$alpha 
+            argstmp$lr <- as.numeric(tune.DNN$training_properties$lr)
+            argstmp$batchsize <- tune.DNN$training_properties$batchsize
+            argstmp$epochs <- tune.DNN$training_properties$epochs
           }
           
         } else {
@@ -480,8 +491,8 @@ bm_Tuning <- function(model,
             cmd.tuning <- paste0(cmd.tuning, " weights = current.weights,")
           }
           if (tuning.fun == "avNNet") {
-            maxit = 500
-            maxnwts = 10 * (ncol(myExpl) + 1) + 10 + 1
+            maxit <- 500
+            maxnwts <- 10 * (ncol(myExpl) + 1) + 10 + 1
             ## Automatically standardize data prior to modeling and prediction
             cmd.tuning <- paste0(cmd.tuning, " preProc = c('center', 'scale'), linout = TRUE, trace = FALSE,")
             cmd.tuning <- paste0(cmd.tuning, " MaxNWts.ANN = maxnwts, maxit = maxit))")
@@ -527,12 +538,12 @@ bm_Tuning <- function(model,
               }
               
               if (model == "CTA") {
-                tuning.fun = "rpart2"
+                tuning.fun <- "rpart2"
                 eval(parse(text = paste0("try(tuned.mod <- ", cmd.tuning)))
-                tuning.fun = "rpart" # needed to reset the tuning function in non parallel mode
+                tuning.fun <- "rpart" # needed to reset the tuning function in non parallel mode
                 if (!is.null(tuned.mod)) {
-                  tmp = tuned.mod$results
-                  if (bm.format@data.type == 'binary') { tmp$TSS = tmp$Sens + tmp$Spec - 1 }
+                  tmp <- tuned.mod$results
+                  if (bm.format@data.type == 'binary') { tmp$TSS <- tmp$Sens + tmp$Spec - 1 }
                   if(metric.eval == "RMSE"){
                     argstmp[["maxdepth"]] <- tmp[which.min(tmp[, metric.eval]), "maxdepth"]
                   } else {
@@ -547,15 +558,15 @@ bm_Tuning <- function(model,
           if (do.formula) {
             cat("\n\t\t\t> Tuning formula...")
             
-            typ.vec = c('simple', 'quadratic', 'polynomial', 's_smoother')
+            typ.vec <- c('simple', 'quadratic', 'polynomial', 's_smoother')
             max.intlev <- min(ncol(myExpl) - 1, 3)
             if (model == "CTA") { max.intlev <- 0}
             if (model == "FDA") { 
-              typ.vec = c('simple', 's_smoother') 
+              typ.vec <- c('simple', 's_smoother') 
               max.intlev <- 0
               argstmp$method <- eval(parse(text = paste0("quote(", argstmp$method, ")")))
             }
-            if (model %in% c("RF", "RFd", "GBM")) { typ.vec = c('simple', 'quadratic', 'polynomial') }
+            if (model %in% c("RF", "RFd", "GBM")) { typ.vec <- c('simple', 'quadratic', 'polynomial') }
             
             if (bm.format@data.type == "binary") {
               myObs <- as.numeric(factor(myResp, labels = c("absence" = 0, "presence" = 1))) - 1
@@ -677,8 +688,8 @@ bm_Tuning <- function(model,
                                   , weights = NULL, params.train)
 {
   ## check model --------------------------------------------------------------
-  .fun_testIfIn(TRUE, "model", model, c("ANN", "CTA", "DNN", "FDA", "GAM", "GBM", "GLM"
-                                        , "MARS", "MAXENT", "MAXNET", "RF", "RFd", "SRE", "XGBOOST"))
+  .fun_testIfInOnlyOne("model", model, c("ANN", "CTA", "DNN", "FDA", "GAM", "GBM", "GLM"
+                                         , "MARS", "MAXENT", "MAXNET", "RF", "RFd", "SRE", "XGBOOST"))
   
   ## check namespace ----------------------------------------------------------
   if (!isNamespaceLoaded("caret")) { 
@@ -697,78 +708,78 @@ bm_Tuning <- function(model,
   }
   
   ## check bm.options ----------------------------------------------------------
-  .fun_testIfInherits(TRUE, "bm.options", bm.options, c("BIOMOD.options.default", "BIOMOD.options.dataset"))
+  .fun_testIfInherits("bm.options", bm.options, c("BIOMOD.options.default", "BIOMOD.options.dataset"))
   ## check bm.format ----------------------------------------------------------
-  .fun_testIfInherits(TRUE, "bm.format", bm.format, c("BIOMOD.formated.data", "BIOMOD.formated.data.PA"))
+  .fun_testIfInherits("bm.format", bm.format, c("BIOMOD.formated.data", "BIOMOD.formated.data.PA"))
   ## check params.train -------------------------------------------------------
-  params.train_init = list(ANN.size = c(2, 4, 6, 8),
-                           ANN.decay = c(0.01, 0.05, 0.1),
-                           ANN.bag = FALSE,
-                           DNN.hidden = list(depth = 3, width = 100),
-                           DNN.bias = TRUE,
-                           DNN.lambda = 0.001,
-                           DNN.alpha = 1, 
-                           DNN.lr = c(0.0001, 0.1),
-                           DNN.batchsize = 100,
-                           DNN.epochs = 150,
-                           FDA.degree = 1:2, 
-                           FDA.nprune = 2:25,
-                           GAM.select = c(TRUE, FALSE),
-                           GAM.method = c('GCV.Cp', 'GACV.Cp', 'REML', 'P-REML', 'ML', 'P-ML'),
-                           GAM.span = c(0.3, 0.5, 0.7),
-                           GAM.degree = 1,
-                           GBM.n.trees = c(500, 1000, 2500),
-                           GBM.interaction.depth = seq(2, 8, by = 3),
-                           GBM.shrinkage = c(0.001, 0.01, 0.1),
-                           GBM.n.minobsinnode = 10,
-                           MARS.degree = 1:2, 
-                           MARS.nprune = 2:max(21, 2 * ncol(bm.format@data.env.var) + 1),
-                           MAXENT.algorithm = 'maxnet',
-                           MAXENT.tune.args = list(rm = seq(0.5, 1, 0.5), fc = c("L")),
-                           MAXENT.parallel = TRUE,
-                           MAXENT.partitions = 'randomkfold',
-                           MAXENT.kfolds = 10,
-                           MAXENT.user.grp = NULL,
-                           RF.mtry = 1:min(10, ncol(bm.format@data.env.var)),
-                           RFd.mtry = 1:min(10, ncol(bm.format@data.env.var)),
-                           SRE.quant = c(0, 0.0125, 0.025, 0.05, 0.1),
-                           XGBOOST.nrounds = 50,
-                           XGBOOST.max_depth = 1,
-                           XGBOOST.eta = c(0.3, 0.4),
-                           XGBOOST.gamma = 0,
-                           XGBOOST.colsample_bytree = c(0.6, 0.8),
-                           XGBOOST.min_child_weight = 1,
-                           XGBOOST.subsample = 0.5)
+  params.train_init <- list(ANN.size = c(2, 4, 6, 8),
+                            ANN.decay = c(0.01, 0.05, 0.1),
+                            ANN.bag = FALSE,
+                            DNN.hidden = list(depth = 3, width = 100),
+                            DNN.bias = TRUE,
+                            DNN.lambda = 0.001,
+                            DNN.alpha = 1, 
+                            DNN.lr = c(0.0001, 0.1),
+                            DNN.batchsize = 100,
+                            DNN.epochs = 150,
+                            FDA.degree = 1:2, 
+                            FDA.nprune = 2:25,
+                            GAM.select = c(TRUE, FALSE),
+                            GAM.method = c('GCV.Cp', 'GACV.Cp', 'REML', 'P-REML', 'ML', 'P-ML'),
+                            GAM.span = c(0.3, 0.5, 0.7),
+                            GAM.degree = 1,
+                            GBM.n.trees = c(500, 1000, 2500),
+                            GBM.interaction.depth = seq(2, 8, by = 3),
+                            GBM.shrinkage = c(0.001, 0.01, 0.1),
+                            GBM.n.minobsinnode = 10,
+                            MARS.degree = 1:2, 
+                            MARS.nprune = 2:max(21, 2 * ncol(bm.format@data.env.var) + 1),
+                            MAXENT.algorithm = 'maxnet',
+                            MAXENT.tune.args = list(rm = seq(0.5, 1, 0.5), fc = c("L")),
+                            MAXENT.parallel = TRUE,
+                            MAXENT.partitions = 'randomkfold',
+                            MAXENT.kfolds = 10,
+                            MAXENT.user.grp = NULL,
+                            RF.mtry = 1:min(10, ncol(bm.format@data.env.var)),
+                            RFd.mtry = 1:min(10, ncol(bm.format@data.env.var)),
+                            SRE.quant = c(0, 0.0125, 0.025, 0.05, 0.1),
+                            XGBOOST.nrounds = 50,
+                            XGBOOST.max_depth = 1,
+                            XGBOOST.eta = c(0.3, 0.4),
+                            XGBOOST.gamma = 0,
+                            XGBOOST.colsample_bytree = c(0.6, 0.8),
+                            XGBOOST.min_child_weight = 1,
+                            XGBOOST.subsample = 0.5)
   
   for (i in names(params.train)) {
     if (i %in% names(params.train_init)) {
-      params.train_init[[i]] = params.train[[i]]
+      params.train_init[[i]] <- params.train[[i]]
     }
   }
-  params.train = params.train_init
+  params.train <- params.train_init
   
   ## check evaluation metric --------------------------------------------------
   metric.bm <- NULL
   if (model == "MAXENT") {
-    .fun_testIfIn(TRUE, "metric.eval", metric.eval, c("auc.val.avg", "auc.diff.avg", "or.mtp.avg", "or.10p.avg", "AICc"))
-    .fun_testIfIn(TRUE, "params.train$MAXENT.algorithm", params.train$MAXENT.algorithm, c("maxent.jar", "maxnet"))
+    .fun_testIfIn("metric.eval", metric.eval, c("auc.val.avg", "auc.diff.avg", "or.mtp.avg", "or.10p.avg", "AICc"))
+    .fun_testIfIn("params.train$MAXENT.algorithm", params.train$MAXENT.algorithm, c("maxent.jar", "maxnet"))
   } else if (model == "SRE") {
-    .fun_testIfIn(TRUE, "metric.eval", metric.eval, c("AUC", "Kappa", "TSS"))
-    sapply(params.train$SRE.quant, FUN = .fun_testIf01, test = TRUE, objName =  "params.train$SRE.quant")
+    .fun_testIfIn("metric.eval", metric.eval, c("AUC", "Kappa", "TSS"))
+    sapply(params.train$SRE.quant, FUN = .fun_testIf0X, objName =  "params.train$SRE.quant")
   } else if (bm.format@data.type == "binary") {
-    .fun_testIfIn(TRUE, "metric.eval", metric.eval, c("ROC", "TSS"))
+    .fun_testIfIn("metric.eval", metric.eval, c("ROC", "TSS"))
     metric.bm <- metric.eval
   } else if (bm.format@data.type %in% c("multiclass","ordinal")) {
-    .fun_testIfIn(TRUE, "metric.eval", metric.eval, c("Accuracy"))
+    .fun_testIfIn("metric.eval", metric.eval, "Accuracy")
     metric.bm <- "Accuracy"
   } else {
-    .fun_testIfIn(TRUE, "metric.eval", metric.eval, c("RMSE", "Rsquared"))
+    .fun_testIfIn("metric.eval", metric.eval, c("RMSE", "Rsquared"))
     metric.bm <- ifelse(metric.eval == "RMSE", "RMSE", "Rsquared")
   }
   
   ## check weights ------------------------------------------------------------
   if (model %in% c("CTA", "FDA", "GAM", "GLM") && is.null(weights)) { 
-    weights = rep(1, length(bm.format@data.species))
+    weights <- rep(1, length(bm.format@data.species))
   }
   
   ## get tuning function and parameters ---------------------------------------
@@ -779,22 +790,22 @@ bm_Tuning <- function(model,
   }
   names(all.params) <- all.fun
   
-  .fun_testIfIn(TRUE, "tuning.fun", tuning.fun, c(all.fun, "bm_SRE", "ENMevaluate", "maxnet", "tune"))
-  .fun_testIfIn(TRUE, "tuning.fun", tuning.fun, unique(ModelsTable$train[which(ModelsTable$model == model)]))
+  .fun_testIfIn("tuning.fun", tuning.fun, c(all.fun, "bm_SRE", "ENMevaluate", "maxnet", "tune"))
+  .fun_testIfIn("tuning.fun", tuning.fun, unique(ModelsTable$train[which(ModelsTable$model == model)]))
   train.params <- all.params[[tuning.fun]]
   
   ## get tuning grid through params.train -------------------------------------
   tuning.grid <- NULL
   if (model %in% c("ANN", "FDA", "GAM", "GBM", "MARS", "RF", "RFd", "XGBOOST")) {
     if (!(model == "GAM")) {
-      params.train = params.train[grep(paste0(model,"\\."), names(params.train))]
-      .fun_testIfIn(TRUE, "names(params.train)", names(params.train), paste0(model, ".", train.params$params))
+      params.train <- params.train[grep(paste0(model,"\\."), names(params.train))]
+      .fun_testIfIn("names(params.train)", names(params.train), paste0(model, ".", train.params$params))
     } else if (tuning.fun == "gamLoess"){
-      params.train = params.train[c('GAM.span', "GAM.degree")]
+      params.train <- params.train[c('GAM.span', "GAM.degree")]
     } else {
-      params.train = params.train[c('GAM.select', 'GAM.method')]
+      params.train <- params.train[c('GAM.select', 'GAM.method')]
     }
-    names(params.train) = sub(model, "", names(params.train))
+    names(params.train) <- sub(model, "", names(params.train))
     tuning.grid <- do.call(expand.grid, params.train)
   }
   
@@ -805,15 +816,15 @@ bm_Tuning <- function(model,
   
   ## Do formula ---------------------------------------------------------------
   if (model %in% c("DNN", "MAXENT", "MAXNET", "SRE", "XGBOOST") && do.formula == TRUE) {
-    do.formula <- FALSE 
-    cat("\n No optimization of formula for", model)
+    do.formula <- FALSE
+    .message("No optimization of formula available for that model. Sorry.")
   }
   
   ## get criteria -------------------------------------------------------------
   if (do.stepAIC &&
       (model == "GLM" || (model == "GAM" && bm.options@package == "gam")) && 
       !bm.format@data.type %in% c("multiclass", "ordinal", "relative")) {
-    .fun_testIfIn(TRUE, "metric.AIC", metric.AIC, c("AIC", "BIC"))
+    .fun_testIfIn("metric.AIC", metric.AIC, c("AIC", "BIC"))
     if (metric.AIC == "AIC") { criteria.AIC <- 2 }
     if (metric.AIC == "BIC")  { criteria.AIC <- log(ncol(bm.format@data.env.var)) }
   } else {
@@ -864,4 +875,3 @@ bm_Tuning <- function(model,
   
   return(step.list)
 }
-

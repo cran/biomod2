@@ -118,6 +118,28 @@ section.footnotes {
 <h3 id="sec:2026"><i class="fa-solid fa-chess-rook"></i> 2026</h3>
 <h5 id="sec:bugfix_1">Bugfix</h5>
 <ul>
+<li>4.3-4-6 :
+<ul>
+<li>update user related messages :
+<ul>
+<li>remove <em>test</em> argument from <code>.fun_test[...]</code> functions and use them whenever possible</li>
+<li>add <code>.fun_testIfNULL</code>, <code>.fun_testIfLength</code>, <code>.fun_testIfInOnlyOne</code>, <code>.fun_testIfSameSize</code> functions, and change <code>.fun_testIf01</code> and <code>.fun_testMetric</code> to <code>.fun_testIf0X</code> and <code>.fun_testIfSize</code></li>
+<li>add <code>.bm_cat2</code> function and update all <em>cat</em> messages</li>
+<li>add distinction between <em>cat</em> and <em>message</em>, and switch most <em>warning</em> to <em>message</em></li>
+<li>standardize / uniformize all <em>cat</em>, <em>message</em>, <em>stop</em> and <em>warning</em> messages</li>
+</ul>
+</li>
+<li>update default parameters in functions (set to NULL if possible)</li>
+<li>add <code>seed.val</code> parameter in <code>bm_CrossValidation</code></li>
+<li>add check in <code>BIOMOD_Projection</code> and <code>BIOMOD_EnsembleForecasting</code> to deal with single model projection failing</li>
+<li>remove <code>.BIOMOD_EnsembleForecasting.prepare.workdir</code> function</li>
+<li>fix <code>kfold</code> selection for non-binary data in <code>bm_CrossValidation</code></li>
+<li>add check in <code>bm_PseudoAbsences</code> to select presences in <code>PA.user.table</code> when <code>user.defined</code> strategy</li>
+<li>fix <code>bm_Tuning</code> for DNN : multiple sets (PA x RUN), hidden <code>width</code> and <code>depth</code> parameters</li>
+<li>fix <code>EMwmean</code> for abundance models using <code>RMSE</code>, <code>MSE</code>, <code>MAE</code> or <code>Max_error</code> as selection metrics</li>
+<li>add new video tutorial on YouTube</li>
+</ul>
+</li>
 <li>4.3-4-5 : pass CRAN check</li>
 </ul>
 <h4 id="sec:4-3-4-4-clean-version-2026-01-22">4.3-4-4 Clean version (2026-01-22)</h4>
@@ -357,7 +379,7 @@ finally rather through <code>.errorhandling</code> in <code>foreach</code> loop 
 <li>Some changes for the tuning ranges.</li>
 <li>Add <code>RFd</code> : Random Forest with a down-sampling method.</li>
 <li>Add <code>seed.val</code> for <code>bm_pseudoAbsences</code> and <code>BIOMOD_FormatingData</code>.</li>
-<li>Add <code>fact.aggr</code> argument for pseudo-absences selection with the random and disk methods. It allows to reduce the resolution of the environment.</li>
+<li>Add <code>fact.aggr</code> argument for pseudo-absence selection with the random and disk methods. It allows to reduce the resolution of the environment.</li>
 <li>Possibility to give the same options to all datasets with <em>“for_all_datasets”</em> in <code>bm_ModelingOptions</code>.</li>
 </ul>
 <h5 id="sec:bugfix_8">Bugfix</h5>
@@ -826,7 +848,7 @@ finally rather through <code>.errorhandling</code> in <code>foreach</code> loop 
 <h4 id="sec:2-1-12-2013-03-04">2.1.12 (2013-03-04)</h4>
 <ul>
 <li>add <code>rasterVis</code> dependency for nicer <code>biomod2</code> plots</li>
-<li><code>PA.dist.min</code> and <code>PA.dist.max</code> are now defined in meters when you work with unprojected rasters in disk pseudo absences selection</li>
+<li><code>PA.dist.min</code> and <code>PA.dist.max</code> are now defined in meters when you work with unprojected raster in disk pseudo-absence selection</li>
 </ul>
 <h4 id="sec:2-1-9-2013-02-28">2.1.9 (2013-02-28)</h4>
 <ul>
@@ -854,7 +876,7 @@ finally rather through <code>.errorhandling</code> in <code>foreach</code> loop 
 </ul>
 <h4 id="sec:2-0-11-2013-02-18">2.0.11 (2013-02-18)</h4>
 <ul>
-<li>possibility to consider a user.defined pseudo absences selection (<strong>thanks to Signe N.</strong>)</li>
+<li>possibility to consider a user.defined pseudo-absence selection (<strong>thanks to Signe N.</strong>)</li>
 <li>possibility to switch off stepwise glm selection (*<strong>thanks Frank B.</strong>)</li>
 </ul>
 <h4 id="sec:2-0-9-2013-02-15">2.0.9 (2013-02-15)</h4>

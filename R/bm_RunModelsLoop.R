@@ -129,11 +129,11 @@ bm_RunModelsLoop <- function(bm.format,
   if (nb.cpu > 1) {
     if (.getOS() != "windows") {
       if (!isNamespaceLoaded("doParallel")) {
-        if(!requireNamespace('doParallel', quietly = TRUE)) stop("Package 'doParallel' not found")
+        if (!requireNamespace('doParallel', quietly = TRUE)) stop("Package 'doParallel' not found")
       }
       doParallel::registerDoParallel(cores = nb.cpu)
     } else {
-      warning("Parallelisation with `foreach` is not available for Windows. Sorry.")
+      .message("Parallelisation with foreach is not available for Windows. Sorry.")
     }
   }
   
@@ -148,13 +148,13 @@ bm_RunModelsLoop <- function(bm.format,
   
   ## PREPARE DATA ---------------------------------------------------------------------------------
   list.data <- list()
-  pa.list = sapply(colnames(calib.lines), function(x) strsplit(x, "_")[[1]][2])
+  pa.list <- sapply(colnames(calib.lines), function(x) strsplit(x, "_")[[1]][2])
   for (pa.id in unique(pa.list)) { # loop on PA -------------------------------
-    models.subset = models
+    models.subset <- models
     if (!is.null(models.pa)) {
       ## optional : subset of models associated to the concerned PA dataset
-      models.subset = sapply(models.pa, function(x) pa.id %in% x)
-      models.subset = names(models.pa)[which(models.subset == TRUE)]
+      models.subset <- sapply(models.pa, function(x) pa.id %in% x)
+      models.subset <- names(models.pa)[which(models.subset == TRUE)]
     }
     
     data.all <- get_species_data(bm.format)
@@ -165,11 +165,11 @@ bm_RunModelsLoop <- function(bm.format,
     data.all <- data.all[, c(bm.format@sp.name, "x", "y", colnames(bm.format@data.env.var))]
     
     for (i in which(pa.list == pa.id)) { # loop on RUN ------------------------
-      run.id = strsplit(colnames(calib.lines)[i], "_")[[1]][3]
-      run.name = paste0(bm.format@sp.name, "_", pa.id, "_", run.id)
+      run.id <- strsplit(colnames(calib.lines)[i], "_")[[1]][3]
+      run.name <- paste0(bm.format@sp.name, "_", pa.id, "_", run.id)
       
       for (modi in models.subset) { # loop on models --------------------------
-        all.name = paste0(run.name, "_", modi)
+        all.name <- paste0(run.name, "_", modi)
         list.data[[all.name]] <- list(modi = modi,
                                       run.name = run.name,
                                       data.all = data.all,
@@ -180,21 +180,23 @@ bm_RunModelsLoop <- function(bm.format,
   ## RUN models -----------------------------------------------------------------------------------
   out <- foreach(ii = 1:length(list.data), .combine =, .errorhandling = "pass") %dopar%
     {
-      cat('\n\n-=-=-=--=-=-=-', names(list.data)[ii], '\n')
-      bm_RunModel(model = list.data[[ii]]$modi,
-                  run.name = list.data[[ii]]$run.name,
-                  dir.name = bm.format@dir.name,
-                  modeling.id = modeling.id,
-                  Data = list.data[[ii]]$data.all,
-                  bm.options = bm.options,
-                  calib.lines.vec = list.data[[ii]]$calib.lines.vec,
-                  eval.data = get_eval_data(bm.format),
-                  metric.eval = metric.eval,
-                  var.import = var.import,
-                  weights.vec = list.data[[ii]]$weights.vec,
-                  scale.models = scale.models,
-                  seed.val = seed.val,
-                  do.progress = TRUE)
+      .bm_cat2(names(list.data)[ii])
+      out <- bm_RunModel(model = list.data[[ii]]$modi,
+                         run.name = list.data[[ii]]$run.name,
+                         dir.name = bm.format@dir.name,
+                         modeling.id = modeling.id,
+                         Data = list.data[[ii]]$data.all,
+                         bm.options = bm.options,
+                         calib.lines.vec = list.data[[ii]]$calib.lines.vec,
+                         eval.data = get_eval_data(bm.format),
+                         metric.eval = metric.eval,
+                         var.import = var.import,
+                         weights.vec = list.data[[ii]]$weights.vec,
+                         scale.models = scale.models,
+                         seed.val = seed.val,
+                         do.progress = TRUE)
+      cat("\n")
+      return(out)
     }
   
   if (length(out) > 0) {
@@ -264,6 +266,7 @@ bm_RunModel <- function(model, run.name
   ## 2. CREATE MODELS -----------------------------------------------------------------------------
   set.seed(seed.val)
   
+  cat("\n Running model...")
   if (model != "MAXENT") { ## ANY MODEL BUT MAXENT ------------------------------------------------
     
     bm.opt@func <- ifelse(bm.opt@func == "xgb_train", "xgb.train", bm.opt@func)
@@ -357,7 +360,7 @@ bm_RunModel <- function(model, run.name
           Cp <- tr[tr$xsum == min(tr$xsum), "CP"]
           model.sp <- prune(model.sp, cp = Cp[length(Cp)])
         } else {
-          warning("Pruning of CTA model failed")
+          .message("*** Error in CTA: pruning failed")
         }
       } else if (model == "GBM" && bm.opt.val$cv.folds > 1) {
         best.iter <- try(gbm.perf(model.sp, method = "cv" , plot.it = FALSE)) ## c('OOB', 'test', 'cv')
@@ -374,16 +377,16 @@ bm_RunModel <- function(model, run.name
                       expl_var_names = expl_var_names,
                       expl_var_type = .get_var_type(data_env[calib.lines.vec, , drop = FALSE]),
                       expl_var_range = .get_var_range(data_env[calib.lines.vec, , drop = FALSE]))
-      if (model == "GAM") { model.bm@model_subclass = subclass_name } ## TO BE ADDED to all models ?
-      if (model == "GBM" && exists("best.iter")) { model.bm@n.trees_optim = best.iter }
-      if (model == "SRE" && bm.opt.val$do.extrem == TRUE) { model.bm@extremal_conditions = model.sp }
+      if (model == "GAM") { model.bm@model_subclass <- subclass_name } ## TO BE ADDED to all models ?
+      if (model == "GBM" && exists("best.iter")) { model.bm@n.trees_optim <- best.iter }
+      if (model == "SRE" && bm.opt.val$do.extrem == TRUE) { model.bm@extremal_conditions <- model.sp }
       if (model == "DNN") { model.bm@scaling_attributes <- attributes(scale_data) }
       # if (model == "SRE") {
       #   model.sp <- as.data.frame(model.sp)
       #   rownames(model.sp) <- rownames(bm.opt.val$expl.var)
-      #   model.bm@extremal_conditions = model.sp
+      #   model.bm@extremal_conditions <- model.sp
       # }
-      if (data.type %in% c("ordinal", "multiclass")){
+      if (data.type %in% c("ordinal", "multiclass")) {
         model.bm@levels_factor <- levels(data_sp)
       }
     }
@@ -397,13 +400,11 @@ bm_RunModel <- function(model, run.name
     }
   } else { ## MAXENT ------------------------------------------------------------------------------
     if (!file.exists(file.path(bm.opt.val$path_to_maxent.jar, "maxent.jar"))) {
-      warning(paste0("'maxent.jar' file is missing in specified directory ("
-                     , bm.opt.val$path_to_maxent.jar, ").\n"
-                     , "It must be downloaded (https://biodiversityinformatics.amnh.org/open_source/maxent/) "
-                     , "and put in that directory."), immediate. = TRUE)
+      .message("maxent.jar file is missing in specified directory (", bm.opt.val$path_to_maxent.jar, ")."
+               , "\nIt must be downloaded (https://biodiversityinformatics.amnh.org/open_source/maxent/) and put in that directory.")
       g.pred <- NA
       class(g.pred) <- "try-error"
-      cat("\n*** Error in MAXENT, no executable file")
+      .message("*** Error in MAXENT: no executable file")
     } else {
       categorical_var <- .get_categorical_names(data_env)
       
@@ -454,7 +455,7 @@ bm_RunModel <- function(model, run.name
       if (any(grepl(pattern = "Error", x = maxent_exec_output))) {
         g.pred <- NA
         class(g.pred) <- "try-error"
-        cat("\n*** Error in MAXENT, more info available in ", maxent_stderr_file)
+        .message("*** Error in MAXENT: more information available in ", maxent_stderr_file)
       } else {
         model.bm <- new("MAXENT_biomod2_model",
                         model_output_dir = MWD$m_outdir, # MAXENT only
@@ -472,7 +473,7 @@ bm_RunModel <- function(model, run.name
         g.pred <- try(round(as.numeric(read.csv(MWD$m_outputFile)[, 3]) * 1000))
         
         if (var.import > 0) {
-          cat("\n Getting predictor contributions...")
+          cat("\n Getting variables' importance...")
           variables.importance <- bm_VariablesImportance(bm.model = model.bm
                                                          , expl.var = data_env
                                                          , nb.rep = var.import
@@ -497,22 +498,23 @@ bm_RunModel <- function(model, run.name
   temp_workdir = NULL
   
   if (model != "MAXENT") {
+    cat("\n Getting predictions...")
     if (inherits(model.sp, "try-error")) {
       g.pred <- NA
       class(g.pred) <- "try-error"
-      cat("\n*** Error in ", model, ", calibration failed")
+      .message("*** Error in ", model, ": calibration failed")
     } else if (model == "SRE" && bm.opt.val$do.extrem == FALSE) {
       g.pred <- model.sp
     } else {
       g.pred <- try(predict(model.bm, data_env, on_0_1000 = on_0_1000, seedval = seed.val, temp_workdir = temp_workdir))
     }
   } else if (model == "MAXENT" & !inherits(g.pred, 'try-error')) {
-    temp_workdir = model.bm@model_output_dir
+    temp_workdir <- model.bm@model_output_dir
   }
   
   ## scale or not predictions -------------------------------------------------
   if (scale.models && !inherits(g.pred, 'try-error') && data.type == "binary") {
-    cat("\n\tModel scaling...")
+    cat("\n Model scaling...")
     if (on_0_1000) { g.pred <- g.pred / 1000 }
     model.bm@scaling_model <- try(.scaling_model(data.to.rescale = g.pred, data.ref = data_sp, weights = weights.vec))
     ## with weights
@@ -523,13 +525,13 @@ bm_RunModel <- function(model, run.name
   test_pred_ok <- TRUE
   if (inherits(g.pred, "try-error")) { # model calibration or prediction failed
     test_pred_ok <- FALSE
-    cat("\n*** inherits(g.pred,'try-error')")
+    .message("*** Error in ", model, " predictions: inherits(pred, 'try-error')")
   } else if (all(is.na(g.pred))) { # only NA predicted
     test_pred_ok <- FALSE
-    cat("\n*** only NA predicted")
+    .message("*** Error in ", model, " predictions: only NA predicted")
   } else if (length(unique(na.omit(g.pred))) <= 1) { # single value predicted
     test_pred_ok <- FALSE
-    cat("\n*** single value predicted")
+    .message("*** Error in ", model, " predictions: single value predicted")
   }
   
   ## Find good format of prediction for ordinal
@@ -552,13 +554,15 @@ bm_RunModel <- function(model, run.name
     ListOut$model <- model_name
   } else {
     # keep the name of uncompleted modelisations
-    cat("\n   ! Note : ", model_name, "failed!\n")
-    ListOut$calib.failure = model_name
+    .message("*** Error: ", model_name, " failed")
+    ListOut$calib.failure <- model_name
     return(ListOut) ## end of function.
   }
   
   ## make prediction on evaluation data ---------------------------------------
   if (!is.null(eval.data)) {
+    cat("\n Getting predictions on evaluation data...")
+    
     g.pred.eval <- try(
       predict(model.bm, 
               eval.data[, expl_var_names, drop = FALSE], 
@@ -584,13 +588,13 @@ bm_RunModel <- function(model, run.name
   
   ## 4. EVALUATE MODEL ----------------------------------------------------------------------------
   if (length(metric.eval) > 0) {
-    cat("\n\tEvaluating Model stuff...")
+    cat("\n Getting model evaluation...")
     
     ## Check no NA in g.pred to avoid evaluation failures
     na_cell_id <- which(is.na(g.pred))
     if (length(na_cell_id) > 0) {
       eval.lines.vec <- eval.lines.vec[-na_cell_id]
-      cat('\n\tNote : some NA occurs in predictions')
+      .message("Some NA occurred in predictions and have been removed.")
     }
     
     if (length(which(eval.lines.vec == TRUE)) < length(g.pred)) {
@@ -604,7 +608,7 @@ bm_RunModel <- function(model, run.name
       colnames(cross.validation)[which(colnames(cross.validation) == "best.stat")] <- "calibration"
       
       if (data.type == 'binary' && max(cross.validation$cutoff, na.rm = TRUE) > 1000) {
-        cat("\n*** Wrong values predicted, please be careful with the results fo this model")
+        .message("*** Error in ", model_name, " predictions: wrong values predicted")
       }
       
       stat.validation <- foreach(xx = metric.eval, .combine = "rbind") %do% {
@@ -633,7 +637,7 @@ bm_RunModel <- function(model, run.name
       if (length(na_cell_id) > 0) {
         g.pred.eval.without.na <- g.pred.eval[-na_cell_id]
         eval.data <- eval.data[-na_cell_id, ]
-        cat('\n\tNote : some NA occurs in evaluation predictions')
+        .message("Some NA occurred in evaluation predictions and have been removed.")
       } else {
         g.pred.eval.without.na <- g.pred.eval
       }
@@ -661,8 +665,8 @@ bm_RunModel <- function(model, run.name
   
   ## 5. COMPUTE VARIABLES IMPORTANCE --------------------------------------------------------------
   if (var.import > 0) {
-    cat("\n\tEvaluating Predictor Contributions...")
     if (model != "MAXENT") {
+      cat("\n Getting variables' importance...")
       variables.importance <- bm_VariablesImportance(bm.model = model.bm
                                                      , expl.var = data_env
                                                      , nb.rep = var.import
@@ -672,11 +676,10 @@ bm_RunModel <- function(model, run.name
     ListOut$var.import <- variables.importance
     model.bm@model_variables_importance <- variables.importance
     rm(variables.importance)
-    cat("\n")
   }
   
   ## 6. SAVE MODEL OBJECT ON HARD DRIVE -----------------------------------------------------------
-  nameModel = paste(run.name, model, sep = "_") 
+  nameModel <- paste(run.name, model, sep = "_") 
   assign(x = nameModel, value = model.bm)
   save(list = nameModel, file = file.path(dir_name, resp_name, "models", modeling.id, nameModel), compress = TRUE)
   
@@ -702,13 +705,13 @@ bm_RunModel <- function(model, run.name
   data_env <- Data[, -c(1, which(colnames(Data) %in% c("x", "y"))), drop = FALSE]
   resp_name <- colnames(Data)[1] ## species name
   expl_var_names <- colnames(data_env) ## explanatory variable names
-  # replace Pseudo absences selected (NA) into true absences (0).. for model computing purpose
+  # replace PA selected (NA) into true absences (0).. for model computing purpose
   if (sum(is.na(Data[, 1]))) { data_sp[which(is.na(data_sp))] <- 0 }
   
   ## 1. Check data.type -------------------------------------------------------
   data.type <- bm.options@options[[1]]@type
   avail.types.list <- c('binary', 'count', 'ordinal', 'relative', 'abundance', 'multiclass')
-  .fun_testIfIn(TRUE, "data.type", data.type, avail.types.list)
+  .fun_testIfIn("data.type", data.type, avail.types.list)
   
   on_0_1000 <- TRUE
   if (data.type %in% c("abundance", "count", "multiclass", "ordinal", "relative")) {
@@ -724,9 +727,7 @@ bm_RunModel <- function(model, run.name
         length(which(data_sp[calib.lines.vec] == 0)) == length(calib.lines.vec) ||
         (length(which(data_sp[eval.lines.vec] == 0)) == 0 & data.type == "binary") ||
         length(which(data_sp[eval.lines.vec] == 0)) == length(eval.lines.vec)) {
-      warning(paste0(resp_name, " ", model,
-                     " was switched off because of no both presences and absences data given"),
-              immediate. = TRUE)
+      .message(model, " switched off (calib.lines does not contain both presences and absences)")
       return(NULL)
     }
   } else { ## evaluation = calibration dataset
@@ -734,9 +735,7 @@ bm_RunModel <- function(model, run.name
     # ...test if there is absences AND presences in whole dataset
     if ((length(which(data_sp == 0)) == 0 & data.type == "binary")  ||
         length(which(data_sp == 0)) == length(data_sp)) {
-      warning(paste0(resp_name, " ", model,
-                     " was switched off because of no both presences and absences data given (full model)"),
-              immediate. = TRUE)
+      .message(model, " switched off (allRun does not contain both presences and absences)")
       return(NULL)
     }
   }
@@ -749,9 +748,9 @@ bm_RunModel <- function(model, run.name
                             , 'RMSE', 'MSE', 'MAE', 'Rsquared', 'Rsquared_aj', 'Max_error'
                             , 'Accuracy', 'Recall', 'Precision', 'F1')
   if (sum(!(metric.eval %in% avail.eval.meth.list)) > 0) {
-    tmp = which(metric.eval %in% avail.eval.meth.list)
-    warning(paste0(toString(metric.eval[!tmp]), ' were switched off !'), immediate. = TRUE)
+    tmp <- which(metric.eval %in% avail.eval.meth.list)
     metric.eval <- metric.eval[tmp]
+    .message("metric.eval set to ", toString(metric.eval))
   }  
   
   ## 4. Check weights.vec argument --------------------------------------------
@@ -770,7 +769,7 @@ bm_RunModel <- function(model, run.name
   ## 6. Get data together -----------------------------------------------------
   data_mod <- cbind(data_sp, data_env_w)
   colnames(data_mod) <- c(resp_name, colnames(data_env_w))
-
+  
   
   return(list(resp_name = resp_name,
               expl_var_names = expl_var_names,
@@ -793,7 +792,7 @@ bm_RunModel <- function(model, run.name
                                     , categorical_var = NULL, calib.lines.vec = NULL, data_eval
                                     , dir.name = '.', modeling.id = '', background_data_dir = 'default')
 {
-  cat('\n\t\tCreating Maxent Temp Proj Data...')
+  cat("\n Creating MAXENT working directory...")
   
   ## initialise output
   MWD <- list()
@@ -804,7 +803,7 @@ bm_RunModel <- function(model, run.name
   if (is.null(calib.lines.vec)) { calib.lines.vec <- rep(TRUE, nrow(data_env)) }
   
   ## define all paths to files needed by MAXENT
-  nameFolder = file.path(dir.name, sp_name, 'models', modeling.id)
+  nameFolder <- file.path(dir.name, sp_name, 'models', modeling.id)
   m_outdir <- file.path(nameFolder, paste0(run_name, '_MAXENT_outputs'))
   m_predictDir <- file.path(m_outdir, "Predictions")
   MWD$m_outdir <- m_outdir
@@ -868,4 +867,3 @@ bm_RunModel <- function(model, run.name
   
   return(MWD)
 }
-

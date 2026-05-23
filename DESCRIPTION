@@ -1,8 +1,8 @@
 Package: biomod2
 Type: Package
 Title: Ensemble Platform for Species Distribution Modeling
-Version: 4.3-4-5
-Date: 2026-01-30
+Version: 4.3-4-6
+Date: 2026-05-07
 Authors@R: c(person("Maya", "Guéguen", role = c("aut", "cre")
                     , email = "maya.gueguen@univ-grenoble-alpes.fr"),
              person("Hélène", "Blancheteau", role = "aut"),
@@ -47,11 +47,11 @@ Collate: 'biomod2-package.R' 'biomod2_globalVariables.R'
         'bm_Tuning.R' 'bm_VariablesImportance.R' 'zzz.R'
 LazyData: true
 NeedsCompilation: no
-Packaged: 2026-01-30 12:46:58 UTC; gueguema
+Packaged: 2026-05-11 11:50:16 UTC; gueguema
 Author: Maya Guéguen [aut, cre],
   Hélène Blancheteau [aut],
   Rémi Lemaire-Patin [aut],
   Wilfried Thuiller [aut]
 Maintainer: Maya Guéguen <maya.gueguen@univ-grenoble-alpes.fr>
 Repository: CRAN
-Date/Publication: 2026-01-30 14:30:13 UTC
+Date/Publication: 2026-05-23 11:20:20 UTC

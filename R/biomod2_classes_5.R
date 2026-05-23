@@ -227,7 +227,7 @@ setMethod('predict2', signature(object = 'biomod2_ensemble_model', newdata = "Sp
             
             
             if (!is.null(out) & !is.null(filename)) {
-              cat("\n\t\tWriting projection on hard drive...")
+              cat("\n\t\tWriting projection on hard drive...") ## Happening ?
               if (on_0_1000 & !inherits(object, "EMcv_biomod2_model")) { ## projections are stored as positive integer
                 writeRaster(out, filename = filename, overwrite = overwrite, datatype = "INT2S", NAflag = -9999)
               } else { ## keep default data format for saved raster
@@ -262,9 +262,9 @@ setMethod('predict2', signature(object = 'biomod2_ensemble_model', newdata = "da
             mean_prediction <- args$mean_prediction
             side <- args$side
             data.type <- args$data.type
-            # additional arg retrived for EMca
+            # additional arg retrieved for EMca
             thresh <- args$thresh
-            # additional arg retrived for EMwmean
+            # additional arg retrieved for EMwmean
             penalization_scores <- args$penalization_scores
             
             if (data_as_formal_predictions) { 
@@ -428,7 +428,7 @@ setMethod('predict2', signature(object = 'EMcv_biomod2_model', newdata = "SpatRa
           {
             predfun <- function(newdata, on_0_1000, mod.name, na.rm, ...) {
               if (nlyr(newdata) <= 1) {
-                stop(paste0("\n Model EMcv was not computed because only one single model was kept in ensemble modeling (", names(newdata), ")"))
+                stop("EMcv not computed (only one single model kept in ensemble modeling (", names(newdata), "))")
               }
               out <- app(newdata, function(x) {
                 sd(x, na.rm = na.rm) / mean(x, na.rm = na.rm) * 100
@@ -449,8 +449,7 @@ setMethod('predict2', signature(object = 'EMcv_biomod2_model', newdata = "data.f
           {
             predfun <- function(newdata, na.rm, ...) {
               if (ncol(newdata) <= 1) {
-                stop(paste0("\n Model EMcv was not computed because only one single model was kept in ensemble modeling ("
-                            , colnames(newdata), ")"))
+                stop("EMcv not computed (only one single model kept in ensemble modeling (", colnames(newdata), "))")
               }
               out <- apply(newdata, 1,
                            function(x) {
@@ -476,11 +475,8 @@ setClass('EMci_biomod2_model',
          contains = 'biomod2_ensemble_model',
          prototype = list(model_class = 'EMci', alpha = 0.05, side = 'superior'),
          validity = function(object) {
-           if (!(object@side %in% c('inferior','superior'))) {
-             stop("side arg should be 'inferior' or 'superior")
-           } else { 
-             return(TRUE) 
-           }
+           .fun_testIfIn("object@side", object@side, c("inferior", "superior"))
+           return(TRUE) 
          })
 
 ##' 
@@ -632,7 +628,7 @@ setMethod('predict2', signature(object = 'EMca_biomod2_model', newdata = "data.f
             on_0_1000 <- args$on_0_1000
             if (is.null(on_0_1000)) { on_0_1000 <- FALSE }
             
-            predfun <- function(newdata, na.rm, ...) {
+            predfun <- function(newdata, on_0_1000, thresh, na.rm, ...) {
               out <- rowMeans(bm_BinaryTransformation(newdata, thresh), na.rm = na.rm)
               if (on_0_1000) { out <- round(out * 1000) }
               out
@@ -643,7 +639,7 @@ setMethod('predict2', signature(object = 'EMca_biomod2_model', newdata = "data.f
               thresh <- object@thresholds / 1000
             }
             # redirect to predict2.biomod2_ensemble_model.data.frame
-            callNextMethod(object, newdata, predfun = predfun,
+            callNextMethod(object, newdata, predfun = predfun, thresh = thresh,
                            data_as_formal_predictions = data_as_formal_predictions, ...)
           }
 )
@@ -670,7 +666,7 @@ setMethod('predict2', signature(object = 'EMwmean_biomod2_model', newdata = "Spa
           function(object, newdata, data_as_formal_predictions = FALSE, ...)
           {
             if (ncol(newdata) < 1) {
-              stop("Model EMwmean was not computed because no single model was kept in ensemble modeling")
+              stop("EMwmean not computed (no single model kept in ensemble modeling)")
             }
             predfun <- function(newdata, on_0_1000, penalization_scores, mod.name, ...) {
               if (nlyr(newdata) == 1) {
@@ -700,7 +696,7 @@ setMethod('predict2', signature(object = 'EMwmean_biomod2_model', newdata = "dat
           function(object, newdata, data_as_formal_predictions = FALSE, ...)
           {
             if (ncol(newdata) < 1) {
-              stop("Model EMwmean was not computed because no single model was kept in ensemble modeling")
+              stop("EMwmean not computed (no single model kept in ensemble modeling)")
             }
             predfun <- function(newdata, on_0_1000, penalization_scores, na.rm, ...) {
               out <- apply(as.matrix(newdata), 1, function(x) penalization_scores*x)
@@ -746,7 +742,7 @@ setMethod('predict2', signature(object = 'EMmode_biomod2_model', newdata = "Spat
                 # return(
                 #   app(newdata, .find_freq_mode, wopt = list(names = mod.name))
                 # )
-              
+                
                 levels <- unlist(unique(values(newdata[[1]], dataframe = T, na.rm = T)))## On assume qu'il les a tous....
                 levels <- levels(levels)
                 

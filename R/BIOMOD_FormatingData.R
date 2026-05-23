@@ -55,20 +55,20 @@
 ##' \cr \emph{Note that old format from \pkg{raster} and \pkg{sp} are still supported such as 
 ##' \code{RasterStack} and \code{SpatialPointsDataFrame} objects. }
 ##' 
-##' @param PA.nb.rep (\emph{optional, default} \code{0}) \cr 
-##' If pseudo-absence selection, an \code{integer} corresponding to the number of sets 
-##' (repetitions) of pseudo-absence points that will be drawn
 ##' @param PA.strategy (\emph{optional, default} \code{NULL}) \cr 
 ##' If pseudo-absence selection, a \code{character} defining the strategy that will be used to 
 ##' select the pseudo-absence points. Must be \code{random}, \code{sre}, \code{disk} or 
 ##' \code{user.defined} (see Details)
-##' @param PA.nb.absences (\emph{optional, default} \code{0}) \cr 
+##' @param PA.nb.rep (\emph{optional, default} \code{NULL}) \cr 
+##' If pseudo-absence selection, an \code{integer} corresponding to the number of sets 
+##' (repetitions) of pseudo-absence points that will be drawn
+##' @param PA.nb.absences (\emph{optional, default} \code{NULL}) \cr 
 ##' If pseudo-absence selection, and \code{PA.strategy = 'random'} or \code{PA.strategy = 'sre'} 
 ##' or \code{PA.strategy = 'disk'}, an \code{integer} corresponding to the number of pseudo-absence 
 ##' points that will be selected for each pseudo-absence repetition (true absences included). \cr
 ##' It can also be a \code{vector} of the same length as \code{PA.nb.rep} containing \code{integer} 
 ##' values corresponding to the different numbers of pseudo-absences to be selected (see Details)
-##' @param PA.sre.quant (\emph{optional, default} \code{0}) \cr 
+##' @param PA.sre.quant (\emph{optional, default} \code{NULL}) \cr 
 ##' If pseudo-absence selection and \code{PA.strategy = 'sre'}, a \code{numeric} between \code{0} 
 ##' and \code{0.5} defining the half-quantile used to make the \code{sre} pseudo-absence selection 
 ##' (see Details)
@@ -76,7 +76,7 @@
 ##' If pseudo-absence selection and \code{PA.strategy = 'disk'}, a \code{numeric} defining the 
 ##' minimal distance to presence points used to make the \code{disk} pseudo-absence selection 
 ##' (in the same projection system units as \code{resp.xy} and \code{expl.var}, see Details)
-##' @param PA.dist.max (\emph{optional, default} \code{0}) \cr 
+##' @param PA.dist.max (\emph{optional, default} \code{NULL}) \cr 
 ##' If pseudo-absence selection and \code{PA.strategy = 'disk'}, a \code{numeric} defining the 
 ##' maximal distance to presence points used to make the \code{disk} pseudo-absence selection 
 ##' (in the same projection system units as \code{resp.xy} and \code{expl.var}, see Details)
@@ -356,36 +356,31 @@ BIOMOD_FormatingData <- function(resp.name,
                                  eval.resp.var = NULL,
                                  eval.resp.xy = NULL,
                                  eval.expl.var = NULL,
-                                 PA.nb.rep = 0,
-                                 PA.nb.absences = 1000,
                                  PA.strategy = NULL,
+                                 PA.nb.rep = NULL,
+                                 PA.nb.absences = NULL,
                                  PA.dist.min = 0,
                                  PA.dist.max = NULL,
-                                 PA.sre.quant = 0.025,
+                                 PA.sre.quant = NULL,
                                  PA.fact.aggr = NULL,
                                  PA.user.table = NULL,
                                  na.rm = TRUE,
                                  filter.raster = FALSE,
                                  seed.val = NULL)
-{ 
-  .bm_cat(paste0(resp.name, " Data Formating"))
+{
+  .bm_cat("[BIOMOD] Do Data Formating")
   
   ## 1. check args ------------------------------------------------------------
-  args <- .BIOMOD_FormatingData.check.args(resp.name,
-                                           resp.var,
-                                           expl.var,
-                                           dir.name,
-                                           resp.xy,
-                                           eval.resp.var,
-                                           eval.expl.var,
-                                           eval.resp.xy,
-                                           filter.raster)
+  cat("\nChecking arguments...")
+  args <- .BIOMOD_FormatingData.check.args(resp.name, dir.name)
   for (argi in names(args)) { assign(x = argi, value = args[[argi]]) }
   rm(args)
+  cat("\n")
   
   ## 2. build BIOMOD.formated.data object -------------------------------------
   out <- NULL
-  if (is.null(PA.strategy) || PA.strategy == 'none') { # no Pseudo Absences
+  if (is.null(PA.strategy)) { # no pseudo-absences
+    cat("\n\t + BIOMOD.formated.data object")
     out <- BIOMOD.formated.data(sp = resp.var,
                                 xy = resp.xy,
                                 env = expl.var,
@@ -397,7 +392,8 @@ BIOMOD_FormatingData <- function(resp.name,
                                 eval.xy = eval.resp.xy,
                                 na.rm = na.rm,
                                 filter.raster = filter.raster)
-  } else { # automatic Pseudo Absences selection
+  } else { # automatic pseudo-absence selection
+    cat("\n\t + BIOMOD.formated.data.PA object")
     out <- BIOMOD.formated.data.PA(sp = resp.var,
                                    xy = resp.xy,
                                    env = expl.var,
@@ -406,8 +402,8 @@ BIOMOD_FormatingData <- function(resp.name,
                                    eval.sp = eval.resp.var,
                                    eval.env = eval.expl.var,
                                    eval.xy = eval.resp.xy,
-                                   PA.nb.rep = PA.nb.rep,
                                    PA.strategy = PA.strategy,
+                                   PA.nb.rep = PA.nb.rep,
                                    PA.nb.absences = PA.nb.absences,
                                    PA.dist.min = PA.dist.min,
                                    PA.dist.max = PA.dist.max,
@@ -419,6 +415,7 @@ BIOMOD_FormatingData <- function(resp.name,
                                    seed.val)
   }
   out@call <- match.call()
+  cat("\n")
   
   .bm_cat("Done")
   return(out)
@@ -427,40 +424,23 @@ BIOMOD_FormatingData <- function(resp.name,
 
 ###################################################################################################
 
-.BIOMOD_FormatingData.check.args <- function(resp.name,
-                                             resp.var,
-                                             expl.var,
-                                             dir.name,
-                                             resp.xy,
-                                             eval.resp.var,
-                                             eval.expl.var,
-                                             eval.resp.xy,
-                                             filter.raster)
+.BIOMOD_FormatingData.check.args <- function(resp.name, dir.name)
 {
-  ## 0. Checking names (resp.name available ?) --------------------------------
+  ## 1. Check resp.name argument ----------------------------------------------
+  .fun_testIfNULL("resp.name", resp.name)
   if (grepl('/', resp.name)) {
-    stop(paste0("Response variable name must be a character, and not a file path."
-                , "\n Please refer to dir.name parameter to set a modeling folder."))
+    stop("resp.name must be a character (not a file path). Please refer to dir.name parameter to set a modeling folder.")
   }
   if (grepl('_', resp.name) | grepl(' ', resp.name)) {
     resp.name <- paste(unlist(strsplit(resp.name, '_')), collapse = '.')
     resp.name <- paste(unlist(strsplit(resp.name, ' ')), collapse = '.')
-    cat('\n      ! Response variable name was converted into', resp.name)
+    .message("resp.name set to ", resp.name)
   }
-  if (!dir.exists(dir.name)) {
-    stop(paste0("Modeling folder '", dir.name, "' does not exist"))
-  }
-  args <- .BIOMOD.formated.data.check.args(sp = resp.var, env = expl.var, xy = resp.xy
-                                           , eval.sp = eval.resp.var, eval.env = eval.expl.var
-                                           , eval.xy = eval.resp.xy, filter.raster = filter.raster)
   
-  return(list(resp.var = args$sp,
-              expl.var = args$env,
-              resp.xy = args$xy,
-              resp.name = resp.name,
-              dir.name = dir.name,
-              eval.resp.var = args$eval.sp,
-              eval.expl.var = args$eval.env,
-              eval.resp.xy = args$eval.xy))
+  ## 2. Check dir.name argument -----------------------------------------------
+  if (!dir.exists(dir.name)) {
+    stop("Modeling folder '", dir.name, "' does not exist. Please check.")
+  }
+  
+  return(list(resp.name = resp.name, dir.name = dir.name))
 }
-

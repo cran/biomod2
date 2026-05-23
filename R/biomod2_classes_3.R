@@ -447,12 +447,15 @@ setClass("BIOMOD.stored.models.out",
 
 setMethod('show', signature('BIOMOD.models.out'), function(object) {
   .bm_cat("BIOMOD.models.out")
-  cat("\nModeling directory (dir.name) :", object@dir.name, fill = .Options$width)
-  cat("\nModeled species (sp.name) :", object@sp.name, fill = .Options$width)
-  cat("\nModeling id (modeling.id) :", object@modeling.id, fill = .Options$width)
-  cat("\nExplanatory variables (expl.var.names) :", object@expl.var.names, fill = .Options$width)
-  cat("\n\nComputed models (models.computed) : ", object@models.computed, fill = .Options$width)
-  cat("\nFailed models (models.failed) : ", object@models.failed, fill = .Options$width)
+  cat("\n")
+  cat("Modeling directory (dir.name) :", object@dir.name, fill = .Options$width)
+  cat("Modeled species (sp.name) :", object@sp.name, fill = .Options$width)
+  cat("Modeling id (modeling.id) :", object@modeling.id , "(", object@link , ")", fill = .Options$width)
+  cat("\n")
+  cat("Explanatory variables (expl.var.names) :", object@expl.var.names, fill = .Options$width)
+  cat("\n")
+  cat("Computed models (models.computed) :", object@models.computed, fill = .Options$width)
+  cat("Failed models (models.failed) :", object@models.failed, fill = .Options$width)
   .bm_cat()
 })
 
@@ -480,10 +483,10 @@ setMethod("get_calib_lines", "BIOMOD.models.out",
             
             if (!is.null(out) && as.data.frame == TRUE) {
               tmp <- melt(out, varnames = c("points", "PA_run"))
-              tmp$PA = strsplit(sub("^_", "", tmp$PA_run), "_")[[1]][1]
-              tmp$run = strsplit(sub("^_", "", tmp$PA_run), "_")[[1]][2]
+              tmp$PA <- strsplit(sub("^_", "", tmp$PA_run), "_")[[1]][1]
+              tmp$run <- strsplit(sub("^_", "", tmp$PA_run), "_")[[1]][2]
               out <- tmp[, c("PA", "run", "points", "value")]
-              colnames(out)[4] = "calib.lines"
+              colnames(out)[4] <- "calib.lines"
               
               keep_lines <- .filter_outputs.df(out, subset.list = list(PA = PA, run = run))
               out <- out[keep_lines, ]
@@ -504,10 +507,10 @@ setMethod("get_formal_data", "BIOMOD.models.out",
             if (is.null(subinfo)) {
               return(load_stored_object(obj@formated.input.data))
             } else if (subinfo == 'MinMax') {
-              env = as.data.frame(get_formal_data(obj)@data.env.var)
-              MinMax = foreach(i = 1:ncol(env)) %do%
+              env <- as.data.frame(get_formal_data(obj)@data.env.var)
+              MinMax <- foreach(i = 1:ncol(env)) %do%
                 {
-                  x = env[, i]
+                  x <- env[, i]
                   if (is.numeric(x)) {
                     return(list(min = min(x, na.rm = TRUE)
                                 , max = max(x, na.rm = TRUE)))
@@ -515,7 +518,7 @@ setMethod("get_formal_data", "BIOMOD.models.out",
                     return(list(levels = levels(x)))
                   }
                 }
-              names(MinMax) = colnames(env)
+              names(MinMax) <- colnames(env)
               return(MinMax)
             } else if (subinfo == 'expl.var') {
               return(as.data.frame(get_formal_data(obj)@data.env.var))
@@ -527,7 +530,7 @@ setMethod("get_formal_data", "BIOMOD.models.out",
               return(get_formal_data(obj)@eval.data.species)
             } else if (subinfo == 'eval.expl.var') {
               return(as.data.frame(get_formal_data(obj)@eval.data.env.var))
-            } else { stop("Unknown subinfo tag")}
+            } else { stop("Invalid subinfo tag")}
           }
 )
 
@@ -545,8 +548,8 @@ setMethod("get_predictions", "BIOMOD.models.out",
                    , model.as.col = FALSE)
           {
             if (evaluation && (!obj@has.evaluation.data)) {
-              warning("!   Calibration data returned because no evaluation data available")
-              evaluation = FALSE
+              evaluation <- FALSE
+              .message("evaluation set to FALSE (calibration data returned)")
             }
             
             # select calibration or eval data
@@ -591,8 +594,8 @@ setMethod("get_built_models", "BIOMOD.models.out",
 
 setMethod("get_evaluations", "BIOMOD.models.out",
           function(obj, full.name = NULL, PA = NULL, run = NULL, algo = NULL, metric.eval = NULL) {
-            if(obj@models.evaluation@link == ''){
-              cat("\n! models have no evaluations\n")
+            if (obj@models.evaluation@link == '') {
+              .message("No evaluation has been computed for these models.")
               return(invisible(NULL))
             } else {
               out <- load_stored_object(obj@models.evaluation)
@@ -612,8 +615,8 @@ setMethod("get_evaluations", "BIOMOD.models.out",
 
 setMethod("get_variables_importance", "BIOMOD.models.out",
           function(obj, full.name = NULL, PA = NULL, run = NULL, algo = NULL, expl.var = NULL) {
-            if(obj@variables.importance@link == ''){
-              cat("\n! models have no variables importance\n")
+            if (obj@variables.importance@link == '') {
+              .message("No variables importance has been computed for these models.")
               return(invisible(NULL))
             } else {
               out <- load_stored_object(obj@variables.importance)
@@ -847,7 +850,7 @@ setMethod('plot', signature(x = 'BIOMOD.projection.out', y = "missing"),
               } else {
                 args_scale_fill <- list(NULL, limits = limits, discrete = FALSE)
               }
-            
+              
               
               if (plot.output == "facet") {
                 g <- ggplot() +
@@ -915,16 +918,14 @@ setMethod('plot', signature(x = 'BIOMOD.projection.out', y = "missing"),
   
   ## 1 - check for tidyterra ----------------------
   if (inherits(proj, "SpatRaster")) {
-    if (!requireNamespace("tidyterra")) {
-      stop("Package `tidyterra` is missing. Please install it with `install.packages('tidyterra')`.")
-    }
+    if (!requireNamespace('tidyterra', quietly = TRUE)) stop("Package 'tidyterra' not found")
   }
   
   ## 2 - plot.output----------------------
   if (missing(plot.output)) {
     plot.output <- "facet"
   } else {
-    .fun_testIfIn(TRUE, "plot.output", plot.output, c("facet", "list"))
+    .fun_testIfIn("plot.output", plot.output, c("facet", "list"))
   }
   
   ## 3 - do.plot ----------------------
@@ -937,7 +938,7 @@ setMethod('plot', signature(x = 'BIOMOD.projection.out', y = "missing"),
   if (missing(scales)) {
     scales <- "fixed"
   } else {
-    .fun_testIfIn(TRUE, "scales", scales, c("fixed","free","free_x","free_y"))
+    .fun_testIfIn("scales", scales, c("fixed", "free_x", "free_y", "free"))
   }
   
   ## 6 - check coord if x is a data.frame -------------------------------
@@ -946,33 +947,27 @@ setMethod('plot', signature(x = 'BIOMOD.projection.out', y = "missing"),
     
     if (nrow(x@coord) > 0) {
       if (!is.null(coord)) {
-        cat("! ignoring argument `coord` as coordinates were already given to BIOMOD_Projection")
+        .message("coord will be ignored (coordinates already given to BIOMOD_Projection)")
       }
       coord <- x@coord
     }
     
     if (nrow(x@coord) == 0 & is.null(coord)) {
-      stop("missing coordinates to plot with a data.frame. Either give argument `coord` to plot or argument `new.env.xy` to BIOMOD_Projection")
-    } else if (!inherits(coord, c("data.frame","matrix"))) {
-      stop("`coord` must be a data.frame or a matrix.")
-    } else if (ncol(coord) != 2) {
-      stop("`coord` must have two columns.")
-    } else if (nrow(coord) != npred) {
-      stop("`coord` must have as many rows as the number of predictions (", npred, ").")
-    } else {
-      coord <- as.data.frame(coord)
-      colnames(coord) <- c("x", "y")
-      coord$points <- seq_len(npred)
+      stop("BIOMOD.projection.out coordinates are missing. Please define either new.env.xy in BIOMOD_Projection or coord in plot function.")
     }
+    .fun_testIfInherits("coord", coord, c("matrix", "data.frame"))
+    .fun_testIfSize("coord", ncol(coord), 2)
+    .fun_testIfSameSize("coord", nrow(coord), "predictions", npred, "number of rows/size")
+    coord <- as.data.frame(coord)
+    colnames(coord) <- c("x", "y")
+    coord$points <- seq_len(npred)
   }
   
-  if (missing(size)) {
-    size <- 0.75
-  } 
+  if (missing(size)) { size <- 0.75 } 
   
   ## 7 - check size -------------------------------
   if (inherits(proj, 'data.frame')) {
-    .fun_testIfPosNum(TRUE, "size", size)
+    .fun_testIfPosNum("size", size)
   }
   
   return(list(proj = proj,
@@ -994,20 +989,24 @@ setMethod('plot', signature(x = 'BIOMOD.projection.out', y = "missing"),
 setMethod('show', signature('BIOMOD.projection.out'), function(object)
 {
   .bm_cat("BIOMOD.projection.out")
-  cat("\nModeled species (sp.name) :", object@sp.name, fill = .Options$width)
-  cat("\nModeling id (modeling.id) :", object@modeling.id , "(", object@models.out@link , ")", fill = .Options$width)
-  cat("\nExplanatory variables (expl.var.names) :", object@expl.var.names, fill = .Options$width)
-  cat("\nProjection directory (dir.name/sp.name/proj.name) :"
+  cat("\n")
+  cat("Modeling directory (dir.name) :", object@dir.name, fill = .Options$width)
+  cat("Modeled species (sp.name) :", object@sp.name, fill = .Options$width)
+  cat("Modeling id (modeling.id) :", object@modeling.id , "(", object@models.out@link , ")", fill = .Options$width)
+  cat("\n")
+  cat("Projection name (proj.name) :", object@proj.name, fill = .Options$width)
+  cat("Projection directory (dir.name/sp.name/proj.name) :"
       , paste0(object@dir.name, "/", object@sp.name, "/", object@proj.name), fill = .Options$width)
-  cat("\n\nProjected models (models.projected) : ", object@models.projected, fill = .Options$width)
+  cat("\n")
+  cat("Projected models (models.projected) : ", object@models.projected, fill = .Options$width)
   df.info <- .extract_projlinkInfo(object)
   if (any(df.info$type == "bin")) {
     available.metric <- unique(subset(df.info, df.info$type == "bin")$metric)
-    cat("\nAvailable binary projection :", available.metric, fill = .Options$width)
+    cat("Binary projections :", available.metric, fill = .Options$width)
   }
   if (any(df.info$type == "filt")) {
     available.metric <- unique(subset(df.info, df.info$type == "filt")$metric)
-    cat("\nAvailable filtered projection :", available.metric, fill = .Options$width)
+    cat("Filtered projections :", available.metric, fill = .Options$width)
   }
   .bm_cat()
 })
@@ -1295,11 +1294,15 @@ setClass("BIOMOD.ensemble.models.out",
 
 setMethod('show', signature('BIOMOD.ensemble.models.out'), function(object) {
   .bm_cat("BIOMOD.ensemble.models.out")
-  cat("\nModeled species (sp.name) :", object@sp.name, fill = .Options$width)
-  cat("\nModeling id (modeling.id) :", object@modeling.id , "(", object@models.out@link , ")", fill = .Options$width)
-  cat("\nExplanatory variables (expl.var.names) :", object@expl.var.names, fill = .Options$width)
-  cat("\n\nComputed models (em.computed) : ", object@em.computed, fill = .Options$width)
-  cat("\nFailed models (em.failed) : ", object@em.failed, fill = .Options$width)
+  cat("\n")
+  cat("Modeling directory (dir.name) :", object@dir.name, fill = .Options$width)
+  cat("Modeled species (sp.name) :", object@sp.name, fill = .Options$width)
+  cat("Modeling id (modeling.id) :", object@modeling.id , "(", object@models.out@link , ")", fill = .Options$width)
+  cat("\n")
+  cat("Explanatory variables (expl.var.names) :", object@expl.var.names, fill = .Options$width)
+  cat("\n")
+  cat("Computed models (em.computed) :", object@em.computed, fill = .Options$width)
+  cat("Failed models (em.failed) :", object@em.failed, fill = .Options$width)
   .bm_cat()
 })
 
@@ -1315,7 +1318,7 @@ setMethod("get_formal_data", "BIOMOD.ensemble.models.out",
             if (is.null(subinfo)) {
               return(load_stored_object(obj@models.out))
             } else {
-              bm_form = get_formal_data(obj)
+              bm_form <- get_formal_data(obj)
               return(get_formal_data(bm_form, subinfo = subinfo))
             }
           }
@@ -1367,8 +1370,8 @@ setMethod("get_predictions", "BIOMOD.ensemble.models.out",
           {
             # check evaluation data availability
             if (evaluation && (!get_formal_data(obj)@has.evaluation.data)) {
-              warning("!   Calibration data returned because no evaluation data available")
-              evaluation = FALSE
+              evaluation <- FALSE
+              .message("evaluation set to FALSE (calibration data returned)")
             }
             
             # select calibration or eval data
@@ -1404,8 +1407,8 @@ setMethod("get_evaluations", "BIOMOD.ensemble.models.out",
           function(obj, full.name = NULL, merged.by.algo = NULL, merged.by.run = NULL
                    , merged.by.PA = NULL, filtered.by = NULL, algo = NULL, metric.eval = NULL)
           {
-            if(obj@models.evaluation@link == ''){
-              cat("\n! models have no evaluations\n")
+            if (obj@models.evaluation@link == '') {
+              .message("No evaluation has been computed for these models.")
               return(invisible(NULL))
             } else {
               out <- load_stored_object(obj@models.evaluation)
@@ -1432,8 +1435,8 @@ setMethod("get_variables_importance", "BIOMOD.ensemble.models.out",
           function(obj, full.name = NULL, merged.by.algo = NULL, merged.by.run = NULL
                    , merged.by.PA = NULL, filtered.by = NULL, algo = NULL, expl.var = NULL)
           {
-            if(obj@variables.importance@link == ''){
-              cat("\n! models have no variables importance\n")
+            if (obj@variables.importance@link == '') {
+              .message("No variables importance has been computed for these models.")
               return(invisible(NULL))
             } else {
               out <- load_stored_object(obj@variables.importance)
@@ -1493,11 +1496,11 @@ setGeneric("set_new_dirname", function(obj, new.dir.name) { standardGeneric("set
   if (obj.type == "mod") {
     to.change <- c("formated.input.data", "calib.lines","models.options", "models.evaluation", "variables.importance", "models.prediction","models.prediction.eval")
     new.name <- file.path(new.dir.name, sp.name, '.BIOMOD_DATA', modellingID, n)
-    name.OUT = paste0(sp.name, '.', modellingID, '.models.out')
+    name.OUT <- paste0(sp.name, '.', modellingID, '.models.out')
   } else if (obj.type == "em") {
     to.change <- c("models.out", "models.evaluation", "variables.importance", "models.prediction","models.prediction.eval")
     new.name <- file.path(new.dir.name, sp.name, '.BIOMOD_DATA', modellingID, 'ensemble.models', n)
-    name.OUT = paste0(sp.name, '.', modellingID, '.ensemble.models.out')
+    name.OUT <- paste0(sp.name, '.', modellingID, '.ensemble.models.out')
   }
   for (n in to.change){
     eval(parse(text = paste0("new.object@", n, "@link", "<- new.name"))) #Plus tordu que ça tu meurs
@@ -1564,4 +1567,3 @@ setMethod('set_new_dirname', signature(obj = 'BIOMOD.projection.out'), function(
             to = file.path(new.dir.name, sp.name), recursive = TRUE)
   
 })
-

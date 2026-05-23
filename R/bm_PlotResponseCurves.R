@@ -217,11 +217,11 @@ bm_PlotResponseCurves <- function(bm.out
     ## NON-BIVARIATE CASE -------------------------------------------------------------------------
     
     if (do.progress) {
-      PROGRESS = txtProgressBar(min = 0, max = length(show.variables) * length(models), style = 3)
-      i.iter = 0
+      PROGRESS <- txtProgressBar(min = 0, max = length(show.variables) * length(models), style = 3)
+      i.iter <- 0
     }
     
-    list.out = foreach(vari = show.variables) %do%
+    list.out <- foreach(vari = show.variables) %do%
       {
         if (is.factor(new.env[, vari])) {
           pts.tmp <- as.factor(levels(new.env[, vari]))
@@ -229,7 +229,7 @@ bm_PlotResponseCurves <- function(bm.out
           pts.tmp <- seq(min(new.env[, vari], na.rm = TRUE), max(new.env[, vari], na.rm = TRUE), length.out = nb.pts)
         }
         ## Creating tmp data --------------------------------------------------
-        tmp = ref_table[, -which(colnames(ref_table) == vari), drop = FALSE]
+        tmp <- ref_table[, -which(colnames(ref_table) == vari), drop = FALSE]
         new.env.r.tmp <- eval(parse(text = paste0("cbind(", vari, "= pts.tmp, tmp)")))
         new.env.r.tmp <- new.env.r.tmp[, colnames(ref_table), drop = FALSE]
         if (length(factor_id) > 0) {
@@ -241,16 +241,16 @@ bm_PlotResponseCurves <- function(bm.out
         
         ## Load models ------------------------------------------------------------------
         BIOMOD_LoadModels(bm.out = bm.out, full.name = models)
-
+        
         ## Getting predictions for each model -------------------------------------------
-        tab.out = foreach(model = models, .combine = "cbind") %do% 
+        tab.out <- foreach(model = models, .combine = "cbind") %do% 
           {
             mod <- get(model)
             mod.name <- ifelse(use.formal.names, formal_names[which(is.element(models, model))], model)
             
-            temp_workdir = NULL
+            temp_workdir <- NULL
             if (inherits(mod, "MAXENT_biomod2_model")) {
-              temp_workdir = mod@model_output_dir
+              temp_workdir <- mod@model_output_dir
             }
             proj.tmp <- predict(mod, newdata = new.env.r.tmp, on_0_1000 = on_0_1000
                                 , do_check = FALSE, temp_workdir = temp_workdir, seedval = NULL)
@@ -259,8 +259,8 @@ bm_PlotResponseCurves <- function(bm.out
               proj.tmp <- .numeric2factor(proj.tmp, get_formal_data(bm.out, 'resp.var'))
             }
             
-            res = data.frame(pts.tmp, proj.tmp)
-            colnames(res) = c(vari, mod.name)
+            res <- data.frame(pts.tmp, proj.tmp)
+            colnames(res) <- c(vari, mod.name)
             
             if (do.progress) {
               i.iter <- i.iter + 1
@@ -268,7 +268,7 @@ bm_PlotResponseCurves <- function(bm.out
             }
             return(res)
           }
-        tab.out = tab.out[, c(vari, models)]
+        tab.out <- tab.out[, c(vari, models)]
         return(tab.out)
       }
     if (do.progress) { close(PROGRESS) }
@@ -277,11 +277,11 @@ bm_PlotResponseCurves <- function(bm.out
     ## BIVARIATE CASE -----------------------------------------------------------------------------
     
     if (do.progress) {
-      PROGRESS = txtProgressBar(min = 0, max = ncol(combn(show.variables, 2)) * length(models), style = 3)
-      i.iter = 0
+      PROGRESS <- txtProgressBar(min = 0, max = ncol(combn(show.variables, 2)) * length(models), style = 3)
+      i.iter <- 0
     }
     
-    list.out = foreach(vari1 = show.variables[-length(show.variables)], .combine = "c") %:%
+    list.out <- foreach(vari1 = show.variables[-length(show.variables)], .combine = "c") %:%
       foreach(vari2 = show.variables[-(1:which(show.variables == vari1))]) %do%
       {
         pts.tmp1 <- rep(seq(min(new.env[, vari1], na.rm = TRUE), max(new.env[, vari1], na.rm = TRUE)
@@ -290,7 +290,7 @@ bm_PlotResponseCurves <- function(bm.out
                             , length.out = sqrt(nb.pts)), sqrt(nb.pts))
         
         ## Creating tmp data ------------------------------------------------------------
-        tmp = ref_table[, -which(colnames(ref_table) %in% c(vari1, vari2)), drop = FALSE]
+        tmp <- ref_table[, -which(colnames(ref_table) %in% c(vari1, vari2)), drop = FALSE]
         new.env.r.tmp <- eval(parse(text = paste0("cbind(", vari1," = pts.tmp1, ", vari2, " = pts.tmp2, tmp)")))
         new.env.r.tmp <- new.env.r.tmp[, colnames(ref_table), drop = FALSE]
         if (length(factor_id)) {
@@ -303,14 +303,14 @@ bm_PlotResponseCurves <- function(bm.out
         BIOMOD_LoadModels(bm.out = bm.out, full.name = models)
         
         ## Getting predictions for each model -------------------------------------------
-        tab.out = foreach(model = models, .combine = "cbind") %do% 
+        tab.out <- foreach(model = models, .combine = "cbind") %do% 
           {
             mod <- get(model)
             mod.name <- ifelse(use.formal.names, formal_names[which(is.element(models, model))], model)
             
-            temp_workdir = NULL
+            temp_workdir <- NULL
             if (length(grep("MAXENT$", mod.name)) == 1) {
-              temp_workdir = mod@model_output_dir
+              temp_workdir <- mod@model_output_dir
             }
             
             proj.tmp <- predict(mod, newdata = new.env.r.tmp, on_0_1000 = on_0_1000
@@ -320,8 +320,8 @@ bm_PlotResponseCurves <- function(bm.out
               proj.tmp <- .numeric2factor(proj.tmp, get_formal_data(bm.out, 'resp.var'))
             }
             
-            res = data.frame(pts.tmp1, pts.tmp2, proj.tmp)
-            colnames(res) = c(vari1, vari2, mod.name)
+            res <- data.frame(pts.tmp1, pts.tmp2, proj.tmp)
+            colnames(res) <- c(vari1, vari2, mod.name)
             
             if (do.progress) {
               i.iter <- i.iter + 1
@@ -329,7 +329,7 @@ bm_PlotResponseCurves <- function(bm.out
             }
             return(res)
           }
-        tab.out = tab.out[, c(vari1, vari2, models)]
+        tab.out <- tab.out[, c(vari1, vari2, models)]
         return(tab.out)
       }
     if (do.progress) { close(PROGRESS) }
@@ -351,26 +351,26 @@ bm_PlotResponseCurves <- function(bm.out
             , legend.position = "bottom"
             , axis.text.x = element_text(angle = 45, hjust = 1))
   } else {
-    comb.names = sort(unique(ggdat$comb))
-    list.ggdat = foreach(combi = comb.names) %do%
+    comb.names <- sort(unique(ggdat$comb))
+    list.ggdat <- foreach(combi = comb.names) %do%
       {
-        vari1 = strsplit(combi, "[+]")[[1]][1]
-        vari2 = strsplit(combi, "[+]")[[1]][2]
-        tmp = ggdat[which(ggdat$comb == combi), ]
-        tmp1 = tmp[which(tmp$expl.name == vari1), c("id", "expl.val", "pred.name", "pred.val", "comb")]
-        colnames(tmp1)[which(colnames(tmp1) == "expl.val")] = vari1
-        tmp2 = tmp[which(tmp$expl.name == vari2), c("id", "expl.val", "pred.name", "pred.val", "comb")]
-        colnames(tmp2)[which(colnames(tmp2) == "expl.val")] = vari2
-        tmp = merge(tmp1, tmp2, by = c("id", "pred.name", "pred.val", "comb"))
+        vari1 <- strsplit(combi, "[+]")[[1]][1]
+        vari2 <- strsplit(combi, "[+]")[[1]][2]
+        tmp <- ggdat[which(ggdat$comb == combi), ]
+        tmp1 <- tmp[which(tmp$expl.name == vari1), c("id", "expl.val", "pred.name", "pred.val", "comb")]
+        colnames(tmp1)[which(colnames(tmp1) == "expl.val")] <- vari1
+        tmp2 <- tmp[which(tmp$expl.name == vari2), c("id", "expl.val", "pred.name", "pred.val", "comb")]
+        colnames(tmp2)[which(colnames(tmp2) == "expl.val")] <- vari2
+        tmp <- merge(tmp1, tmp2, by = c("id", "pred.name", "pred.val", "comb"))
         return(tmp)
       }
-    names(list.ggdat) = comb.names
+    names(list.ggdat) <- comb.names
     
     gg <- ggplot(ggdat, aes(fill = .data$pred.val))
     for (ii in 1:length(list.ggdat)) {
-      combi = names(list.ggdat)[ii]
-      vari1 = strsplit(combi, "[+]")[[1]][1]
-      vari2 = strsplit(combi, "[+]")[[1]][2]
+      combi <- names(list.ggdat)[ii]
+      vari1 <- strsplit(combi, "[+]")[[1]][1]
+      vari2 <- strsplit(combi, "[+]")[[1]][2]
       gg <- gg +
         geom_raster(data = list.ggdat[[ii]], aes(x = .data[[vari1]], y = .data[[vari2]]))
     }
@@ -391,9 +391,9 @@ bm_PlotResponseCurves <- function(bm.out
   if (do.plot){ 
     # if (bm.out@data.type == "multiclass"){
     #   levels <- mod@levels_factor
-    #   cat("\nThe levels are represent as : ")
+    #   cat("\nThe levels are represent as :")
     #   for (i in 1:length(levels)){
-    #     cat("\n\t ", i, " : ", levels[i])
+    #     cat("\n\t ", i, ":", levels[i])
     #   }
     # }
     print(gg) }
@@ -408,43 +408,37 @@ bm_PlotResponseCurves <- function(bm.out
   args <- list(...)
   
   ## 1. Check bm.out argument -------------------------------------------------
-  .fun_testIfInherits(TRUE, "bm.out", bm.out, c("BIOMOD.models.out", "BIOMOD.ensemble.models.out"))
+  .fun_testIfInherits("bm.out", bm.out, c("BIOMOD.models.out", "BIOMOD.ensemble.models.out"))
   
   if (get_built_models(bm.out)[1] == "none") {
-    stop('No models computed')
+    stop("No computed models. Please check.")
   }
   
   ## 2. Check models.chosen ---------------------------------------------------
-  if (models.chosen[1] == 'all') {
+  if (missing(models.chosen) || is.null(models.chosen) || models.chosen[1] == 'all') {
     if (inherits(bm.out, "BIOMOD.models.out")) {
       models.chosen <- bm.out@models.computed
     } else if (inherits(bm.out, "BIOMOD.ensemble.models.out")) {
       models.chosen <- bm.out@em.computed
-    } 
+    }
+    .message("models.chosen set to ", toString(models.chosen))
   } else {
     if (inherits(bm.out, "BIOMOD.models.out")) {
-      models.chosen <- intersect(models.chosen, bm.out@models.computed)
+      .fun_testIfIn("models.chosen", models.chosen, bm.out@models.computed)
     } else if (inherits(bm.out, "BIOMOD.ensemble.models.out")) {
-      models.chosen <- intersect(models.chosen, bm.out@em.computed)
-    } 
+      .fun_testIfIn("models.chosen", models.chosen, bm.out@em.computed)
+    }
   }
-  if (length(models.chosen) < 1) {
-    stop('No models selected')
-  }
-  models <- models.chosen
   
   ## check that given models exist
-  files.check <- file.path(bm.out@dir.name, bm.out@sp.name, 'models', bm.out@modeling.id, models.chosen)
-  not.checked.files <- grep('MAXENT|SRE', files.check)
-  if (length(not.checked.files) > 0) {
-    files.check <- files.check[-not.checked.files]
-  }
+  files.check <- paste0(bm.out@dir.name, "/", bm.out@sp.name, "/models/",
+                        bm.out@modeling.id, "/", models.chosen)
   missing.files <- files.check[!file.exists(files.check)]
   if (length(missing.files) > 0) {
-    stop(paste0("Projection files missing : ", toString(missing.files)))
-    if (length(missing.files) == length(files.check)) {
-      stop("Impossible to find any models, might be a problem of working directory")
-    }
+    stop("Some model projection files are missing : ", toString(missing.files)
+         , ".", ifelse(length(missing.files) == length(files.check)
+                       , " Impossible to find any model, might be a working directory problem.", "")
+         , " Please check.")
   }
   
   ## 2. Check args$nb.pts argument --------------------------------------------
@@ -459,12 +453,11 @@ bm_PlotResponseCurves <- function(bm.out
   }
   
   ## 3. Check new.env argument ------------------------------------------------
-  .fun_testIfInherits(TRUE, "new.env", new.env, 
-                      c("SpatRaster","Raster","data.frame","matrix"))
+  .fun_testIfInherits("new.env", new.env, c("matrix", "data.frame", "Raster", "SpatRaster"))
   
-  if(inherits(new.env, "matrix")){
-    if(any(sapply(get_formal_data(bm.out, "expl.var"), is.factor))){
-      stop("new.env cannot be given as matrix when original model have factor variables")
+  if (inherits(new.env, "matrix")) {
+    if (any(sapply(get_formal_data(bm.out, "expl.var"), is.factor))) {
+      stop("new.env cannot be given as matrix when modeling involves categorical variables.")
     }
     new.env <- as.data.frame(new.env)
   }
@@ -472,19 +465,19 @@ bm_PlotResponseCurves <- function(bm.out
   if (inherits(new.env, c("Raster"))) {
     categorical_var <- which(raster::is.factor(new.env))
     if (length(categorical_var) > 0) {
-      new.env = .categorical_stack_to_terra(new.env)
+      new.env <- .categorical_stack_to_terra(new.env)
     } else {
       new.env <- rast(new.env)
     }
   }
-
+  
   if (inherits(new.env, c("SpatRaster"))) {
-    cat("\n   > Extracting raster infos..")
+    # cat("\n   > Extracting raster infos..")
     DataTmp <- matrix(0, ncol = nlyr(new.env), nrow = nb.pts)
     colnames(DataTmp) <- names(new.env)
     maxVal <- global(new.env, max, na.rm = TRUE)$max
     minVal <- global(new.env, min, na.rm = TRUE)$min
-
+    
     DataTmp <- as.data.frame(DataTmp)
     for (i in 1:ncol(DataTmp)) {
       DataTmp[, i] <- seq(minVal[i], maxVal[i], length.out = nb.pts)
@@ -495,24 +488,21 @@ bm_PlotResponseCurves <- function(bm.out
       for(thisvar in categorical_var){
         DataTmp[, thisvar] <- rep(factor(
           cats(new.env[[categorical_var]])[[1]][,2]
-          ), length.out = nrow(DataTmp))
+        ), length.out = nrow(DataTmp))
       }
     }
     new.env <- data.frame(DataTmp)
   }
   
   ## 4. Check show.variables argument -----------------------------------------
-  if (length(show.variables) > ncol(new.env) || 
-      any(!show.variables %in% colnames(new.env))) {
-    stop("columns wanted in show.variables do not match the data \n")
-  }
+  .fun_testIfIn("show.variables", show.variables, colnames(new.env))
   
   # remove factorial var in do.bivariate case
   if (do.bivariate == TRUE) {
     fact_var <- sapply(new.env[, show.variables, drop = FALSE], is.factor)
     if (sum(fact_var) > 0) {
-      warning("Factorial variables have been automatically removed!")
       show.variables <- show.variables[!fact_var]
+      .message("show.variables set to ", toString(show.variables), " (categorical variables removed)")
     }
   }
   
@@ -528,7 +518,7 @@ bm_PlotResponseCurves <- function(bm.out
     data_species[data_species != 1 | is.na(data_species)] <- 0
   }
   
-  return(list(models = models,
+  return(list(models = models.chosen,
               new.env = new.env,
               show.variables = show.variables,
               do.bivariate = do.bivariate,
@@ -544,7 +534,7 @@ bm_PlotResponseCurves <- function(bm.out
 
 .as_ggdat <- function(list.dat, do.bivariate)
 {
-  col.expl = c(1, 2)
+  col.expl <- c(1, 2)
   if (!do.bivariate) { col.expl = c(1) }
   out_ <- foreach(dat_ = list.dat, .combine = "rbind") %do%
     {
@@ -552,18 +542,17 @@ bm_PlotResponseCurves <- function(bm.out
       if (do.bivariate) {
         dat_$comb <- paste0(colnames(dat_)[col.expl], collapse = "+")
       }
-      id.col = which(colnames(dat_) == "id")
-      id.vec = unlist(ifelse(do.bivariate, list(c("id", "comb")), "id"))
-      expl.dat_ = melt(dat_[, c(col.expl, id.col)], 
-                       id.vars = "id", 
-                       variable.name = "expl.name", 
-                       value.name = "expl.val",
-                       factorsAsStrings = FALSE)
-      expl.dat_$expl.val = as.numeric(expl.dat_$expl.val) ## should not work with factorial variable other than number
-      pred.dat_ = melt(dat_[, -col.expl], id.vars = id.vec, variable.name = "pred.name", value.name = "pred.val")
-      out.dat_ = merge(expl.dat_, pred.dat_, by = "id")
+      id.col <- which(colnames(dat_) == "id")
+      id.vec <- unlist(ifelse(do.bivariate, list(c("id", "comb")), "id"))
+      expl.dat_ <- melt(dat_[, c(col.expl, id.col)], 
+                        id.vars = "id", 
+                        variable.name = "expl.name", 
+                        value.name = "expl.val",
+                        factorsAsStrings = FALSE)
+      expl.dat_$expl.val <- as.numeric(expl.dat_$expl.val) ## should not work with factorial variable other than number
+      pred.dat_ <- melt(dat_[, -col.expl], id.vars = id.vec, variable.name = "pred.name", value.name = "pred.val")
+      out.dat_ <- merge(expl.dat_, pred.dat_, by = "id")
       return(out.dat_)
     }
   return(out_)
 }
-
