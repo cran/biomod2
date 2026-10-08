@@ -118,6 +118,36 @@ section.footnotes {
 <h3 id="sec:2026"><i class="fa-solid fa-chess-rook"></i> 2026</h3>
 <h5 id="sec:bugfix_1">Bugfix</h5>
 <ul>
+<li>4.3-4-7 :
+<ul>
+<li>update modeling options in <code>BIOMOD.models.out</code> object with changes made right prior modeling</li>
+<li>add message for <code>sampsize</code> parameter (RF and RFd models)</li>
+<li>fix different configurations in <code>BIOMOD_FormatingData</code> (env as <em>SpatialPointsDataFrame</em> for example)</li>
+<li>in <code>BIOMOD_Projection</code> and <code>BIOMOD_EnsembleForecasting</code> :
+<ul>
+<li>fix path for <code>individual_projections</code> folder</li>
+<li>add re-writing if <code>do.stack = FALSE</code> and post-prediction modifications</li>
+<li>deal with datatype and output format</li>
+</ul>
+</li>
+<li>in <code>BIOMOD_Modeling</code> :
+<ul>
+<li>authorize the use of <code>prevalence</code> for RF and RFd</li>
+<li>fix <code>.automatic_weights_creation</code> : round(w * 10) instead of round(w) for small prevalence</li>
+</ul>
+</li>
+<li>in <code>bm_Tuning</code> :
+<ul>
+<li>replace <code>MAXENT.kfolds</code> by <code>MAXENT.partition.settings</code></li>
+<li>add <code>.expected_calib.lines_names</code> function and improve <code>calib.lines</code> management</li>
+</ul>
+</li>
+<li>fix check for <code>expl.var</code> when using <code>data.frame</code> and asking for pseudo-absences in <code>BIOMOD_FormatingData</code></li>
+<li>fix predictions with categorical variables for XGBOOST</li>
+<li>fix <code>set_new_dirname</code> function</li>
+<li>add check when <code>CV.do.full.models = NULL</code> in <code>BIOMOD_Modeling</code> function</li>
+</ul>
+</li>
 <li>4.3-4-6 :
 <ul>
 <li>update user related messages :

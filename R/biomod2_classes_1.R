@@ -147,8 +147,7 @@ NULL
 
 ##' @name BIOMOD.formated.data-class
 ##' @rdname BIOMOD.formated.data
-##' @importFrom terra rast app is.factor subset extract cellFromXY `add<-` 
-##' classify rasterize values
+##' @importFrom terra rast app is.factor subset extract cellFromXY `add<-` classify rasterize values
 ##' @export
 ##' 
 
@@ -192,11 +191,14 @@ setGeneric("BIOMOD.formated.data", def = function(sp, env, ...) { standardGeneri
                             'SpatialPointsDataFrame', 'SpatialPoints', 'SpatVector')
   .fun_testIfInherits(ifelse(is.eval == TRUE, "eval.sp", "sp"), sp, available.types.resp)
   
+  ## CHECK resp.var -------------------------------------------------
   ## SpatialPoints, SpatialPointsDataFrame, SpatVector
   if (inherits(sp, c('SpatialPoints', 'SpatVector'))) {
+    if (!is.null(xy)) {
+      .message("resp.xy will be ignored (resp.var is a spatial object)")
+    }
     .tmp <- .check_formating_spatial(resp.var = sp,
                                      expl.var = env,
-                                     resp.xy = xy,
                                      is.eval = is.eval)
     sp <- .tmp$resp.var
     xy <- .tmp$resp.xy
@@ -208,7 +210,7 @@ setGeneric("BIOMOD.formated.data", def = function(sp, env, ...) { standardGeneri
     sp <- .check_formating_table(sp)
   }
   
-  ## Check data.type
+  ## CHECK data.type ------------------------------------------------
   if (is.eval == FALSE) {
     presumed.data.type <- .which.data.type(sp)
     
@@ -231,7 +233,7 @@ setGeneric("BIOMOD.formated.data", def = function(sp, env, ...) { standardGeneri
     }
   }
   
-  ## Check sp
+  ## CHECK resp.var in function of data.type ------------------------
   if (data.type == "binary") {
     sp <- .check_formating_resp.var.bin(resp.var = sp, is.eval = is.eval)
   } else {
@@ -249,6 +251,9 @@ setGeneric("BIOMOD.formated.data", def = function(sp, env, ...) { standardGeneri
       xy <- .check_formating_xy(resp.xy = xy, resp.length = length(sp), env.as.df = env.as.df)
     } else if (inherits(env, c('RasterLayer', 'RasterStack', 'SpatRaster'))) {
       .fun_testIfNULL("resp.xy", xy)
+    } else if (inherits(env, "SpatialPointsDataFrame")) {
+      xy <- data.matrix(sp::coordinates(env))
+      xy <- .check_formating_xy(resp.xy = xy, resp.length = length(sp), env.as.df = TRUE)
     } else {
       xy <- data.frame("x" = numeric(), "y" = numeric())
     }
@@ -474,29 +479,33 @@ setMethod('BIOMOD.formated.data', signature(sp = 'numeric', env = 'SpatRaster'),
             names(tmp) <- "Environmental Mask"
             data.mask <- list("calibration" = wrap(tmp))
             
-            env <- as.data.frame(extract(env, xy, factors = TRUE, ID = FALSE))
-            
             ## IF eval.sp but eval.env == NULL, keep same env variable for eval than calib
             if (!is.null(eval.sp)) {
               ## Check for duplicated cells over env data
               cat("\n > Checking duplicated cells (evaluation)...")
+              output <- NULL
               if (is.null(eval.env)) {
                 output <- .check_duplicated_cells(env, eval.xy, eval.sp, filter.raster)
                 data.mask[["evaluation"]] <- data.mask[["calibration"]]
                 eval.env <- env
-              } else {
+              } else if (inherits(eval.env, "SpatRaster")) {
                 output <- .check_duplicated_cells(eval.env, eval.xy, eval.sp, filter.raster)
                 tmp <- prod(classify(eval.env, matrix(c(-Inf, Inf, 1), nrow = 1)))
                 names(tmp) <- "Environmental Mask"
                 data.mask[["evaluation"]] <- wrap(tmp)
-                if (inherits(eval.env, "SpatRaster")) {
-                  eval.env <- as.data.frame(extract(eval.env, eval.xy, factors = TRUE, ID = FALSE))
-                }
+              } else {
+                .message("no check for evaluation data (expl.var and eval.expl.var are not SpatRaster objects)")
               }
               eval.xy <- output$xy
               eval.sp <- output$sp
               rm(output)
+              
+              if (inherits(eval.env, "SpatRaster")) {
+                eval.env <- as.data.frame(extract(eval.env, eval.xy, factors = TRUE, ID = FALSE))
+              }
             }
+            
+            env <- as.data.frame(extract(env, xy, factors = TRUE, ID = FALSE))
             
             BFD <- BIOMOD.formated.data(sp, env, xy, dir.name, data.type, sp.name, 
                                         eval.sp, eval.env, eval.xy,
@@ -563,9 +572,9 @@ setMethod('BIOMOD.formated.data', signature(sp = 'numeric', env = 'SpatRaster'),
 ##' 
 ##' @importFrom terra rast minmax crds ext
 ##' @importFrom ggplot2 ggplot aes xlim ylim facet_wrap
-##' scale_size scale_color_manual scale_shape_manual scale_fill_manual 
-##' scale_alpha scale_alpha_continuous 
-##' theme guides ggtitle guide_legend after_stat waiver
+##' @importFrom ggplot2 scale_size scale_color_manual scale_shape_manual scale_fill_manual 
+##' @importFrom ggplot2 scale_alpha scale_alpha_continuous 
+##' @importFrom ggplot2 theme guides ggtitle guide_legend after_stat waiver
 ##' 
 ##' @export
 ##' 
@@ -1115,26 +1124,14 @@ setMethod('plot', signature(x = 'BIOMOD.formated.data', y = "missing"),
   # find possible dataset
   allPA <- allrun <- NA
   if (!is.null(calib.lines)) {
-    .fun_testIfInherits("calib.lines", calib.lines, c("matrix", "data.frame"))
-    if (inherits(calib.lines, "data.frame")) {
-      calib.lines <- as.matrix(calib.lines)
-    }
-    
-    expected_CVnames <- c(paste0("_allData_RUN", seq_len(ncol(calib.lines))), "_allData_allRun")
-    if (inherits(x, "BIOMOD.formated.data.PA")) {
-      expected_CVnames <- c(expected_CVnames
-                            , sapply(1:ncol(x@PA.table)
-                                     , function(this_PA) c(paste0("_PA", this_PA, "_RUN", seq_len(ncol(calib.lines)))
-                                                           , paste0("_PA", this_PA, "_allRun"))))
-    } 
-    .fun_testIfIn("colnames(calib.lines)", colnames(calib.lines), expected_CVnames)
-    
-    allPA <- sapply(colnames(calib.lines), function(xx) strsplit(xx, "_")[[1]][2])
-    allrun <- sapply(colnames(calib.lines), function(xx) strsplit(xx, "_")[[1]][3])
+    expected_CVnames <- .expected_calib.lines_names(x, calib.lines)
+    allPA <- sapply(expected_CVnames, function(xx) strsplit(xx, "_")[[1]][2])
+    allrun <- sapply(expected_CVnames, function(xx) strsplit(xx, "_")[[1]][3])
   } else if (inherits(x, "BIOMOD.formated.data.PA")) {
     allPA <- colnames(x@PA.table)
     allrun <- rep(NA, length(allPA))
   }
+  
   
   # default value for PA and run
   if (missing(PA)) {
@@ -1463,10 +1460,13 @@ setMethod('summary', signature(object = 'BIOMOD.formated.data'),
                 rbind(
                   output,
                   foreach(this_run = run, this_PA = PA, .combine = 'rbind')  %do% {
-                    if (is.na(this_PA) || this_PA == 'allData') { # run only
+                    
+                    if (is.na(this_PA) || this_PA == "allData") { # run only
                       this_name <- paste0("_", this_PA, "_", this_run)
                       this_calib <- calib.lines[ , this_name]
-                      this_valid <- ! calib.lines[ , this_name]
+                      if (this_run != "allRun") {
+                        this_valid <- ! calib.lines[ , this_name]
+                      }
                     } else if (is.na(this_run)) { # PA only
                       this_calib <- ifelse(is.na(object@PA.table[ , this_PA]), FALSE, object@PA.table[ , this_PA])
                     } else { # PA+run
@@ -1483,7 +1483,7 @@ setMethod('summary', signature(object = 'BIOMOD.formated.data'),
                                       "Pseudo_Absences" = length(which(is.na(calib.resp))),
                                       "Undefined" = NA)
                     
-                    if (!is.na(this_run)) { 
+                    if (!is.na(this_run) && !(this_PA == "allData" && this_run == "allRun")) { 
                       valid.resp <- object@data.species[this_valid]
                       tmp <- rbind(tmp,
                                    data.frame("dataset" = "validation",
@@ -1507,20 +1507,7 @@ setMethod('summary', signature(object = 'BIOMOD.formated.data'),
 .summary.BIOMOD.formated.data.check.args <- function(object, calib.lines)
 {
   if (!is.null(calib.lines)) {
-    .fun_testIfInherits("calib.lines", calib.lines, c("matrix", "data.frame"))
-    if (inherits(calib.lines, "data.frame")) {
-      calib.lines <- as.matrix(calib.lines)
-    }
-    
-    expected_CVnames <- c(paste0("_allData_RUN", seq_len(ncol(calib.lines))), "_allData_allRun")
-    if (inherits(object, "BIOMOD.formated.data.PA")) {
-      .fun_testIfSameSize("calib.lines", nrow(calib.lines), "PA.table", nrow(object@PA.table), "number of rows")
-      expected_CVnames <- c(expected_CVnames
-                            , sapply(1:ncol(object@PA.table)
-                                     , function(this_PA) c(paste0("_PA", this_PA, "_RUN", seq_len(ncol(calib.lines)))
-                                                           , paste0("_PA", this_PA, "_allRun"))))
-    }
-    .fun_testIfIn("colnames(calib.lines)", colnames(calib.lines), expected_CVnames)
+    expected_CVnames <- .expected_calib.lines_names(object, calib.lines)
   }
   return(list(object = object, calib.lines = calib.lines))
 }
@@ -1666,8 +1653,7 @@ NULL
 ##' @name BIOMOD.formated.data.PA-class
 ##' @rdname BIOMOD.formated.data.PA
 ##' 
-##' @importFrom terra rast app is.factor subset extract 
-##' cellFromXY `add<-` crds vect
+##' @importFrom terra rast app is.factor subset extract cellFromXY `add<-` crds vect
 ##' @export
 ##' 
 

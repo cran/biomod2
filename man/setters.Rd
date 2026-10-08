@@ -31,12 +31,10 @@ the modelling of biomod2 have been done.
 \code{\link{BIOMOD.models.out}}, \code{\link{BIOMOD.projection.out}}, 
 \code{\link{BIOMOD.ensemble.models.out}}
 
-Other Toolbox functions: 
+Other Toolbox functions:
 \code{\link{getters.bm}},
 \code{\link{getters.out}},
-\code{\link{load_stored_object}()},
-\code{\link{predict.bm}},
-\code{\link{predict.em}},
+\code{\link[=load_stored_object]{load_stored_object()}},
 \code{\link{predict2.bm}},
 \code{\link{predict2.em}}
 }

@@ -27,11 +27,9 @@ into memory.
 \seealso{
 \code{\link{BIOMOD.stored.data}}
 
-Other Toolbox functions: 
+Other Toolbox functions:
 \code{\link{getters.bm}},
 \code{\link{getters.out}},
-\code{\link{predict.bm}},
-\code{\link{predict.em}},
 \code{\link{predict2.bm}},
 \code{\link{predict2.em}},
 \code{\link{setters}}

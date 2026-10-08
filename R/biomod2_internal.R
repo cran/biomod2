@@ -150,12 +150,8 @@
 ## CHECK formated data ----------------------------------------------------------------------------
 ## used in biomod2_classes_1
 
-.check_formating_spatial <- function(resp.var, expl.var = NULL, resp.xy = NULL, is.eval = FALSE)
+.check_formating_spatial <- function(resp.var, expl.var = NULL, is.eval = FALSE)
 {
-  if (!is.null(resp.xy)) {
-    .message("resp.xy will be ignored (resp.var is a spatial object)")
-  }
-  
   if (inherits(resp.var, 'SpatialPoints')) { 
     resp.xy <- data.matrix(sp::coordinates(resp.var))
     if (inherits(resp.var, 'SpatialPointsDataFrame')) {
@@ -234,7 +230,7 @@
   .fun_testIfSize("resp.var", ncol(resp.var), 1)
   if (is.ordered(resp.var[, 1])) {
     levels <- levels(resp.var[, 1])
-    resp.var <- factor(resp.var[, 1], levels = levels, ordered = T)
+    resp.var <- factor(resp.var[, 1], levels = levels, ordered = TRUE)
   } else {
     resp.var <- as.numeric(resp.var[, 1])
   }
@@ -284,6 +280,40 @@
 ## CHECK calib.lines names ------------------------------------------------------------------------
 ## used in bm_CrossValidation
 
+.expected_calib.lines_names <- function(bm.format = NULL, calib.lines = NULL)
+{
+  expected_CVnames <- c("_allData_allRun")
+  if (!is.null(calib.lines)) {
+    .fun_testIfInherits("calib.lines", calib.lines, c("matrix", "data.frame"))
+    if (inherits(calib.lines, "data.frame")) {
+      calib.lines <- as.matrix(calib.lines)
+    }
+    
+    if (any(grepl("_PA", colnames(calib.lines))) && !inherits(bm.format, "BIOMOD.formated.data.PA")) {
+      err.msg <- "colnames(calib.lines) must have the following format : '_allData_allRun' or '_allData_RUNy' with y integer (no PA dataset provided)"
+      stop(err.msg)
+    }
+    
+    # expected_CVnames <- c(paste0("_allData_RUN", seq_len(ncol(calib.lines))), expected_CVnames)
+    expected_CVnames <- c(paste0("_allData_RUN", seq_len(100)), expected_CVnames)
+    if (!is.null(bm.format) && inherits(bm.format, "BIOMOD.formated.data.PA")) {
+      expected_CVnames <- c(expected_CVnames
+                            , sapply(1:ncol(bm.format@PA.table)
+                                     , function(this_PA) c(paste0("_PA", this_PA, "_RUN", seq_len(ncol(calib.lines)))
+                                                           , paste0("_PA", this_PA, "_allRun"))))
+    } 
+    .fun_testIfIn("colnames(calib.lines)", colnames(calib.lines), expected_CVnames)
+    expected_CVnames <- colnames(calib.lines)
+  } else {
+    if (!is.null(bm.format) && inherits(bm.format, "BIOMOD.formated.data.PA")) {
+      expected_CVnames <- c(expected_CVnames
+                            , sapply(1:ncol(bm.format@PA.table)
+                                     , function(this_PA) paste0("_PA", this_PA, "_allRun")))
+    }
+  }
+  return(expected_CVnames)
+}
+
 .check_calib.lines_names <- function(calib.lines, expected_PA.names)
 {
   full.names <- colnames(calib.lines)
@@ -293,13 +323,13 @@
   } else {
     err.msg <- "colnames(calib.lines) must have the following format : '_PAx_RUNy' with x and y integer"
     # check for beginning '_'
-    if (!all( substr(full.names, 1, 1) == "_")) {
+    if (!all(substr(full.names, 1, 1) == "_")) {
       stop(err.msg)
     }
     PA.names <- sapply(strsplit(full.names, split = "_"), function(x) x[2])
     CV.names <- sapply(strsplit(full.names, split = "_"), function(x) x[3])
     .fun_testIfIn("Pseudo-absence dataset in colnames(calib.lines)", PA.names, expected_PA.names)
-    if (!all( substr(CV.names, 1, 3) == "RUN")) {
+    if (!all(substr(CV.names, 1, 3) == "RUN")) {
       stop(err.msg)
     }
     CV.num <- sapply(strsplit(CV.names, split = "RUN"), function(x) x[2])
@@ -427,7 +457,7 @@ rast.has.values <- function(x)
   } else { # code presences as 1
     weights[which(resp == 0 | is.na(resp))] <- (nbPres * (1 - prev)) / (prev * nbAbs)
   }
-  weights <- round(weights[]) # to remove glm & gam warnings
+  weights <- round(weights[] * 10) # to remove glm & gam warnings
   weights[!subset] <- 0
   
   return(weights)
@@ -471,7 +501,7 @@ rast.has.values <- function(x)
 {
   ## 0. CHECK object type ---------------------------------------------------------------
   .fun_testIfIn("obj.type", obj.type, c("mod", "em"))
-  .fun_testIfIn("out", out, c("model", "calib.failure", "models.kept", "pred", "pred.eval", "evaluation", "var.import"))
+  .fun_testIfIn("out", out, c("model", "calib.failure", "models.kept", "pred", "pred.eval", "evaluation", "var.import", "options"))
   
   if (obj.type == "mod") {
     dim_names <- c("PA", "run", "algo")
@@ -481,30 +511,42 @@ rast.has.values <- function(x)
   }
   
   if (obj.type == "mod") {
-    output <- foreach(i.dim1 = 1:length(obj.out), .combine = "rbind") %do%
-      {
-        res <- obj.out[[i.dim1]][[out]]
-        if (!is.null(res) && length(res) > 0) {
-          res <- as.data.frame(res)
-          if (out %in% c("model", "calib.failure", "models.kept", "pred", "pred.eval")) {
-            colnames(res) <- out
-            res[["points"]] <- 1:nrow(res)
-            res <- res[, c("points", out)]
-          }
-          col_names <- colnames(res)
-          tmp.full.name <- obj.out[[i.dim1]][["model"]]
-          if(out == "calib.failure" | is.null(tmp.full.name)){
-            res[["full.name"]] <- NA
-            return(res[, c("full.name", col_names)])
-          } else {
-            res[["full.name"]] <- tmp.full.name
-            res[[dim_names[1]]] <- strsplit(tmp.full.name, "_")[[1]][2]
-            res[[dim_names[2]]] <- strsplit(tmp.full.name, "_")[[1]][3]
-            res[[dim_names[3]]] <- strsplit(tmp.full.name, "_")[[1]][4]
-            return(res[, c("full.name", dim_names, col_names)])
+    if (out == "options") {
+      output <- foreach(i.dim1 = 1:length(obj.out), .combine = "c") %do%
+        {
+          res <- obj.out[[i.dim1]][[out]]
+          if (!is.null(res) && length(res) > 0) {
+            res <- list(res)
+            names(res) <- obj.out[[i.dim1]][["model"]]
+            return(res)
           }
         }
-      }
+    } else {
+      output <- foreach(i.dim1 = 1:length(obj.out), .combine = "rbind") %do%
+        {
+          res <- obj.out[[i.dim1]][[out]]
+          if (!is.null(res) && length(res) > 0) {
+            res <- as.data.frame(res)
+            if (out %in% c("model", "calib.failure", "models.kept", "pred", "pred.eval")) {
+              colnames(res) <- out
+              res[["points"]] <- 1:nrow(res)
+              res <- res[, c("points", out)]
+            }
+            col_names <- colnames(res)
+            tmp.full.name <- obj.out[[i.dim1]][["model"]]
+            if(out == "calib.failure" | is.null(tmp.full.name)){
+              res[["full.name"]] <- NA
+              return(res[, c("full.name", col_names)])
+            } else {
+              res[["full.name"]] <- tmp.full.name
+              res[[dim_names[1]]] <- strsplit(tmp.full.name, "_")[[1]][2]
+              res[[dim_names[2]]] <- strsplit(tmp.full.name, "_")[[1]][3]
+              res[[dim_names[3]]] <- strsplit(tmp.full.name, "_")[[1]][4]
+              return(res[, c("full.name", dim_names, col_names)])
+            }
+          }
+        }
+    }
   } else if (obj.type == "em") {
     
     ## 1. GET dimension names -------------------------------------------------------------
@@ -1018,7 +1060,7 @@ rast.has.values <- function(x)
 ## used in biomod2_classes_4
 
 .xgb_pred <- function(model, data, ...) {
-  predict(model, newdata = as.matrix(data), ...)
+  predict(model, newdata = xgboost::xgb.DMatrix(data), ...)
 }
 
 

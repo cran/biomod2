@@ -285,16 +285,25 @@ bm_RunModel <- function(model, run.name
       bm.opt.val$strata <- data_mod[calib.lines.vec, , drop = FALSE][ , resp_name]
       
       if (model == "RF" && data.type == "binary") {
-        bm.opt.val$sampsize <- unlist(ifelse(!is.null(bm.opt.val$sampsize)
+        isNull <- is.null(bm.opt.val$sampsize)
+        bm.opt.val$sampsize <- unlist(ifelse(!isNull
                                              , list(bm.opt.val$sampsize)
-                                             , length(data_sp[calib.lines.vec]))) ## TOCHECK !!
+                                             , length(data_sp[calib.lines.vec])))
+        .message("sampsize set to ", toString(bm.opt.val$sampsize), " ("
+                 , ifelse(!isNull, "user provided", "nb presences + nb absences"), ")")
       }
       if (model == "RFd" && !is.null(bm.opt.val$type) && bm.opt.val$type == "classification") {
+        isNull <- is.null(bm.opt.val$sampsize)
         nb_presences <- summary(data_mod[calib.lines.vec, resp_name])[["1"]]
-        bm.opt.val$sampsize <- unlist(ifelse(!is.null(bm.opt.val$sampsize)
+        nb_absences <- summary(data_mod[calib.lines.vec, resp_name])[["0"]]
+        bm.opt.val$sampsize <- unlist(ifelse(!isNull
                                              , list(bm.opt.val$sampsize)
-                                             , list(c("0" = nb_presences, "1" = nb_presences))))
+                                             , list(c("0" = min(nb_presences, nb_absences)
+                                                      , "1" = min(nb_presences, nb_absences)))))
         bm.opt.val$replace <- unlist(ifelse(!is.null(bm.opt.val$replace), list(bm.opt.val$replace), TRUE))
+        .message("sampsize set to ", toString(bm.opt.val$sampsize), " ("
+                 , ifelse(!isNull, "user provided", ifelse(nb_absences < nb_presences, "nb absences", "nb presences")), ")")
+        .message("replace set to ", bm.opt.val$replace)
       }
     }
     
@@ -309,8 +318,7 @@ bm_RunModel <- function(model, run.name
                                as.data.frame(scale_data),                                  #standardize values
                                data_mod[calib.lines.vec, categorical_var, drop = FALSE] )  #categorical data
     } else if (model == "GLM") {
-      bm.opt.val$data <- cbind(data_mod[calib.lines.vec, , drop = FALSE], 
-                               data.frame("weights" = weights.vec[calib.lines.vec]))
+      bm.opt.val$data <- data_mod[calib.lines.vec, , drop = FALSE]
       if ("mustart" %in% names(bm.opt.val) &&
           (length(bm.opt.val$mustart) > 0 && nchar(bm.opt.val$mustart) > 0) &&
           length(bm.opt.val$mustart) < nrow(bm.opt.val$data)) {
@@ -330,9 +338,9 @@ bm_RunModel <- function(model, run.name
     }
     
     ## FILL weights parameter ---------------------------------------
-    if (model %in% c("ANN", "CTA", "GBM", "GLM", "MARS")) { #, "RF")) { ## TO BE ADDED RF ??
+    if (model %in% c("ANN", "CTA", "GBM", "GLM", "MARS")) {
       bm.opt.val$weights <- quote(weights)
-    } else if (model %in% c("FDA", "GAM")) {
+    } else if (model %in% c("FDA", "GAM", "RF", "RFd")) {
       bm.opt.val$weights <- weights.vec[calib.lines.vec]
     }
     
@@ -366,12 +374,15 @@ bm_RunModel <- function(model, run.name
         best.iter <- try(gbm.perf(model.sp, method = "cv" , plot.it = FALSE)) ## c('OOB', 'test', 'cv')
       }
       
+      ## Update modeling options BUT only for this dataset, while all datasets will still be saved and not updated
+      bm.opt@args.values[[dataset_name]] <- bm.opt.val
+      
       model.bm <- new(paste0(bm.opt@model, "_biomod2_model"),
                       model = model.sp,
                       model_name = model_name,
                       model_class = bm.opt@model,
                       model_type = data.type,
-                      model_options = bm.opt, ## bm.opt.val ??
+                      model_options = bm.opt,
                       dir_name = dir_name,
                       resp_name = resp_name,
                       expl_var_names = expl_var_names,
@@ -492,7 +503,8 @@ bm_RunModel <- function(model, run.name
                   pred = NULL,
                   pred.eval = NULL,
                   evaluation = NULL,
-                  var.import = NULL)
+                  var.import = NULL,
+                  options = bm.opt.val)
   
   ## 3. CREATE PREDICTIONS ------------------------------------------------------------------------
   temp_workdir = NULL
@@ -756,7 +768,7 @@ bm_RunModel <- function(model, run.name
   ## 4. Check weights.vec argument --------------------------------------------
   if (is.null(weights.vec)) { weights.vec <- rep(1, nrow(Data)) }
   ## These models require data and weights to be in the same dataset
-  if (model %in% c('ANN', 'MARS', 'CTA', 'GBM')) { ## TO BE ADDED RF ??
+  if (model %in% c("ANN", "CTA", "GBM", "GLM", "MARS")) {
     data_env_w <- cbind(data_env, weights.vec)
     colnames(data_env_w) <- c(colnames(data_env), "weights")
   } else {

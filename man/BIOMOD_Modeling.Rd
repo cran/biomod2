@@ -226,8 +226,9 @@ metrics (see Details).
 
   \item{metric.eval}{
   \emph{Please refer to  
-  \href{https://www.cawcr.gov.au/projects/verification/}{CAWRC website ("Methods for 
-  dichotomous forecasts")} to get detailed description (simple/complex metrics).} \cr
+  \href{https://jwgfvr.github.io/forecastverification/}{JWGFVR website ("Forecast 
+  verification - methods, issues and FAQ")} to get detailed description 
+  (simple/complex metrics).} \cr
   Several evaluation metrics can be selected. \cr
   Optimal value of each method can be obtained with the \code{\link{get_optim_value}} 
   function.
@@ -297,8 +298,8 @@ metrics (see Details).
   \item{weights & prevalence}{
   More or less weight can be given to some specific observations. \cr Automatically created 
   \code{weights} will be \code{integer} values to prevent some modeling issues. \cr 
-  \emph{Note that \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{RFd} and \code{SRE} models 
-  do not take weights into account.}
+  \emph{Note that \code{DNN}, \code{MAXENT}, \code{MAXNET} and \code{SRE} models do not take 
+  weights into account.}
   \itemize{
     \item If \code{prevalence = 0.5} (the default), presences and absences will be weighted equally 
     (\emph{i.e. the weighted sum of presences equals the weighted sum of absences}). 
@@ -409,13 +410,13 @@ bm_PlotEvalBoxplot(bm.out = myBiomodModelOut, group.by = c('algo', 'run'))
   \code{\link{bm_PlotEvalBoxplot}}, \code{\link{bm_PlotVarImpBoxplot}},
   \code{\link{bm_PlotResponseCurves}}
 
-Other Main functions: 
-\code{\link{BIOMOD_EnsembleForecasting}()},
-\code{\link{BIOMOD_EnsembleModeling}()},
-\code{\link{BIOMOD_FormatingData}()},
-\code{\link{BIOMOD_LoadModels}()},
-\code{\link{BIOMOD_Projection}()},
-\code{\link{BIOMOD_RangeSize}()}
+Other Main functions:
+\code{\link[=BIOMOD_EnsembleForecasting]{BIOMOD_EnsembleForecasting()}},
+\code{\link[=BIOMOD_EnsembleModeling]{BIOMOD_EnsembleModeling()}},
+\code{\link[=BIOMOD_FormatingData]{BIOMOD_FormatingData()}},
+\code{\link[=BIOMOD_LoadModels]{BIOMOD_LoadModels()}},
+\code{\link[=BIOMOD_Projection]{BIOMOD_Projection()}},
+\code{\link[=BIOMOD_RangeSize]{BIOMOD_RangeSize()}}
 }
 \author{
 Wilfried Thuiller, Damien Georges, Robin Engler

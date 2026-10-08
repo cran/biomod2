@@ -1,21 +1,24 @@
 Package: biomod2
 Type: Package
 Title: Ensemble Platform for Species Distribution Modeling
-Version: 4.3-4-6
-Date: 2026-05-07
+Version: 4.3-4-7
+Date: 2026-10-07
 Authors@R: c(person("Maya", "Guéguen", role = c("aut", "cre")
-                    , email = "maya.gueguen@univ-grenoble-alpes.fr"),
+                    , email = "maya.gueguen@univ-grenoble-alpes.fr"
+                    , comment = c(ORCID = "0000-0002-1045-2997")),
              person("Hélène", "Blancheteau", role = "aut"),
              person("Rémi", "Lemaire-Patin", role = "aut"),
              person("Wilfried", "Thuiller", role = c("aut")
-                    , email = "wilfried.thuiller@univ-grenoble-alpes.fr"))
+                    , email = "wilfried.thuiller@univ-grenoble-alpes.fr"
+                    , comment = c(ORCID = "0000-0002-5388-5274")))
 BugReports: https://github.com/biomodhub/biomod2/issues
 URL: https://biomodhub.github.io/biomod2/
-Description: Functions for species distribution modeling, calibration and evaluation, 
-  ensemble of models, ensemble forecasting and visualization. The package permits to run
-  consistently up to 10 single models on a presence/absences (resp presences/pseudo-absences)
-  dataset and to combine them in ensemble models and ensemble projections. Some bench of other 
-  evaluation and visualisation tools are also available within the package.
+Description: Functions for species distribution modelling, to calibrate, evaluate, and project 
+  species-environment relationships across space and time using multiple modelling algorithms and 
+  ensemble forecasting. It accommodates diverse ecological data types (presence-only, presence-absence, 
+  counts, multi-class abundance, or relative/absolute abundance) within a unified modelling workflow 
+  which includes cross-validation schemes, pseudo-absence selection strategies, expanded model 
+  parametrization options, a dozen of algorithms, and tools for exploring and visualizing outputs.
 Depends: R (>= 4.1)
 Imports: stats, utils, methods, terra (>= 1.6-33), sp, reshape,
         reshape2, abind, foreach, ggplot2, gbm (>= 2.1.3), rpart, MASS,
@@ -26,7 +29,6 @@ Suggests: Hmisc, gam, mgcv, earth, maxnet, mda, nnet, randomForest,
         rmarkdown, tidyterra, ggtext, patchwork, kableExtra, DT,
         R.utils, paletteer, viridis
 License: GPL-3
-RoxygenNote: 7.3.3
 Encoding: UTF-8
 VignetteBuilder: knitr
 Collate: 'biomod2-package.R' 'biomod2_globalVariables.R'
@@ -46,12 +48,15 @@ Collate: 'biomod2-package.R' 'biomod2_globalVariables.R'
         'bm_SRE.R' 'bm_SampleBinaryVector.R' 'bm_SampleFactorLevels.R'
         'bm_Tuning.R' 'bm_VariablesImportance.R' 'zzz.R'
 LazyData: true
+Config/roxygen2/version: 8.0.0
 NeedsCompilation: no
-Packaged: 2026-05-11 11:50:16 UTC; gueguema
-Author: Maya Guéguen [aut, cre],
+Packaged: 2026-10-08 13:01:25 UTC; gueguema
+Author: Maya Guéguen [aut, cre] (ORCID:
+    <https://orcid.org/0000-0002-1045-2997>),
   Hélène Blancheteau [aut],
   Rémi Lemaire-Patin [aut],
-  Wilfried Thuiller [aut]
+  Wilfried Thuiller [aut] (ORCID:
+    <https://orcid.org/0000-0002-5388-5274>)
 Maintainer: Maya Guéguen <maya.gueguen@univ-grenoble-alpes.fr>
 Repository: CRAN
-Date/Publication: 2026-05-23 11:20:20 UTC
+Date/Publication: 2026-10-08 13:50:02 UTC

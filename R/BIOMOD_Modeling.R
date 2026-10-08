@@ -181,8 +181,9 @@
 ##' 
 ##'   \item{metric.eval}{
 ##'   \emph{Please refer to  
-##'   \href{https://www.cawcr.gov.au/projects/verification/}{CAWRC website ("Methods for 
-##'   dichotomous forecasts")} to get detailed description (simple/complex metrics).} \cr
+##'   \href{https://jwgfvr.github.io/forecastverification/}{JWGFVR website ("Forecast 
+##'   verification - methods, issues and FAQ")} to get detailed description 
+##'   (simple/complex metrics).} \cr
 ##'   Several evaluation metrics can be selected. \cr
 ##'   Optimal value of each method can be obtained with the \code{\link{get_optim_value}} 
 ##'   function.
@@ -252,8 +253,8 @@
 ##'   \item{weights & prevalence}{
 ##'   More or less weight can be given to some specific observations. \cr Automatically created 
 ##'   \code{weights} will be \code{integer} values to prevent some modeling issues. \cr 
-##'   \emph{Note that \code{MAXENT}, \code{MAXNET}, \code{RF}, \code{RFd} and \code{SRE} models 
-##'   do not take weights into account.}
+##'   \emph{Note that \code{DNN}, \code{MAXENT}, \code{MAXNET} and \code{SRE} models do not take 
+##'   weights into account.}
 ##'   \itemize{
 ##'     \item If \code{prevalence = 0.5} (the default), presences and absences will be weighted equally 
 ##'     (\emph{i.e. the weighted sum of presences equals the weighted sum of absences}). 
@@ -551,6 +552,21 @@ BIOMOD_Modeling <- function(bm.format,
     return(models.out)
   }
   
+  ## Update and save again modeling options
+  models.options <- .transform_outputs_list("mod", mod.out, out = "options")
+  bm.options.updated <- bm.options
+  mod <- sort(unique(sapply(names(models.options), function(x) strsplit(x, "_")[[1]][4])))
+  for (mod.i in mod) {
+    opt.i <- models.options[grep(paste0(mod.i, "$"), names(models.options))]
+    names(opt.i) <- sapply(names(opt.i), function(x) sub(bm.format@sp.name, "", sub(paste0("_", mod.i, "$"), "", x)))
+    nam <- grep(paste0("^", mod.i, "[.]"), names(bm.options.updated@options), value = TRUE)
+    for (run.i in names(opt.i)) {
+      bm.options.updated@options[[nam]]@args.values[[run.i]] <- opt.i[[run.i]]
+    }
+  }
+  models.out <- .fill_BIOMOD.models.out("models.options", bm.options.updated, models.out
+                                        , inMemory = TRUE, nameFolder = name.BIOMOD_DATA)
+  
   ## 3.4 Rearrange and save models outputs : ----------------------------------
   ## models evaluation, variables importance, models prediction, predictions evaluation
   if (length(metric.eval) > 0) {
@@ -676,6 +692,10 @@ BIOMOD_Modeling <- function(bm.format,
   # }
   
   ## 6. Check CV.user.table / CV.do.full.models arguments ---------------------
+  if (is.null(CV.do.full.models)) {
+    CV.do.full.models <- FALSE
+    .message("CV.do.full.models set to FALSE (no '_allData_allRun' set computed)")
+  }
   if (CV.strategy == "user.defined" && !is.null(CV.user.table)) {
     if (!("_allData_allRun" %in% colnames(CV.user.table)) && CV.do.full.models == TRUE) { 
       CV.do.full.models <- FALSE

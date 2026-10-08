@@ -30,11 +30,9 @@ from \code{\link{biomod2_model}} objects from the modeling step.
 \seealso{
 \code{\link{biomod2_model}}
 
-Other Toolbox functions: 
+Other Toolbox functions:
 \code{\link{getters.out}},
-\code{\link{load_stored_object}()},
-\code{\link{predict.bm}},
-\code{\link{predict.em}},
+\code{\link[=load_stored_object]{load_stored_object()}},
 \code{\link{predict2.bm}},
 \code{\link{predict2.em}},
 \code{\link{setters}}
