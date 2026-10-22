@@ -1,8 +1,8 @@
 Package: biomod2
 Type: Package
 Title: Ensemble Platform for Species Distribution Modeling
-Version: 4.3-4-7
-Date: 2026-10-07
+Version: 4.3-4-8
+Date: 2026-10-19
 Authors@R: c(person("Maya", "Guéguen", role = c("aut", "cre")
                     , email = "maya.gueguen@univ-grenoble-alpes.fr"
                     , comment = c(ORCID = "0000-0002-1045-2997")),
@@ -50,7 +50,7 @@ Collate: 'biomod2-package.R' 'biomod2_globalVariables.R'
 LazyData: true
 Config/roxygen2/version: 8.0.0
 NeedsCompilation: no
-Packaged: 2026-10-08 13:01:25 UTC; gueguema
+Packaged: 2026-10-22 08:48:46 UTC; gueguema
 Author: Maya Guéguen [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-1045-2997>),
   Hélène Blancheteau [aut],
@@ -59,4 +59,4 @@ Author: Maya Guéguen [aut, cre] (ORCID:
     <https://orcid.org/0000-0002-5388-5274>)
 Maintainer: Maya Guéguen <maya.gueguen@univ-grenoble-alpes.fr>
 Repository: CRAN
-Date/Publication: 2026-10-08 13:50:02 UTC
+Date/Publication: 2026-10-22 09:50:02 UTC

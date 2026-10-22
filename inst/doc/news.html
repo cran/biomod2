@@ -118,6 +118,40 @@ section.footnotes {
 <h3 id="sec:2026"><i class="fa-solid fa-chess-rook"></i> 2026</h3>
 <h5 id="sec:bugfix_1">Bugfix</h5>
 <ul>
+<li>4.3-4-8 :
+<ul>
+<li>generalize the use of <code>set.seed</code> only if <code>!is.null(seed.val)</code></li>
+<li>in <code>bm_RangeSize</code> :
+<ul>
+<li>fix case 1 <code>proj.current</code> * several <code>proj.future</code> (<em>data.frame</em> method)</li>
+<li>fix case ordinal conversion to numeric (<em>data.frame</em> and <em>rast</em> methods)</li>
+<li>fix case (nonbinary &amp; !ordinal) and (ordinal) <code>loss.gain</code> computation (<em>rast</em> method)</li>
+<li>standardize code between <em>data.frame</em> and <em>rast</em> methods</li>
+<li>remove <em>.CompteurSp</em> internal function</li>
+</ul>
+</li>
+<li>in <code>bm_CrossValidation</code> :
+<ul>
+<li>provide <code>seed.val</code> to the function when called directly from <code>BIOMOD_Modeling</code></li>
+<li>remove <code>set.seed</code> in both <em>.sample_num</em> and <em>.sample_class</em> internal functions</li>
+</ul>
+</li>
+<li>in <code>bm_VariablesImportance</code> :
+<ul>
+<li>correct the use of <code>seed.val</code> (<em>seed.val + r + v</em> for each repetition, set in <code>.full_shuffling</code> ; remove CTA special case)</li>
+<li>fix correlation method used depending on data type (Spearman for <em>ordinal</em> or <em>multiclass</em>, Pearson for the rest)</li>
+</ul>
+</li>
+<li>in <code>bm_FindOptimStat</code> :
+<ul>
+<li>fix use of <code>mean</code> and <code>round</code> functions</li>
+<li>for abundance data, computation of <em>Recall</em> and <em>Precision</em> metrics were swapped</li>
+</ul>
+</li>
+<li>fix retrieval of thresholds to compute metrics over validation (ensemble) and evaluation (single, ensemble) parts</li>
+<li>fix round digits to scan thresholds in <code>bm_FindOptimStat</code> (0-1 scale VS 0-1000)</li>
+</ul>
+</li>
 <li>4.3-4-7 :
 <ul>
 <li>update modeling options in <code>BIOMOD.models.out</code> object with changes made right prior modeling</li>

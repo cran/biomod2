@@ -47,7 +47,8 @@
 ##' \enumerate{
 ##'   \item shuffle the original variable
 ##'   \item compute model prediction with shuffled variable
-##'   \item calculate Pearson's correlation between reference and shuffled predictions
+##'   \item calculate Pearson's correlation (Spearman for \code{ordinal} or 
+##'   \code{multiclass} data) between reference and shuffled predictions
 ##'   \item return score as \code{1 - cor}
 ##' }
 ##' The highest the value, the less reference and shuffled predictions are correlated, and the 
@@ -59,7 +60,7 @@
 ##' The same principle is used in \code{\link[randomForest]{randomForest}}.
 ##' 
 ##' 
-##' @keywords shuffle random importance "Pearson correlation"
+##' @keywords shuffle random importance "Pearson correlation" "Spearman correlation"
 ##' 
 ##' 
 ##' @seealso \code{\link[randomForest]{randomForest}}, 
@@ -138,7 +139,9 @@ bm_VariablesImportance <- function(bm.model,
   out <- foreach (r = 1:nb.rep, .combine = "rbind") %:%
     foreach (v = variables, .combine = "rbind") %do%
     {
-      data_rand <- .randomise_data(expl.var, v, method) #, seedval = seed.val)
+      seed.rep <- NULL
+      if (!is.null(seed.val)) { seed.rep <- seed.val + r + which(variables == v) }
+      data_rand <- .randomise_data(expl.var, v, method, seedval = seed.rep)
       shuffled.pred <- predict(bm.model, data_rand, temp_workdir = temp.workdir, seedval = seed.val)
       
       if (model_type == "ordinal") {
@@ -151,7 +154,7 @@ bm_VariablesImportance <- function(bm.model,
           shuffled.pred <- as.numeric(factor(shuffled.pred))
         }
       }
-      method_cor <- ifelse(model_type %in% c("ordinal", "multiclass"), "pearson", "spearman")
+      method_cor <- ifelse(model_type %in% c("ordinal", "multiclass"), "spearman", "pearson")
       out_vr <- 1 - max(round(
         cor(x = ref, y = shuffled.pred, use = "pairwise.complete.obs", method = method_cor)
         , digits = 6), 0, na.rm = TRUE)
@@ -183,7 +186,8 @@ bm_VariablesImportance <- function(bm.model,
   # test method is supported
   .fun_testIfIn("method", method, "full_rand")
   
-  if(missing(temp.workdir)){ temp.workdir <- NULL }
+  ## test
+  if (missing(temp.workdir)) { temp.workdir <- NULL }
   
   return(list(bm.model = bm.model
               , expl.var = expl.var
@@ -209,11 +213,7 @@ bm_VariablesImportance <- function(bm.model,
     stop("x must be a vector, matrix or data.frame object")
   }
   
-  ## Set a new random seed to ensure that sampling is random
-  ## (issue when CTA is involved and seed needs to be set to a fix number)
-  if (is.null(seedval)) {
-    set.seed(as.double(Sys.time()) + as.numeric(format(Sys.time(), "%OS6")) * 1000000)
-  }
+  if (!is.null(seedval)) set.seed(seedval)
   
   out <- NULL
   if (is.null(id)) {
